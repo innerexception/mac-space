@@ -9,18 +9,8 @@
 }
 
 @font-face {
-  font-family: 'Avatar';
-  src: url('./assets/V5_pixelpals.ttf')  format('truetype')
-}
-
-@font-face {
   font-family: 'Item';
   src: url('./assets/Aywadings.ttf')  format('truetype')
-}
-
-@font-face {
-  font-family: 'Grid';
-  src: url('./assets/Grid.ttf')  format('truetype')
 }
 
 html {

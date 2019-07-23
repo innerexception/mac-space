@@ -1,77 +1,52 @@
 import * as React from 'react'
-import * as PIXI from 'pixi.js'
-const tile = require('../../assets/tiny2.png')
+import * as Phaser from 'phaser'
+import DefaultScene from '../util/PhaserUtil'
 
 interface Props {
+    me: Player
 }
 
 interface State {
+    activeShip: Ship
+    phaserInstance: Phaser.Game | null
 }
 
 export default class Viewscreen extends React.Component<Props, State> {
 
     state = {
-        viewportRef: React.createRef<HTMLDivElement>()
+        activeShip: this.props.me.ships.find(ship=>ship.id===this.props.me.activeShipId),
+        phaserInstance: null,
+        containerRef: React.createRef<HTMLDivElement>()
     }
 
     componentDidMount() {
-        const app = new PIXI.Application();
-        this.state.viewportRef.current.appendChild(app.view)
-        this.initPixi(app)
-        window.addEventListener('keydown', (e)=>this.handleKeyDown(e.keyCode))
-    }
-
-    handleKeyDown = (keyCode:number) =>{
-        switch(keyCode){
-            // case 65:
-            //     this.state.isPlayerAttacking ? this.hideAttackTiles():this.showAttackTiles(this.props.me, this.props.me.character.abilities.find(ability=>ability.name==='Attack'))
-            //     break
-            // case 38:
-            //     this.moveUnit(this.props.me, Directions.UP)
-            //     break
-            // case 40: 
-            //     this.moveUnit(this.props.me, Directions.DOWN)
-            //     break
-            // case 37: 
-            //     this.moveUnit(this.props.me, Directions.LEFT)
-            //     break
-            // case 39: 
-            //     this.moveUnit(this.props.me, Directions.RIGHT)
-            //     break
-        }
-    }
-
-    initPixi(app){
-        // create a texture from an image path
-        const texture = PIXI.Texture.from(tile);
-
-        /* create a tiling sprite ...
-        * requires a texture, a width and a height
-        * in WebGL the image size should preferably be a power of two
-        */
-        const tilingSprite = new PIXI.TilingSprite(
-            texture,
-            app.screen.width,
-            app.screen.height,
-        );
-        app.stage.addChild(tilingSprite);
-
-        let count = 0;
-
-        app.ticker.add(() => {
-            count += 0.005;
-
-            tilingSprite.tileScale.x = 2 + Math.sin(count);
-            tilingSprite.tileScale.y = 2 + Math.cos(count);
-
-            tilingSprite.tilePosition.x += 1;
-            tilingSprite.tilePosition.y += 1;
+        this.state.phaserInstance = new Phaser.Game({
+            type: Phaser.WEBGL,
+            width: this.state.containerRef.current.clientWidth,
+            height: this.state.containerRef.current.clientHeight,
+            parent: 'canvasEl',
+            physics: {
+                default: 'impact',
+                impact: {
+                    setBounds: {
+                        x: 0,
+                        y: 0,
+                        width: 3200,
+                        height: 600,
+                        thickness: 32
+                    }
+                }
+            },
+            scene: [DefaultScene]
+        });
+        window.addEventListener("resize", ()=>{
+            let game = (this.state.phaserInstance as Phaser.Game)
+            game.canvas.width = this.state.containerRef.current.clientWidth
+            game.canvas.height = this.state.containerRef.current.clientHeight
         });
     }
 
-    render(){
-        return (
-            <div ref={this.state.viewportRef}/>
-        )
+    render() {
+        return <div ref={this.state.containerRef} id='canvasEl' style={{width:'100%', height:'50vh'}}/>
     }
 }

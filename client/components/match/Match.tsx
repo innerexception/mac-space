@@ -23,7 +23,7 @@ export default class Match extends React.Component<Props, State> {
     render(){
         return (
             <div style={AppStyles.window}>
-                {TopBar('MacHack')}
+                {TopBar('MacSpace')}
                 <div style={{padding:'0.5em', maxWidth:'25em'}}>
                     <div>
                         top right widgets:
@@ -37,7 +37,7 @@ export default class Match extends React.Component<Props, State> {
                         </div>
                     </div>
                     {this.state.showMap && <Map/>}
-                    <Viewscreen/>
+                    <Viewscreen me={this.props.currentUser}/>
                 </div>
          </div>
         )

@@ -30,7 +30,7 @@
     "file-saver": "^2.0.2",
     "http": "0.0.0",
     "normalize.css": "^8.0.1",
-    "pixi.js": "^5.1.0",
+    "phaser": "^3.18.1",
     "react": "^16.8.3",
     "react-dom": "^16.8.3",
     "react-redux": "^4.4.9",

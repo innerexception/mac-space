@@ -24,7 +24,11 @@ export default class Login extends React.Component {
 const getUser = (name:string) => {
    return {
         name,
-        id: v4()
+        id: v4(),
+        activeShipId: '',
+        ships:[],
+        reputation:[],
+        notoriety: 0
     }
 }
 
