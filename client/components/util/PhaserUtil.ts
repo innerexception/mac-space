@@ -1,13 +1,17 @@
 import { Scene, Cameras } from "phaser";
 
-const star = require('../../assets/tiny.png')
-const star2 = require('../../assets/tiny2.png')
+const star = require('../../assets/star/g0.png')
+const star2 = require('../../assets/star/a0.png')
 const ship = require('../../assets/ship/bounder.png')
+const planet = require('../../assets/planet/callisto.png')
+const asteroid1 = require('../../assets/asteroid/iron/spin-00.png')
+const asteroid2 = require('../../assets/asteroid/lead/spin-00.png')
 
 export default class DefaultScene extends Scene {
 
     minimap: Cameras.Scene2D.BaseCamera
     player: Phaser.Physics.Impact.ImpactSprite
+    planet: Phaser.GameObjects.Sprite
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
     thruster: Phaser.GameObjects.Particles.ParticleEmitter
 
@@ -16,6 +20,9 @@ export default class DefaultScene extends Scene {
         this.load.image('star', star);
         this.load.image('bigStar', star2);
         this.load.image('ship', ship);
+        this.load.image('planet', planet);
+        this.load.image('asteroid1', asteroid1);
+        this.load.image('asteroid2', asteroid2);
         // this.load.spritesheet('face', 'assets/sprites/metalface78x92.png', { frameWidth: 78, frameHeight: 92 });
     }
     
@@ -31,7 +38,9 @@ export default class DefaultScene extends Scene {
         this.minimap.scrollY = 400;
     
         this.createStarfield();
-    
+        this.addAsteroids();
+        this.planet = this.add.sprite(500,550,'planet')
+
         //  Add a player ship
     
         this.player = this.impact.add.sprite(1600, 400, 'ship');
@@ -52,10 +61,13 @@ export default class DefaultScene extends Scene {
         });
         this.thruster.setSpeed(100)
 
-        // // Enables movement of player with WASD keys
-        // this.input.keyboard.on('keydown-W', (event) => {
-        //     this.player.setAccelerationY(-800);
-        // });
+        // Enables movement of player with WASD keys
+        this.input.keyboard.on('keydown-L', (event) => {
+            let planetAngle = Phaser.Math.Angle.Between(this.player.x, this.player.y, this.planet.x, this.planet.y)
+            this.player.setRotation(planetAngle)
+            let planetVector = { x: Math.sin(this.player.rotation), y: Math.cos(this.player.rotation)}
+            this.player.setAcceleration(planetVector.x*500, planetVector.y*-500)
+        });
         // this.input.keyboard.on('keydown-S', (event) => {
         //     this.player.setAccelerationY(800);
         // });
@@ -113,7 +125,10 @@ export default class DefaultScene extends Scene {
     
         var group = this.add.group();
     
-        group.createMultiple({ key: 'bigStar', frameQuantity: 128 });
+        group.createMultiple([
+            { key: 'bigStar', frameQuantity: 64, setScale: {x: 0.02, y:0.02} }, 
+            { key: 'star', frameQuantity: 256, setScale: {x: 0.02, y:0.02} }
+        ]);
     
         var rect = new Phaser.Geom.Rectangle(0, 0, 3200, 3200);
     
@@ -122,8 +137,34 @@ export default class DefaultScene extends Scene {
         group.children.iterate((child, index) => {
     
             var sf = Math.max(0.3, Math.random());
-            //this.minimap.ignore(child);
+            this.minimap.ignore(child);
+            
             
         }, this);
+    }
+
+    addAsteroids ()
+    {
+        let asteroids = []
+        for(var i=0; i< 24; i++){
+            asteroids.push(this.add.sprite(0,0,'asteroid1').setScale(Phaser.Math.FloatBetween(1,0.1)))
+        }
+        for(var i=0; i< 48; i++){
+            asteroids.push(this.add.sprite(0,0,'asteroid2').setScale(Phaser.Math.FloatBetween(1,0.1)))
+        }
+    
+        var rect = new Phaser.Geom.Ellipse(1600, 1600, 1000, 1000);
+    
+        Phaser.Actions.RandomEllipse(asteroids, rect);
+    
+        this.add.tween({
+            targets: rect,
+            duration: 10000,
+            repeat: -1,
+            onUpdate: () =>
+            {
+                Phaser.Actions.RotateAroundDistance(asteroids, { x: 1600, y: 1600 }, 0.02, 1000);
+            }
+        })
     }
 }
