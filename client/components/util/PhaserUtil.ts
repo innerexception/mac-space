@@ -14,6 +14,7 @@ export default class DefaultScene extends Scene {
     planet: Phaser.GameObjects.Sprite
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
     thruster: Phaser.GameObjects.Particles.ParticleEmitter
+    landingSequence: boolean
 
     preload = () =>
     {
@@ -28,7 +29,6 @@ export default class DefaultScene extends Scene {
     
     create = () =>
     {
-         //  The world is 3200 x 600 in size
         this.cameras.main.setBounds(0, 0, 3200, 3200).setName('main');
     
         //  The miniCam is 400px wide, so can display the whole world at a zoom of 0.2
@@ -48,6 +48,10 @@ export default class DefaultScene extends Scene {
         this.player.scaleY = 0.3
         this.player.setMaxVelocity(700).setFriction(400, 400);
     
+        this.add.group({
+
+        })
+
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.thruster = this.add.particles('jets').createEmitter({
@@ -56,27 +60,33 @@ export default class DefaultScene extends Scene {
             angle: this.player.angle,
             scale: { start: 0.2, end: 0 },
             blendMode: 'ADD',
-            lifespan: 300,
+            lifespan: 150,
             on: false
         });
         this.thruster.setSpeed(100)
+        this.player.depth = 3
 
-        // Enables movement of player with WASD keys
+        
         this.input.keyboard.on('keydown-L', (event) => {
+            //landing sequence
             let planetAngle = Phaser.Math.Angle.Between(this.player.x, this.player.y, this.planet.x, this.planet.y)
-            this.player.setRotation(planetAngle)
-            let planetVector = { x: Math.sin(this.player.rotation), y: Math.cos(this.player.rotation)}
-            this.player.setAcceleration(planetVector.x*500, planetVector.y*-500)
+            this.tweens.add({
+                targets: this.player,
+                rotation: planetAngle+(Math.PI/2),
+                duration: 2000,
+                onComplete: ()=>{
+                    this.landingSequence = true
+                }
+            })
         });
-        // this.input.keyboard.on('keydown-S', (event) => {
-        //     this.player.setAccelerationY(800);
-        // });
-        // this.input.keyboard.on('keydown-A', (event) => {
-        //     this.player.setAccelerationX(-800);
-        // });
-        // this.input.keyboard.on('keydown-D', (event) => {
-        //     this.player.setAccelerationX(800);
-        // });
+        this.input.keyboard.on('keydown-J', (event) => {
+            //TODO: jump sequence
+
+        });
+        this.input.keyboard.on('keydown-SPACE', (event) => {
+            //TODO: fire primary
+
+        });
 
     }
     
@@ -97,6 +107,15 @@ export default class DefaultScene extends Scene {
         {
             this.player.setAcceleration(vector.x*500, vector.y*-500); //negative b/c y is inverted in crazyland
             this.thruster.emitParticle(16);
+        }
+        else if(this.landingSequence){
+            let distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.planet.x, this.planet.y)
+            if(distance > 50){
+                let planetVector = { x: Math.sin(this.player.rotation), y: Math.cos(this.player.rotation)}
+                this.player.setAcceleration(planetVector.x*(100), planetVector.y*(-100))
+                this.thruster.emitParticle(16);
+            }
+            else this.landingSequence = false
         }
         else
         {
