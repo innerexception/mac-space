@@ -2,7 +2,7 @@ import { Scene, Cameras } from "phaser";
 
 const star = require('../../assets/star/g0.png')
 const star2 = require('../../assets/star/a0.png')
-const ship = require('../../assets/ship/bounder.png')
+const ship = require('../../assets/ship/aerie.png')
 const planet = require('../../assets/planet/callisto.png')
 const asteroid1 = require('../../assets/asteroid/iron/spin-00.png')
 const asteroid2 = require('../../assets/asteroid/lead/spin-00.png')
@@ -51,13 +51,13 @@ export default class DefaultScene extends Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.thruster = this.add.particles('jets').createEmitter({
-                x: this.player.x,
-                y: this.player.y,
-                angle: this.player.angle,
-                scale: { start: 0.2, end: 0 },
-                blendMode: 'ADD',
-                lifespan: 300,
-                on: false
+            x: this.player.x,
+            y: this.player.y,
+            angle: this.player.angle,
+            scale: { start: 0.2, end: 0 },
+            blendMode: 'ADD',
+            lifespan: 300,
+            on: false
         });
         this.thruster.setSpeed(100)
 
@@ -147,24 +147,30 @@ export default class DefaultScene extends Scene {
     {
         let asteroids = []
         for(var i=0; i< 24; i++){
-            asteroids.push(this.add.sprite(0,0,'asteroid1').setScale(Phaser.Math.FloatBetween(1,0.1)))
+            asteroids.push(this.add.sprite(0,0,'asteroid1')
+                .setScale(Phaser.Math.FloatBetween(0.8,0.1))
+                .setRotation(Phaser.Math.FloatBetween(3,0.1)))
         }
         for(var i=0; i< 48; i++){
-            asteroids.push(this.add.sprite(0,0,'asteroid2').setScale(Phaser.Math.FloatBetween(1,0.1)))
+            asteroids.push(this.add.sprite(0,0,'asteroid2')
+                .setScale(Phaser.Math.FloatBetween(0.8,0.1))
+                .setRotation(Phaser.Math.FloatBetween(3,0.1)))
         }
-    
+
         var rect = new Phaser.Geom.Ellipse(1600, 1600, 1000, 1000);
-    
         Phaser.Actions.RandomEllipse(asteroids, rect);
-    
-        this.add.tween({
-            targets: rect,
-            duration: 10000,
-            repeat: -1,
-            onUpdate: () =>
-            {
-                Phaser.Actions.RotateAroundDistance(asteroids, { x: 1600, y: 1600 }, 0.02, 1000);
-            }
+
+        asteroids.forEach(sprite=>{
+            let d=Phaser.Math.Between(700,1000)
+            let r=Phaser.Math.FloatBetween(-0.01,0.1)
+            this.time.addEvent({
+                delay: 1, 
+                callback: ()=>{
+                    sprite.rotation+=r
+                    Phaser.Actions.RotateAroundDistance([sprite], { x: 1600, y: 1600 }, 0.001, d)
+                },
+                loop: true 
+            });
         })
     }
 }
