@@ -26,7 +26,7 @@ export default class Viewscreen extends React.Component<Props, State> {
             height: this.state.containerRef.current.clientHeight,
             parent: 'canvasEl',
             physics: {
-                default: 'impact',
+                default: 'arcade',
                 impact: {
                     setBounds: {
                         x: 0,
