@@ -7,12 +7,14 @@ interface Props {
     currentUser: Player
     activeSession: Session
     isConnected: boolean
+    showMap: boolean
+    showPlanetMenu: boolean
 }
 
 export default class UIManager extends React.Component<Props> {
 
     getComponent = () => {
-        if(!this.props.currentUser.id){
+        if(!this.props.currentUser){
             return <Login {...this.props}/>
         }
         else {

@@ -1,6 +1,6 @@
 import { ReducerActions } from '../../../enum'
 
-const appReducer = (state = getInitialState(), action:any) => {
+const appReducer = (state = getInitialState(), action:any):RState => {
     switch (action.type) {
         case ReducerActions.CONNECTED: 
             return { ...state, isConnected: true}
@@ -18,6 +18,8 @@ const appReducer = (state = getInitialState(), action:any) => {
             return { ...state, currentUser: action.currentUser }
         case ReducerActions.MATCH_CLEANUP: 
             return { ...state, activeSession: null, currentUser:null}
+        case ReducerActions.OPEN_PLANET: 
+            return { ...state, showPlanetMenu: action.state }
         default:
             return state
     }
@@ -25,14 +27,17 @@ const appReducer = (state = getInitialState(), action:any) => {
 
 export default appReducer;
 
-const getInitialState = () => {
+const getInitialState = ():RState => {
     return {
         activeSession: {
-            players: new Array<any>()
+            sessionId:'',
+            players: new Array<Player>(),
+            systems: new Array<SystemConfig>(),
+            npcs: new Array<Player>()
         },
         isConnected: false,
-        currentUser: {
-            
-        }
+        currentUser: null,
+        showMap: false,
+        showPlanetMenu: false
     }
 }

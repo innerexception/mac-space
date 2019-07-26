@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as Phaser from 'phaser'
-import DefaultScene from '../util/PhaserUtil'
+import System from '../util/System'
 
 interface Props {
     me: Player
@@ -37,7 +37,7 @@ export default class Viewscreen extends React.Component<Props, State> {
                     }
                 }
             },
-            scene: [DefaultScene]
+            scene: [System]
         });
         window.addEventListener("resize", ()=>{
             let game = (this.state.phaserInstance as Phaser.Game)

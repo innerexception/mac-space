@@ -1,12 +1,15 @@
 import * as React from 'react'
 import AppStyles from '../../AppStyles';
 import Map from './Map'
+import PlanetMenu from './PlanetMenu'
 import Viewscreen from './Viewscreen'
 import { TopBar, Button } from '../Shared'
 
 interface Props {
     currentUser: Player
     activeSession: Session
+    showMap: boolean
+    showPlanetMenu: boolean
 }
 
 interface State {
@@ -36,7 +39,8 @@ export default class Match extends React.Component<Props, State> {
                             options menu (esc)
                         </div>
                     </div>
-                    {this.state.showMap && <Map/>}
+                    {this.props.showMap && <Map/>}
+                    {this.props.showPlanetMenu && <PlanetMenu/>}
                     <Viewscreen me={this.props.currentUser}/>
                 </div>
          </div>

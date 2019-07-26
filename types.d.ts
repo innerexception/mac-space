@@ -10,6 +10,7 @@ declare enum Direction {
 interface Tuple {
     x: number
     y: number
+    rotation?: number
 }
 
 interface Player {
@@ -67,20 +68,41 @@ interface Gun {
     isTurrent: boolean
 }
 
-interface System {
+interface SystemConfig {
     name: string
+    x: number
+    y: number
+    stellarObjects: Array<StellarObjectConfig>
+    asteroidConfig: Array<AsteroidConfig>
+    ships: Array<Ship>,
+    sceneConfig: Phaser.Types.Scenes.CreateSceneFromObjectConfig
+}
 
+interface StellarObjectConfig {
+    name: string,
+    x: number,
+    y: number,
+    asset: string,
+    landable: boolean
+}
+
+interface AsteroidConfig {
+    type: 'Iron'|'Silver'|'Platinum',
+    density: number,
+    isBelt: boolean
 }
 
 interface Session {
     sessionId: string
     players: Array<Player>
-    systems: Array<System>
+    systems: Array<SystemConfig>
     npcs: Array<Player>
 }
 
 interface RState {
     isConnected: boolean
-    currentUser: Player
+    currentUser: Player | null
     activeSession: Session
+    showMap: boolean
+    showPlanetMenu: boolean
 }

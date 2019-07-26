@@ -9,6 +9,13 @@ export const setUser = (currentUser:object) => {
     })
 }
 
+export const onTogglePlanetMenu = (state:boolean) => {
+    dispatch({
+        type: ReducerActions.OPEN_PLANET,
+        state
+    })
+}
+
 export const onWSMessage = (data:any) => {
     if (!data ) {
         dispatch({

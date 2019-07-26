@@ -1,4 +1,6 @@
 import { Scene, Cameras, GameObjects, Physics, } from "phaser";
+import { onTogglePlanetMenu } from '../uiManager/Thunks'
+import { Arcturus, Rigel } from "../../data/Systems";
 
 const star = require('../../assets/star/g0.png')
 const star2 = require('../../assets/star/a0.png')
@@ -9,7 +11,7 @@ const asteroid2 = require('../../assets/asteroid/lead/spin-00.png')
 const lazor = require('../../assets/projectile/laser+0.png')
 const boom = require('../../assets/explosion.png')
 
-export default class DefaultScene extends Scene {
+export default class System extends Scene {
 
     minimap: Cameras.Scene2D.BaseCamera
     player: Physics.Arcade.Sprite
@@ -20,6 +22,16 @@ export default class DefaultScene extends Scene {
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
     thruster: GameObjects.Particles.ParticleEmitter
     landingSequence: boolean
+    currentSystem: SystemConfig
+    selectedSystem: SystemConfig
+    jumpSequence: boolean
+    name: string
+    jumpVector: Tuple
+
+    constructor(config, jumpVector?:Tuple){
+        super(config)
+        this.jumpVector = jumpVector
+    }
 
     preload = () =>
     {
@@ -42,7 +54,10 @@ export default class DefaultScene extends Scene {
         this.minimap.setBackgroundColor(0x002244);
         this.minimap.scrollX = 1600;
         this.minimap.scrollY = 400;
-    
+        
+        this.selectedSystem = Arcturus
+        this.currentSystem = Rigel
+
         this.anims.create({
             key: 'explode',
             frames: this.anims.generateFrameNumbers('boom', { start: 0, end: 23, first: 23 }),
@@ -59,7 +74,11 @@ export default class DefaultScene extends Scene {
         this.player.scaleX = 0.3
         this.player.scaleY = 0.3
         this.player.setMaxVelocity(700).setFriction(400, 400);
-        
+        if(this.jumpVector){
+            this.player.setVelocity(this.jumpVector.x*500, this.jumpVector.y*-500)
+            this.player.rotation = this.jumpVector.rotation
+        } 
+
         this.projectile = this.physics.add.group({ classType: Projectile  })
         this.projectile.runChildUpdate = true
 
@@ -83,20 +102,56 @@ export default class DefaultScene extends Scene {
 
         
         this.input.keyboard.on('keydown-L', (event) => {
+            //TODO cycle available sites
+            //this.planets.getNext().setSelected()
+
             //landing sequence
             let planetAngle = Phaser.Math.Angle.Between(this.player.x, this.player.y, this.planet.x, this.planet.y)
+            this.player.setMaxVelocity(200)
             this.tweens.add({
                 targets: this.player,
                 rotation: planetAngle+(Math.PI/2),
-                duration: 2000,
+                duration: 1500,
                 onComplete: ()=>{
                     this.landingSequence = true
                 }
             })
+            
         });
         this.input.keyboard.on('keydown-J', (event) => {
-            //TODO: jump sequence
-
+            //jump sequence, pass to next system.
+            let systemAngle = Phaser.Math.Angle.Between(this.player.x, this.player.y, this.selectedSystem.x, this.selectedSystem.y)
+            const rotation = systemAngle+(Math.PI/2)
+            let systemVector = { x: Math.sin(rotation), y: Math.cos(rotation), rotation}
+            let targetScene = this.scene.get(this.selectedSystem.name)
+            if(!targetScene)
+                this.scene.add(
+                    this.selectedSystem.name, 
+                    new System({ key: this.selectedSystem.name, active: false, visible:false }, systemVector), 
+                    false
+                )
+            this.physics.world.setBoundsCollision(false, false, false, false)
+            this.tweens.add({
+                targets: this.player,
+                rotation: systemAngle+(Math.PI/2),
+                duration: 1500,
+                onComplete: ()=>{
+                    this.jumpSequence = true
+                    this.tweens.add({
+                        targets: this.player,
+                        x: this.selectedSystem.x,
+                        y: this.selectedSystem.y,
+                        duration: 2000,
+                        onComplete: ()=> {
+                            this.cameras.main.flash()
+                            this.scene.switch(this.selectedSystem.name)
+                            this.player.setPosition(1600, 400)
+                            this.jumpSequence = false
+                            this.physics.world.setBoundsCollision(true)
+                        }
+                    })
+                }
+            })
         });
         this.input.keyboard.on('keydown-SPACE', (event) => {
             //TODO: fire primary
@@ -131,18 +186,23 @@ export default class DefaultScene extends Scene {
             this.player.rotation = planetAngle+(Math.PI/2)
             let planetVector = { x: Math.sin(this.player.rotation), y: Math.cos(this.player.rotation)}
             
-            if(distance > 1000){
-                this.player.setAcceleration(planetVector.x*(200), planetVector.y*(-200))
-                this.thruster.emitParticle(16);
+            if(distance > 250){
+                this.player.setAcceleration(planetVector.x*200, planetVector.y*-200)
             }
-            else if(distance < 1000 && distance > 25){
-                this.player.setAcceleration(0,0)
-                this.player.setFriction(1500,1500)
+            else if(distance <=250){
+                this.tweens.add({
+                    targets: this.player,
+                    x: this.planet.x,
+                    y: this.planet.y,
+                    duration: 2000,
+                    onComplete: ()=>{
+                        this.player.setVelocity(0,0)
+                        this.player.setMaxVelocity(700)
+                        onTogglePlanetMenu(true)
+                    }
+                })
+                this.landingSequence = false
             }
-            else if(distance <=25){
-                this.player.setFriction(400,400)
-            }
-            else this.landingSequence = false
         }
         else
         {
@@ -150,9 +210,6 @@ export default class DefaultScene extends Scene {
             this.thruster.stop()
         }
     
-        this.player.x = Phaser.Math.Clamp(this.player.x, 0, 3200)
-        this.player.y = Phaser.Math.Clamp(this.player.y, 0, 3200)
-
         //  Position the center of the camera on the player
         //  we want the center of the camera on the player, not the left-hand side of it
         this.cameras.main.scrollX = this.player.x - 200;
@@ -224,16 +281,22 @@ export default class DefaultScene extends Scene {
 
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:Projectile) =>
     {
-        projectile.destroy(true);
+        projectile.destroy();
         asteroid.data.values.hp-=1
 
         if(asteroid.data.values.hp <= 0){
             this.explosions.get(asteroid.x, asteroid.y, 'boom').play('explode')
             asteroid.destroy()
+            //TODO: spawn resources
         }
     }
-}
 
+    playerTouchedResource = (resource:Physics.Arcade.Sprite, player:Physics.Arcade.Sprite) =>
+    {
+        resource.destroy()
+        player.data.values.resources++
+    }
+}
 
 class Projectile extends GameObjects.Image {
 
