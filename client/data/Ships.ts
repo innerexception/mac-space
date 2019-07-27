@@ -21,5 +21,6 @@ export const Shuttle:Ship = {
     gunMounts: 1,
     turrentMounts: 0,
     hardPoints: 0,
-    guns: []
+    guns: [],
+    asset: 'ship'
 }

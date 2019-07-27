@@ -62,7 +62,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         if(!targetScene)
             this.scene.scene.add(
                 targetSystem.name, 
-                new System({ key: targetSystem.name, active: false, visible:false }, systemVector), 
+                new System({ key: targetSystem.name, active: false, visible:false }, targetSystem.assetList, systemVector), 
                 false
             )
         this.scene.physics.world.setBoundsCollision(false, false, false, false)

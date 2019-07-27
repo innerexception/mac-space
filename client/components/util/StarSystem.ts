@@ -3,15 +3,7 @@ import { Arcturus, Rigel } from "../../data/Systems";
 import Projectile from "./display/Projectile";
 import ShipSprite from "./display/ShipSprite";
 import { store } from "../../App";
-
-const star = require('../../assets/star/g0.png')
-const star2 = require('../../assets/star/a0.png')
-const ship = require('../../assets/ship/aerie.png')
-const planet = require('../../assets/planet/callisto.png')
-const asteroid1 = require('../../assets/asteroid/iron/spin-00.png')
-const asteroid2 = require('../../assets/asteroid/lead/spin-00.png')
-const lazor = require('../../assets/projectile/laser+0.png')
-const boom = require('../../assets/explosion.png')
+import * as Assets from '../../data/Assets'
 
 export default class StarSystem extends Scene {
 
@@ -27,27 +19,25 @@ export default class StarSystem extends Scene {
     selectedSystem: SystemState
     name: string
     jumpVector: Tuple
+    assetList: Array<Asset>
 
-    constructor(config, jumpVector?:Tuple){
+    constructor(config, assetList:Array<Asset>, jumpVector?:Tuple){
         super(config)
         this.jumpVector = jumpVector
+        this.assetList = assetList
     }
 
     onReduxUpdate = () => {
         //TODO: rebuild ship sprites if needed
         this.player = store.getState().currentUser
+        store.subscribe(this.onReduxUpdate)
     }
     
     preload = () =>
     {
-        this.load.image('star', star)
-        this.load.image('bigStar', star2)
-        this.load.image('ship', ship)
-        this.load.image('planet', planet)
-        this.load.image('asteroid1', asteroid1)
-        this.load.image('asteroid2', asteroid2)
-        this.load.image('lazor', lazor)
-        this.load.spritesheet('boom', boom, { frameWidth: 64, frameHeight: 64 });
+        this.assetList.forEach(asset=>{
+            (this.load[asset.type] as any)(asset.key, asset.resource, asset.data)
+        })
     }
     
     create = () =>
@@ -81,7 +71,7 @@ export default class StarSystem extends Scene {
 
         //  Add a player ship
         this.activeShip = this.player.ships.find(ship=>ship.id===this.player.activeShipId)
-        this.activeShip.sprite = new ShipSprite(this.scene.scene, 1600, 400, 'ship', this.projectiles, true, this.activeShip);
+        this.activeShip.sprite = new ShipSprite(this.scene.scene, 1600, 400, this.activeShip.asset, this.projectiles, true, this.activeShip);
         
         
         if(this.jumpVector){

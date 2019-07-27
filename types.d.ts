@@ -58,6 +58,7 @@ interface Ship {
     turrentMounts: number
     hardPoints: number
     guns: Array<Gun>
+    asset: string
 }
 
 interface Gun {
@@ -82,7 +83,7 @@ interface SystemState {
     stellarObjects: Array<StellarObjectConfig>
     asteroidConfig: Array<AsteroidConfig>
     ships: Array<Ship>,
-    sceneConfig: Phaser.Types.Scenes.CreateSceneFromObjectConfig
+    assetList: Array<Asset>
 }
 
 interface StellarObjectConfig {
@@ -104,6 +105,13 @@ interface Session {
     players: Array<Player>
     systems: Array<SystemState>
     npcs: Array<Player>
+}
+
+interface Asset {
+    key: string,
+    type: 'image' | 'spritesheet'
+    resource: any
+    data?: any
 }
 
 interface RState {

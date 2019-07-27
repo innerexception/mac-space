@@ -1,6 +1,7 @@
 import * as React from 'react'
 import * as Phaser from 'phaser'
-import System from '../util/StarSystem'
+import StarSystem from '../util/StarSystem'
+import { Rigel } from '../../data/Systems';
 
 interface Props {
     me: Player
@@ -37,7 +38,7 @@ export default class Viewscreen extends React.Component<Props, State> {
                     }
                 }
             },
-            scene: [System]
+            scene: [new StarSystem({}, Rigel.assetList)]
         });
         window.addEventListener("resize", ()=>{
             let game = (this.state.phaserInstance as Phaser.Game)
