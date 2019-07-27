@@ -1,4 +1,4 @@
-export const Rigel:SystemConfig = {
+export const Rigel:SystemState = {
     name: 'Rigel',
     x: 0,
     y: 0,
@@ -7,7 +7,7 @@ export const Rigel:SystemConfig = {
     ships: [],
     sceneConfig: null
 }
-export const Arcturus:SystemConfig = {
+export const Arcturus:SystemState = {
     name: 'Arcturus',
     x: 10000,
     y: 10000,

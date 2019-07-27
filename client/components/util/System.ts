@@ -1,6 +1,7 @@
 import { Scene, Cameras, GameObjects, Physics, } from "phaser";
 import { onTogglePlanetMenu } from '../uiManager/Thunks'
 import { Arcturus, Rigel } from "../../data/Systems";
+import Projectile from "./display/Projectile";
 
 const star = require('../../assets/star/g0.png')
 const star2 = require('../../assets/star/a0.png')
@@ -22,8 +23,8 @@ export default class System extends Scene {
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
     thruster: GameObjects.Particles.ParticleEmitter
     landingSequence: boolean
-    currentSystem: SystemConfig
-    selectedSystem: SystemConfig
+    currentSystem: SystemState
+    selectedSystem: SystemState
     jumpSequence: boolean
     name: string
     jumpVector: Tuple
@@ -295,43 +296,6 @@ export default class System extends Scene {
     {
         resource.destroy()
         player.data.values.resources++
-    }
-}
-
-class Projectile extends GameObjects.Image {
-
-    timeAlive: number
-    xSpeed: number
-    ySpeed: number
-
-    constructor(scene, x, y){
-        super(scene, x, y, 'lazor')
-    }
-
-    fire = (shooter:Physics.Arcade.Sprite, target?:Physics.Arcade.Sprite) => {
-        this.setPosition(shooter.x, shooter.y); // Initial position
-        this.setScale(0.1,0.1)
-        if(target) this.rotation = Math.atan( (target.x-this.x) / (target.y-this.y));
-        else this.rotation = shooter.rotation
-
-        let targetVector = { x: Math.sin(shooter.rotation), y: Math.cos(shooter.rotation)}
-        this.xSpeed = targetVector.x
-        this.ySpeed = -targetVector.y
-
-        this.rotation = shooter.rotation; // angle bullet with shooters rotation
-        this.timeAlive = 0; // Time since new bullet spawned
-    }
-    
-    update = (time, delta) =>
-    {
-        this.x += this.xSpeed * delta;
-        this.y += this.ySpeed * delta;
-        this.timeAlive += delta;
-        if (this.timeAlive > 1800)
-        {
-            this.setActive(false);
-            this.setVisible(false);
-        }
     }
 }
 

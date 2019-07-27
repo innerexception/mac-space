@@ -32,7 +32,7 @@ const getInitialState = ():RState => {
         activeSession: {
             sessionId:'',
             players: new Array<Player>(),
-            systems: new Array<SystemConfig>(),
+            systems: new Array<SystemState>(),
             npcs: new Array<Player>()
         },
         isConnected: false,

@@ -68,7 +68,7 @@ interface Gun {
     isTurrent: boolean
 }
 
-interface SystemConfig {
+interface SystemState {
     name: string
     x: number
     y: number
@@ -95,7 +95,7 @@ interface AsteroidConfig {
 interface Session {
     sessionId: string
     players: Array<Player>
-    systems: Array<SystemConfig>
+    systems: Array<SystemState>
     npcs: Array<Player>
 }
 
