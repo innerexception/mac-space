@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as Phaser from 'phaser'
-import System from '../util/System'
+import System from '../util/StarSystem'
 
 interface Props {
     me: Player

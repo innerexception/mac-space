@@ -27,13 +27,20 @@ interface Faction {
     reputation: number
 }
 
+interface ShipSprite extends Phaser.Physics.Arcade.Sprite {
+    startLandingSequence(target:Phaser.GameObjects.Sprite)
+    startJumpSequence(targetSystem:SystemState)
+    firePrimary()
+    fireSecondary()
+}
+
 interface Ship {
     name: string
     id:string
     shields: number
     armor: number
     hull: number
-    sprite: Phaser.GameObjects.Sprite
+    sprite: ShipSprite
     fuel: number
     maxFuel: number
     energy: number

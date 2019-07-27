@@ -2,6 +2,7 @@ import * as React from 'react';
 import { onLogin } from './uiManager/Thunks'
 import AppStyles from '../AppStyles';
 import { Button, LightButton, TopBar } from './Shared'
+import * as Ships from '../data/Ships'
 import { v4 } from 'uuid'
 
 export default class Login extends React.Component {
@@ -22,20 +23,13 @@ export default class Login extends React.Component {
 }
 
 const getUser = (name:string) => {
+   let shuttle = {...Ships.Shuttle, id:v4()}
    return {
         name,
         id: v4(),
-        activeShipId: '',
-        ships:[],
+        activeShipId: shuttle.id,
+        ships:[shuttle],
         reputation:[],
         notoriety: 0
-    }
-}
-
-const styles = {
-    loginInput: {
-        boxShadow: 'none',
-        border: '1px solid',
-        minWidth:'10em'
     }
 }

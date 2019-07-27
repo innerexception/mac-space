@@ -8,7 +8,7 @@ const thunkMiddleware = require('redux-thunk')
 import WS from './WebsocketClient'
 export const server = new WS()
 
-let store = createStore(appReducer, applyMiddleware(
+export const store = createStore(appReducer, applyMiddleware(
     thunkMiddleware // lets us dispatch() functions
 ))
 
