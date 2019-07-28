@@ -1,4 +1,4 @@
-const ServerMessages = require('./src/ServerMessages')
+const ServerMessages = require('./src/ServerMessages.js')
 const path = require('path');
 const jsdom = require('jsdom');
 const express = require('express');
@@ -93,13 +93,17 @@ wsServer.on('request', function(request) {
             console.log('Headless client connected.')
             session.serverSocketId = socketId
             break
-          case ServerMessages.PLAYER_UPDATE:
+          case ServerMessages.PLAYER_EVENT:
             console.log('Player '+obj.playerId+' sent event: '+obj.event)
             publishToServer(obj.event)
             break
+          case ServerMessages.PLAYER_EVENT_ACK: 
+            console.log('Server ACK player event: '+obj.event + ', seq: '+obj.sequence)
+            publishToPlayer(obj.event)
+            break
           case ServerMessages.SERVER_UPDATE:
             console.log('Server 100ms update sent.')
-            publishToClients(obj.playerStates)
+            publishToPlayers(obj.playerStates)
             break
         }
     }
@@ -119,12 +123,19 @@ wsServer.on('request', function(request) {
 });
 
 
-const publishToClients = (playerStates) => {
+const publishToPlayers = (playerStates) => {
   session.players.forEach((player) => {
     var message = getPlayerUpdateMessage(playerStates[player.id])
     var json = JSON.stringify({ type:'message', data: message });
-      sockets[player.socketId].sendUTF(json);
+    sockets[player.socketId].sendUTF(json);
   })
+}
+
+const publishToPlayer = (playerEvent) => {
+  const player = session.players.find(player => player.id === playerEvent.playerId)
+  var message = getPlayerEventAckMessage(playerEvent)
+  var json = JSON.stringify({ type:'message', data: message });
+  sockets[player.socketId].sendUTF(json);
 }
 
 const publishToServer = (playerEvent) => {
@@ -136,9 +147,19 @@ const publishToServer = (playerEvent) => {
 
 //An event a player claims to have done: 
 //rotate, fire, thrust, land, jump, or any non-physics transaction
+//Server needs to ACK these with the sequence timestamp
 const getPlayerEventMessage = (playerEvent) => {
   return JSON.stringify({
     type: ServerMessages.PLAYER_EVENT,
+    playerEvent
+  })
+}
+
+//Ack an event a player previously send with resulting state snapshot
+//PlayerEvent object has sequence timestamp so that the client can DROP older ACKs if they come in out of order
+const getPlayerEventAckMessage = (playerEvent) => {
+  return JSON.stringify({
+    type: ServerMessages.PLAYER_EVENT_ACK,
     playerEvent
   })
 }

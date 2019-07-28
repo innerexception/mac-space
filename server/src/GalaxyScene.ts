@@ -2,7 +2,7 @@ import { Scene } from "phaser";
 import { StarSystems } from '../../client/data/StarSystems'
 import StarSystem from './ServerStarSystem'
 import WS from './WebsocketClient'
-import ServerMessages from "./ServerMessages";
+const ServerMessages = require('./ServerMessages.js')
 
 export default class GalaxyScene extends Scene {
 
