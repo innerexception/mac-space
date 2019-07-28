@@ -15,8 +15,8 @@ export default class ServerStarSystem extends Scene {
     constructor(config, assetList:Array<Asset>){
         super(config)
         this.assetList = assetList
-        this.name = config.name
-        console.log('star system '+config.name+' was booted.')
+        this.name = config.key
+        console.log('star system '+this.name+' is booting.')
     }
 
     preload = () =>

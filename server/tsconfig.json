@@ -4,7 +4,7 @@
         "allowJs": false,
         "outDir": "./dist",
         "removeComments": true,
-        "strict": true,
+        "strict": false,
         "sourceMap": true,
         "noImplicitAny": false,
         "moduleResolution": "node",
@@ -13,5 +13,5 @@
         "allowSyntheticDefaultImports": false,
         "experimentalDecorators": true,
     },
-    "include": ["src/**/*", "../*.d.ts"],
+    "include": ["src/**/*", "../*.d.ts", "server.ts"],
 }

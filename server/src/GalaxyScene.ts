@@ -1,19 +1,25 @@
 import { Scene } from "phaser";
 import { StarSystems } from '../../client/data/StarSystems'
 import StarSystem from './ServerStarSystem'
+import WS from './WebsocketClient'
+import ServerMessages from "./ServerMessages";
 
 
 export default class GalaxyScene extends Scene {
 
+    constructor(config,){
+      super(config)
+    }
+
     preload() {
-        //TODO: connect to wss instance from the headless browser
+
     }
       
     create() {
         
         //TODO: load up all the systems in the galaxy. In future, we want 1 server per system probs
         StarSystems.forEach((system)=>{
-          this.scene.add(system.name, new StarSystem({name:system.name}, system.assetList), true)
+          this.scene.add(system.name, new StarSystem({key:system.name}, system.assetList), true)
         })
 
 
@@ -131,3 +137,18 @@ export default class GalaxyScene extends Scene {
         });
       }
 }
+
+export const onWSMessage = (data) => {
+    const payload = JSON.parse(data.data)
+    console.log(payload)
+}
+export const onConnected = () => {
+    //TODO: connect to wss instance from the headless browser
+    server.publishMessage({type: ServerMessages.HEADLESS_CONNECT})
+}
+export const onConnectionError = () => {
+    //TODO: connect to wss instance from the headless browser
+    console.log('wtf----')
+}
+
+export const server = new WS()

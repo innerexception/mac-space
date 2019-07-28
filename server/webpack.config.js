@@ -7,9 +7,9 @@ module.exports = {
     output: {
         path: path.join(__dirname, './dist/'),
         filename: 'bootHeadless.js',
-        publicPath: './',
+        publicPath: './dist/',
     },
-    devtool: false,
+    devtool: 'eval-source-map',
     resolve: {extensions: ['.js', '.jsx', '.ts', '.tsx']},
     plugins: [
         new webpack.WatchIgnorePlugin([
@@ -42,7 +42,7 @@ module.exports = {
                 use: [{
                     loader: 'file-loader',
                     options: {
-                      outputPath: './',
+                      outputPath: './assets',
                     },
                   }]
             },

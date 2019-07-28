@@ -1,3 +1,4 @@
+const ServerMessages = require('./src/ServerMessages')
 const path = require('path');
 const jsdom = require('jsdom');
 const express = require('express');
@@ -85,48 +86,46 @@ wsServer.on('request', function(request) {
   connection.on('message', function(message) {
     if (message.type === 'utf8') { // accept only text
         var obj = JSON.parse(message.utf8Data)
-        var targetSession = sessions[obj.sessionId]
-        if(!targetSession && obj.type !== Constants.PLAYER_AVAILABLE) return
         switch(obj.type){
-          case Constants.PLAYER_AVAILABLE:
-            if(targetSession){
-              targetSession.players.push({...obj.currentUser, socketId})
-            }
-            else{
-              targetSession = {
-                players: [{...obj.currentUser, socketId}], 
-                ...obj.session, 
-                sessionId: obj.sessionId
-              }
-              console.log('created new session '+obj.sessionId)
-            }
-            break
-          case Constants.MATCH_UPDATE:
-            targetSession = {...targetSession, ...obj.session}
-            break
-          case Constants.PLAYER_REPLACE: 
-            var player = obj.player
-            targetSession.players = targetSession.players.filter(splayer=>splayer.id !== player.id)
-            targetSession.players.push(player)
-            break
-          case Constants.PLAYER_MAP_REPLACE: 
-            var player = obj.player
-            targetSession.map.forEach(row => row.forEach(tile => {
-                if(tile.playerId && tile.playerId === player.id) delete tile.playerId
-            }))
-            var tile = targetSession.map[player.x][player.y]
-            tile.playerId = player.id
-            delete tile.weapon
-            delete tile.item
-            targetSession.players = targetSession.players.filter(splayer=>splayer.id !== player.id)
-            targetSession.players.push(player)
-            break
-          case Constants.MATCH_TICK: 
-            targetSession.ticks++
-            break
+          case ServerMessages.HEADLESS_CONNECT: 
+            console.log('Headless client connected.')
+          // case Constants.PLAYER_AVAILABLE:
+          //   if(targetSession){
+          //     targetSession.players.push({...obj.currentUser, socketId})
+          //   }
+          //   else{
+          //     targetSession = {
+          //       players: [{...obj.currentUser, socketId}], 
+          //       ...obj.session, 
+          //       sessionId: obj.sessionId
+          //     }
+          //     console.log('created new session '+obj.sessionId)
+          //   }
+          //   break
+          // case Constants.MATCH_UPDATE:
+          //   targetSession = {...targetSession, ...obj.session}
+          //   break
+          // case Constants.PLAYER_REPLACE: 
+          //   var player = obj.player
+          //   targetSession.players = targetSession.players.filter(splayer=>splayer.id !== player.id)
+          //   targetSession.players.push(player)
+          //   break
+          // case Constants.PLAYER_MAP_REPLACE: 
+          //   var player = obj.player
+          //   targetSession.map.forEach(row => row.forEach(tile => {
+          //       if(tile.playerId && tile.playerId === player.id) delete tile.playerId
+          //   }))
+          //   var tile = targetSession.map[player.x][player.y]
+          //   tile.playerId = player.id
+          //   delete tile.weapon
+          //   delete tile.item
+          //   targetSession.players = targetSession.players.filter(splayer=>splayer.id !== player.id)
+          //   targetSession.players.push(player)
+          //   break
+          // case Constants.MATCH_TICK: 
+          //   targetSession.ticks++
+          //   break
         }
-        sessions[obj.sessionId] = targetSession
-        publishSessionUpdate(targetSession)
     }
   });
 
