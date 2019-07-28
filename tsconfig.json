@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "./build/",
+        "outDir": "./server/public/",
         "sourceMap": true,
         "noImplicitAny": false,
         "moduleResolution": "node",

@@ -2,14 +2,14 @@ const path = require('path')
 const webpack= require('webpack')
 module.exports = {
     entry: [
-        "./index.tsx"
+        "./src/index.ts"
     ],
     output: {
-        path: path.join(__dirname, './server/public/'),
-        filename: 'bundle.js',
-        publicPath: './',
+        path: path.join(__dirname, './dist/'),
+        filename: 'bootHeadless.js',
+        publicPath: './dist/',
     },
-    devtool: false,
+    devtool: 'eval-source-map',
     resolve: {extensions: ['.js', '.jsx', '.ts', '.tsx']},
     plugins: [
         new webpack.WatchIgnorePlugin([
@@ -42,7 +42,7 @@ module.exports = {
                 use: [{
                     loader: 'file-loader',
                     options: {
-                      outputPath: './',
+                      outputPath: './assets',
                     },
                   }]
             },

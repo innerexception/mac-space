@@ -1,4 +1,4 @@
-export const ApiUrl= 'ws://localhost:3335'
+export const ApiUrl= 'ws://localhost:8082'
 export const ReducerActions= {
     PLAYER_AVAILABLE: 'ma',
     MATCH_UPDATE: 'mu',
