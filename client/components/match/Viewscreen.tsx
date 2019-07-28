@@ -1,7 +1,7 @@
 import * as React from 'react'
 import * as Phaser from 'phaser'
 import StarSystem from '../util/StarSystem'
-import { Rigel } from '../../data/Systems';
+import { Rigel } from '../../data/StarSystems';
 
 interface Props {
     me: Player

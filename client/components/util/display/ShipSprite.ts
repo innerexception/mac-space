@@ -1,5 +1,4 @@
 import { GameObjects, Physics, Scene, } from "phaser";
-import Projectile from "./Projectile";
 import System from "../StarSystem";
 import { onTogglePlanetMenu } from "../../uiManager/Thunks";
 
@@ -21,7 +20,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         this.shipData = ship
         this.scaleX = 0.3
         this.scaleY = 0.3
-        this.setMaxVelocity(this.shipData.maxSpeed).setFriction(400, 400);
+        this.setMaxVelocity(ship.maxSpeed).setFriction(400, 400);
         this.thruster = this.scene.add.particles('jets').createEmitter({
             x: this.x,
             y: this.y,

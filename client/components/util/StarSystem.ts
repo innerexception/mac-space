@@ -1,9 +1,8 @@
 import { Scene, Cameras, GameObjects, Physics, } from "phaser";
-import { Arcturus, Rigel } from "../../data/Systems";
+import { Arcturus, Rigel } from "../../data/StarSystems";
 import Projectile from "./display/Projectile";
 import ShipSprite from "./display/ShipSprite";
 import { store } from "../../App";
-import * as Assets from '../../data/Assets'
 
 export default class StarSystem extends Scene {
 
@@ -12,6 +11,7 @@ export default class StarSystem extends Scene {
     activeShip: Ship
     planet: GameObjects.Sprite
     asteroids: Array<Physics.Arcade.Sprite>
+    resources: GameObjects.Group
     explosions: GameObjects.Group
     projectiles: GameObjects.Group
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
@@ -25,6 +25,7 @@ export default class StarSystem extends Scene {
         super(config)
         this.jumpVector = jumpVector
         this.assetList = assetList
+        console.log('star system '+config.name+' was booted.')
     }
 
     onReduxUpdate = () => {
@@ -60,20 +61,21 @@ export default class StarSystem extends Scene {
             frameRate: 20
         });
 
-        this.createStarfield();
-        this.addAsteroids();
-        this.planet = this.add.sprite(500,550,'planet')
         this.explosions = this.add.group()
 
         this.projectiles = this.physics.add.group({ classType: Projectile  })
         this.projectiles.runChildUpdate = true
-        this.physics.add.collider(this.projectiles, this.asteroids, this.playerShotAsteroid);
 
         //  Add a player ship
         this.activeShip = this.player.ships.find(ship=>ship.id===this.player.activeShipId)
         this.activeShip.sprite = new ShipSprite(this.scene.scene, 1600, 400, this.activeShip.asset, this.projectiles, true, this.activeShip);
+
+        this.createStarfield();
+        this.addAsteroids();
+        this.planet = this.add.sprite(500,550,'planet')
         
-        
+        this.physics.add.collider(this.projectiles, this.asteroids, this.playerShotAsteroid);
+
         if(this.jumpVector){
             this.activeShip.sprite.setVelocity(this.jumpVector.x*500, this.jumpVector.y*-500)
             this.activeShip.sprite.rotation = this.jumpVector.rotation
@@ -130,6 +132,9 @@ export default class StarSystem extends Scene {
 
     addAsteroids ()
     {
+        this.resources = this.add.group()
+        this.physics.add.collider(this.resources, this.activeShip.sprite, this.playerGotResource);
+
         let asteroids = []
         for(var i=0; i< 24; i++){
             asteroids.push(this.physics.add.sprite(0,0,'asteroid1')
@@ -161,6 +166,13 @@ export default class StarSystem extends Scene {
         this.asteroids = asteroids
     }
 
+    playerGotResource = (player:Physics.Arcade.Sprite, resource:GameObjects.Sprite) =>
+    {
+        resource.destroy();
+        //TODO
+        //onAddCargo(resource.data.values.type, resource.data.values.weight)
+    }
+
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:Projectile) =>
     {
         projectile.destroy();
@@ -170,6 +182,7 @@ export default class StarSystem extends Scene {
             this.explosions.get(asteroid.x, asteroid.y, 'boom').play('explode')
             asteroid.destroy()
             //TODO: spawn resources
+            this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
         }
     }
 

@@ -5,11 +5,11 @@ module.exports = {
         "./index.tsx"
     ],
     output: {
-        path: path.join(__dirname, './build'),
+        path: path.join(__dirname, './server/public/'),
         filename: 'bundle.js',
         publicPath: './',
     },
-    devtool: 'eval-source-map',
+    devtool: false,
     resolve: {extensions: ['.js', '.jsx', '.ts', '.tsx']},
     plugins: [
         new webpack.WatchIgnorePlugin([
