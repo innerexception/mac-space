@@ -56,8 +56,10 @@ var Constants = {
  * WebSocket server
  */
 
-var sessions = {};
 var sockets = {};
+var session = {
+  players: []
+}
 
 var wsServer = new WebSocketServer({
   // WebSocket server is tied to a HTTP server. WebSocket request is just
@@ -89,42 +91,16 @@ wsServer.on('request', function(request) {
         switch(obj.type){
           case ServerMessages.HEADLESS_CONNECT: 
             console.log('Headless client connected.')
-          // case Constants.PLAYER_AVAILABLE:
-          //   if(targetSession){
-          //     targetSession.players.push({...obj.currentUser, socketId})
-          //   }
-          //   else{
-          //     targetSession = {
-          //       players: [{...obj.currentUser, socketId}], 
-          //       ...obj.session, 
-          //       sessionId: obj.sessionId
-          //     }
-          //     console.log('created new session '+obj.sessionId)
-          //   }
-          //   break
-          // case Constants.MATCH_UPDATE:
-          //   targetSession = {...targetSession, ...obj.session}
-          //   break
-          // case Constants.PLAYER_REPLACE: 
-          //   var player = obj.player
-          //   targetSession.players = targetSession.players.filter(splayer=>splayer.id !== player.id)
-          //   targetSession.players.push(player)
-          //   break
-          // case Constants.PLAYER_MAP_REPLACE: 
-          //   var player = obj.player
-          //   targetSession.map.forEach(row => row.forEach(tile => {
-          //       if(tile.playerId && tile.playerId === player.id) delete tile.playerId
-          //   }))
-          //   var tile = targetSession.map[player.x][player.y]
-          //   tile.playerId = player.id
-          //   delete tile.weapon
-          //   delete tile.item
-          //   targetSession.players = targetSession.players.filter(splayer=>splayer.id !== player.id)
-          //   targetSession.players.push(player)
-          //   break
-          // case Constants.MATCH_TICK: 
-          //   targetSession.ticks++
-          //   break
+            session.serverSocketId = socketId
+            break
+          case ServerMessages.PLAYER_UPDATE:
+            console.log('Player '+obj.playerId+' sent event: '+obj.event)
+            publishToServer(obj.event)
+            break
+          case ServerMessages.SERVER_UPDATE:
+            console.log('Server 100ms update sent.')
+            publishToClients(obj.playerStates)
+            break
         }
     }
   });
@@ -133,37 +109,46 @@ wsServer.on('request', function(request) {
   connection.on('close', (code) => {
       console.log((new Date()) + "A Peer disconnected: "+code);
       // remove user from the list of connected clients
-      var sessionIds = Object.keys(sessions)
-      sessionIds.forEach((name) => {
-        let session = sessions[name]
-        let player = session.players.find((player) => player.socketId === socketId)
-        if(player){
-          console.log('removing player '+player.name+' from session '+name)
-          session.players = session.players.filter((rplayer) => rplayer.id !== player.id)
-          publishSessionUpdate(session)
-          delete sockets[socketId]
-          if(session.players.length === 0) {
-            delete sessions[name]
-            console.log('removed session '+name)
-          }
-        } 
-      })
+      let player = session.players.find((player) => player.socketId === socketId)
+      if(player){
+        console.log('removing player '+player.name+' from session '+name)
+        session.players = session.players.filter((rplayer) => rplayer.id !== player.id)
+        delete sockets[socketId]
+      }
   });
 });
 
-//TODO: no more blanket replace
-const publishSessionUpdate = (targetSession) => {
-  var message = getSessionUpdateMessage(targetSession)
-  // broadcast message to clients of session
-  var json = JSON.stringify({ type:'message', data: message });
-  targetSession.players.forEach((player) => {
+
+const publishToClients = (playerStates) => {
+  session.players.forEach((player) => {
+    var message = getPlayerUpdateMessage(playerStates[player.id])
+    var json = JSON.stringify({ type:'message', data: message });
       sockets[player.socketId].sendUTF(json);
   })
 }
 
-const getSessionUpdateMessage = (targetSession) => {
+const publishToServer = (playerEvent) => {
+  var message = getPlayerEventMessage(playerEvent)
+  // broadcast player's message to the headless phaser server
+  var json = JSON.stringify({ type:'message', data: message });
+  sockets[session.serverSocketId].sendUTF(json);
+}
+
+//An event a player claims to have done: 
+//rotate, fire, thrust, land, jump, or any non-physics transaction
+const getPlayerEventMessage = (playerEvent) => {
   return JSON.stringify({
-    type: Constants.MATCH_UPDATE,
-    session: targetSession
+    type: ServerMessages.PLAYER_EVENT,
+    playerEvent
+  })
+}
+
+//The 100ms state update for each player. 
+//Contains entire star system snapshot: stellar objects, ships, projectiles
+//Clients will validate against these, and potentially be corrected.
+const getPlayerUpdateMessage = (playerState) => {
+  return JSON.stringify({
+    type: ServerMessages.MATCH_UPDATE,
+    playerState: playerState
   })
 }

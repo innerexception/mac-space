@@ -4,7 +4,6 @@ import StarSystem from './ServerStarSystem'
 import WS from './WebsocketClient'
 import ServerMessages from "./ServerMessages";
 
-
 export default class GalaxyScene extends Scene {
 
     constructor(config,){
@@ -140,7 +139,7 @@ export default class GalaxyScene extends Scene {
 
 export const onWSMessage = (data) => {
     const payload = JSON.parse(data.data)
-    console.log(payload)
+    console.log('mmmmmm')
 }
 export const onConnected = () => {
     //TODO: connect to wss instance from the headless browser
