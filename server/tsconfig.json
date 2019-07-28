@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "allowJs": false,
+        "outDir": "./dist",
+        "removeComments": true,
+        "strict": false,
+        "sourceMap": true,
+        "noImplicitAny": false,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "strictNullChecks": false,
+        "allowSyntheticDefaultImports": false,
+        "experimentalDecorators": true,
+    },
+    "include": ["src/**/*", "../*.d.ts", "server.ts"],
+}
