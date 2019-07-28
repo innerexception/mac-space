@@ -21,7 +21,6 @@ export default class GalaxyScene extends Scene {
           this.scene.add(system.name, new StarSystem({key:system.name}, system.assetList), true)
         })
 
-
         // this.star = this.physics.add.image(randomPosition(700), randomPosition(500), 'star');
         // this.physics.add.collider(this.players);
       
@@ -110,31 +109,31 @@ export default class GalaxyScene extends Scene {
     }
       
       //Player sent input command
-    handlePlayerInput(self, playerId, input) {
-        self.players.getChildren().forEach((player) => {
-          if (playerId === player.playerId) {
-            //players[player.playerId].input = input;
-          }
-        });
-      }
+    // handlePlayerInput(self, playerId, input) {
+    //     self.players.getChildren().forEach((player) => {
+    //       if (playerId === player.playerId) {
+    //         //players[player.playerId].input = input;
+    //       }
+    //     });
+    //   }
       
-      //Player sent entered event
-    addPlayer(self, playerInfo) {
-        const player = self.physics.add.image(playerInfo.x, playerInfo.y, 'ship').setOrigin(0.5, 0.5).setDisplaySize(53, 40);
-        player.setDrag(100);
-        player.setAngularDrag(100);
-        player.setMaxVelocity(200);
-        player.playerId = playerInfo.playerId;
-        self.players.add(player);
-      }
-      //Player sent leave event
-    removePlayer(self, playerId) {
-        self.players.getChildren().forEach((player) => {
-          if (playerId === player.playerId) {
-            player.destroy();
-          }
-        });
-      }
+    //   //Player sent entered event
+    // addPlayer(self, playerInfo) {
+    //     const player = self.physics.add.image(playerInfo.x, playerInfo.y, 'ship').setOrigin(0.5, 0.5).setDisplaySize(53, 40);
+    //     player.setDrag(100);
+    //     player.setAngularDrag(100);
+    //     player.setMaxVelocity(200);
+    //     player.playerId = playerInfo.playerId;
+    //     self.players.add(player);
+    //   }
+    //   //Player sent leave event
+    // removePlayer(self, playerId) {
+    //     self.players.getChildren().forEach((player) => {
+    //       if (playerId === player.playerId) {
+    //         player.destroy();
+    //       }
+    //     });
+    //   }
 }
 
 export const onWSMessage = (data) => {
