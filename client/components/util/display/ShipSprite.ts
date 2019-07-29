@@ -1,6 +1,8 @@
 import { GameObjects, Physics, Scene, } from "phaser";
 import System from "../StarSystem";
 import { onTogglePlanetMenu } from "../../uiManager/Thunks";
+import { server } from "../../../App";
+import { ServerMessages, PlayerEvents } from "../../../../enum";
 
 export default class ShipSprite extends Physics.Arcade.Sprite {
 
@@ -94,6 +96,10 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         const projectile = this.projectiles.get().setActive(true).setVisible(true)
         if(projectile){
             projectile.fire(this)
+            server.publishMessage({ 
+                type: ServerMessages.PLAYER_EVENT, 
+                event: { shipId: this.shipData.id, type: PlayerEvents.FIRE_PRIMARY }
+            })
         }
     }
 
@@ -108,10 +114,28 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             if (this.cursors.left.isDown)
             {
                 this.rotation -= this.shipData.turn
+                server.publishMessage({ 
+                    type: ServerMessages.PLAYER_EVENT, 
+                    event: { 
+                        shipId: this.shipData.id, 
+                        type: PlayerEvents.ROTATE, 
+                        expectedValue: this.rotation, 
+                        sequence: Date.now() 
+                    }
+                })
             }
             else if (this.cursors.right.isDown)
             {
                 this.rotation += this.shipData.turn
+                server.publishMessage({ 
+                    type: ServerMessages.PLAYER_EVENT, 
+                    event: { 
+                        shipId: this.shipData.id, 
+                        type: PlayerEvents.ROTATE, 
+                        expectedValue: this.rotation, 
+                        sequence: Date.now() 
+                    }
+                })
             }
 
             if (this.cursors.up.isDown)
@@ -119,10 +143,26 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
                 let vector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
                 this.setAcceleration(vector.x*this.shipData.maxSpeed, vector.y*-this.shipData.maxSpeed); //negative b/c y is inverted in crazyland
                 this.thruster.emitParticle(16);
+                server.publishMessage({
+                    type: ServerMessages.PLAYER_EVENT, 
+                    event: { 
+                        shipId: this.shipData.id, 
+                        type: PlayerEvents.THRUST,
+                        sequence: Date.now() 
+                    }
+                })
             }
-            else {
+            else if((this.body as any).acceleration.x !== 0 || (this.body as any).acceleration.y !== 0) {
                 this.thruster.stop()
                 this.setAcceleration(0,0)
+                server.publishMessage({
+                    type: ServerMessages.PLAYER_EVENT, 
+                    event: { 
+                        shipId: this.shipData.id, 
+                        type: PlayerEvents.THRUST_OFF,
+                        sequence: Date.now() 
+                    }
+                })
             }
         }
         else if(this.landingSequence){

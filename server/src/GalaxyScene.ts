@@ -78,7 +78,7 @@ export default class GalaxyScene extends Scene {
         // });
       }
       
-    update() {
+    update(time, delta) {
       //TODO: a delta is applied here such that message broadcast only happens once every 100ms
 
 
@@ -138,7 +138,7 @@ export default class GalaxyScene extends Scene {
 
 export const onWSMessage = (data) => {
     const payload = JSON.parse(data.data)
-    console.log('mmmmmm')
+    console.log("I got it: "+payload)
 }
 export const onConnected = () => {
     //TODO: connect to wss instance from the headless browser

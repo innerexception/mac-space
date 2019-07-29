@@ -182,7 +182,7 @@ export default class StarSystem extends Scene {
             this.explosions.get(asteroid.x, asteroid.y, 'boom').play('explode')
             asteroid.destroy()
             //TODO: spawn resources
-            this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
+            //this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
         }
     }
 

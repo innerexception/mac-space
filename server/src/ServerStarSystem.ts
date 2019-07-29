@@ -42,7 +42,7 @@ export default class ServerStarSystem extends Scene {
     
     update = (time, delta) =>
     {
-        //use delta to fire position updates at 100ms interval for client reconciliation
+        //TODO: use delta to fire position updates at 100ms interval for client reconciliation
     }
 
     addAsteroids ()

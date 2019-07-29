@@ -20,3 +20,17 @@ export const ReducerActions= {
     PLAYER_REPLACE: 'prp',
     OPEN_PLANET: 'op'
 }
+
+export const ServerMessages = {
+    HEADLESS_CONNECT: 'hct',
+    PLAYER_EVENT_ACK: 'pea',
+    PLAYER_EVENT: 'pe',
+    SERVER_UPDATE: 'su'
+}
+
+export const PlayerEvents = { 
+    ROTATE: 'ro',
+    THRUST_OFF: 'to',
+    THRUST: 't',
+    FIRE_PRIMARY: 'fp'
+}
