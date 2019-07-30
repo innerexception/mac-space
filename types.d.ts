@@ -7,6 +7,20 @@ declare enum Direction {
     DOWN, UP, FORWARD, REVERSE, RIGHT, LEFT
 }
 
+declare enum PlayerEvents { 
+    ROTATE= 'ro',
+    THRUST_OFF= 'to',
+    THRUST= 't',
+    FIRE_PRIMARY= 'fp'
+}
+
+declare enum ServerMessages {
+    HEADLESS_CONNECT= 'hct',
+    PLAYER_EVENT_ACK= 'pea',
+    PLAYER_EVENT= 'pe',
+    SERVER_UPDATE= 'su'
+}
+
 interface Tuple {
     x: number
     y: number
@@ -32,6 +46,11 @@ interface ShipSprite extends Phaser.Physics.Arcade.Sprite {
     startJumpSequence(targetSystem:SystemState)
     firePrimary()
     fireSecondary()
+    rotate(rotation:number)
+    thrust()
+    thrustOff()
+    landingSequence: boolean
+    applyUpdate(update:ShipUpdate)
 }
 
 interface Ship {
@@ -86,12 +105,75 @@ interface SystemState {
     assetList: Array<Asset>
 }
 
+interface JumpVector {
+    x:number,
+    y:number,
+    rotation: number,
+    startX?: number,
+    startY?: number
+}
+
+interface ServerSystemUpdate {
+    ships: Map<string, ShipUpdate>
+    asteroids: Map<string, AsteroidUpdate>
+}
+
+interface AsteroidUpdate {
+    x: number
+    y: number
+    hp: number
+    id:string
+    type: 'Iron'|'Silver'|'Platinum',
+}
+
+interface ShipUpdate {
+    id: string
+    type: PlayerEvents
+    sequence: number
+    shipData: ShipDataOnly
+}
+
+interface ShipDataOnly {
+    x: number
+    y: number
+    rotation: number
+    acceleration: Tuple
+    name: string
+    id:string
+    shields: number
+    armor: number
+    hull: number
+    fuel: number
+    maxFuel: number
+    energy: number
+    maxEnergy: number
+    heat: number
+    maxHeat: number
+    fighters: Array<ShipDataOnly>
+    turn: number
+    accel: number
+    speed: number
+    maxSpeed: number
+    cargoSpace: number
+    maxCargoSpace: number
+    gunMounts: number
+    turrentMounts: number
+    hardPoints: number
+    guns: Array<Gun>
+    asset: string
+    jumpVector: JumpVector
+}
+
+interface ServerMessage {
+    type: ServerMessages
+    event: ShipUpdate | AsteroidUpdate
+}
+
 interface StellarObjectConfig {
-    name: string,
     x: number,
     y: number,
     asset: string,
-    landable: boolean
+    landable?: boolean
 }
 
 interface AsteroidConfig {

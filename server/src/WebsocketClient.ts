@@ -27,7 +27,7 @@ export default class WebsocketClient {
         this.websocket.close()
     }
 
-    publishMessage= (msg:any) => {
+    publishMessage= (msg:ServerMessage) => {
       var message = JSON.stringify(msg)
       if(message) {
           this.websocket.send(message);

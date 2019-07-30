@@ -99,7 +99,7 @@ wsServer.on('request', function(request) {
             break
           case ServerMessages.PLAYER_EVENT_ACK: 
             console.log('Server ACK player event: '+obj.event + ', seq: '+obj.sequence)
-            publishToPlayer(obj.event)
+            publishToPlayers(obj.event)
             break
           case ServerMessages.SERVER_UPDATE:
             console.log('Server 100ms update sent.')

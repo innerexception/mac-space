@@ -1,27 +1,32 @@
 import { Scene, GameObjects, Physics, } from "phaser";
 import Projectile from '../../client/components/util/display/Projectile'
 import ShipSprite from './ServerShipSprite'
+import WebsocketClient from "./WebsocketClient";
+import v4 from 'uuid'
 
 export default class ServerStarSystem extends Scene {
 
-    ships: Array<Physics.Arcade.Sprite>
+    ships: Map<string,Ship>
     planets: Array<GameObjects.Sprite>
-    asteroids: Array<Physics.Arcade.Sprite>
+    asteroids: Map<string, Physics.Arcade.Sprite>
     resources: GameObjects.Group
     projectiles: GameObjects.Group
     name: string
-    assetList: Array<Asset>
+    server: WebsocketClient
+    jumpVector: JumpVector
+    state:SystemState
 
-    constructor(config, assetList:Array<Asset>){
+    constructor(config, state:SystemState, server:WebsocketClient){
         super(config)
-        this.assetList = assetList
+        this.state = state
         this.name = config.key
+        this.server = server
         console.log('star system '+this.name+' is booting.')
     }
 
     preload = () =>
     {
-        this.assetList.forEach(asset=>{
+        this.state.assetList.forEach(asset=>{
             (this.load[asset.type] as any)(asset.key, asset.resource, asset.data)
         })
     }
@@ -33,52 +38,72 @@ export default class ServerStarSystem extends Scene {
 
         this.projectiles = this.physics.add.group({ classType: Projectile  })
         this.projectiles.runChildUpdate = true
-
-        this.asteroids = this.addAsteroids();
-        this.planets = [this.add.sprite(500,550,'planet')]
         
-        this.physics.add.collider(this.projectiles, this.asteroids, this.playerShotAsteroid);
+        this.addAsteroids()
+        this.addPlanets()
+        
+        let temp = []
+        this.asteroids.forEach(roid=>temp.push(roid))
+        this.physics.add.collider(this.projectiles, temp, this.playerShotAsteroid);
     }
     
     update = (time, delta) =>
     {
         //TODO: use delta to fire position updates at 100ms interval for client reconciliation
+        if(delta%100===0){
+            this.server.publishMessage({
+                type: ServerMessages.SERVER_UPDATE,
+                event: {
+
+                }
+            })
+        }
     }
 
-    addAsteroids ()
-    {
-        this.resources = this.add.group()
-        this.physics.add.collider(this.resources, this.ships, this.playerGotResource);
+    onPlayerRequestUpdate = (update:ShipUpdate) => {
+        //perform change on entity TODO: maybe also send acks if needed
+        
+    }
 
-        let asteroids = []
-        for(var i=0; i< 24; i++){
-            asteroids.push(this.physics.add.sprite(0,0,'asteroid1')
-                .setScale(Phaser.Math.FloatBetween(0.8,0.1))
-                .setRotation(Phaser.Math.FloatBetween(3,0.1)))
-        }
-        for(var i=0; i< 48; i++){
-            asteroids.push(this.physics.add.sprite(0,0,'asteroid2')
-                .setScale(Phaser.Math.FloatBetween(0.8,0.1))
-                .setRotation(Phaser.Math.FloatBetween(3,0.1)))
-        }
-
-        var rect = new Phaser.Geom.Ellipse(1600, 1600, 1000, 1000);
-        Phaser.Actions.RandomEllipse(asteroids, rect);
-
-        asteroids.forEach((sprite:Physics.Arcade.Sprite)=>{
-            let d=Phaser.Math.Between(700,1000)
-            let r=Phaser.Math.FloatBetween(-0.01,0.1)
-            sprite.setData('hp', 3)
-            this.time.addEvent({
-                delay: 1, 
-                callback: ()=>{
-                    sprite.rotation+=r
-                    Phaser.Actions.RotateAroundDistance([sprite], { x: 1600, y: 1600 }, 0.001, d)
-                },
-                loop: true 
-            });
+    addPlanets = () => {
+        let planets = []
+        this.state.stellarObjects.forEach(obj=>{
+            planets.push(this.add.sprite(obj.x, obj.y, obj.asset))
         })
-        return asteroids
+        this.planets = planets
+    }
+
+    addAsteroids()
+    {
+        let asteroids = new Map()
+        this.state.asteroidConfig.forEach(aConfig=> {
+            for(var i=0; i< aConfig.density*20; i++){
+                let id = v4()
+                asteroids.set(id, this.spawnAsteroid(id, aConfig.type))
+            }
+            
+            let arr = []
+            asteroids.forEach(roid=>arr.push(roid))
+
+            if(aConfig.isBelt)
+                Phaser.Actions.RandomEllipse(arr, new Phaser.Geom.Ellipse(1600, 1600, 1000, 1000));
+            else
+                Phaser.Actions.RandomRectangle(arr, new Phaser.Geom.Rectangle(0, 0, 3200, 3200));
+                    
+            asteroids.forEach((sprite:Physics.Arcade.Sprite)=>{
+                let d=Phaser.Math.Between(700,1000)
+                let r=Phaser.Math.FloatBetween(-0.01,0.1)
+                this.time.addEvent({
+                    delay: 1, 
+                    callback: ()=>{
+                        sprite.rotation+=r
+                        Phaser.Actions.RotateAroundDistance([sprite], { x: 1600, y: 1600 }, 0.001, d)
+                    },
+                    loop: true 
+                });
+            })              
+        })
+        this.asteroids = asteroids
     }
 
     playerRotateLeft = (player:Player) => {

@@ -12,6 +12,10 @@
         "strictNullChecks": false,
         "allowSyntheticDefaultImports": false,
         "experimentalDecorators": true,
+        "lib": [
+            "dom",
+            "es7"
+        ]
     },
     "include": ["src/**/*", "../*.d.ts", "server.ts"],
 }
