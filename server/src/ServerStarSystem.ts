@@ -1,29 +1,38 @@
 import { Scene, GameObjects, Physics, } from "phaser";
 import Projectile from '../../client/components/util/display/Projectile'
 import ShipSprite from './ServerShipSprite'
+import WebsocketClient from "./WebsocketClient";
+import * as Ships from '../../client/data/Ships'
+import { v4 } from 'uuid'
+import { PlayerEvents } from "../../enum";
 
 export default class ServerStarSystem extends Scene {
 
-    ships: Array<Physics.Arcade.Sprite>
+    ships: Map<string,Ship>
     planets: Array<GameObjects.Sprite>
-    asteroids: Array<Physics.Arcade.Sprite>
-    resources: GameObjects.Group
+    asteroids: Map<string, Physics.Arcade.Sprite>
     projectiles: GameObjects.Group
     name: string
-    assetList: Array<Asset>
+    server: WebsocketClient
+    jumpVector: JumpVector
+    state:SystemState
 
-    constructor(config, assetList:Array<Asset>){
+    constructor(config, state:SystemState, server:WebsocketClient){
         super(config)
-        this.assetList = assetList
+        this.state = state
         this.name = config.key
-        console.log('star system '+this.name+' is booting.')
+        this.server = server
+        this.planets = []
+        this.asteroids = new Map()
+        this.ships = new Map()
     }
 
     preload = () =>
     {
-        this.assetList.forEach(asset=>{
+        this.state.assetList.forEach(asset=>{
             (this.load[asset.type] as any)(asset.key, asset.resource, asset.data)
         })
+        console.log('star system '+this.name+' was booted.')
     }
     
     create = () =>
@@ -33,74 +42,109 @@ export default class ServerStarSystem extends Scene {
 
         this.projectiles = this.physics.add.group({ classType: Projectile  })
         this.projectiles.runChildUpdate = true
-
-        this.asteroids = this.addAsteroids();
-        this.planets = [this.add.sprite(500,550,'planet')]
         
-        this.physics.add.collider(this.projectiles, this.asteroids, this.playerShotAsteroid);
+        this.addAsteroids()
+        this.addPlanets()
+        
+        let temp = []
+        this.asteroids.forEach(roid=>temp.push(roid))
+        this.physics.add.collider(this.projectiles, temp, this.playerShotAsteroid);
     }
     
     update = (time, delta) =>
     {
-        //TODO: use delta to fire position updates at 100ms interval for client reconciliation
+        
     }
 
-    addAsteroids ()
-    {
-        this.resources = this.add.group()
-        this.physics.add.collider(this.resources, this.ships, this.playerGotResource);
-
-        let asteroids = []
-        for(var i=0; i< 24; i++){
-            asteroids.push(this.physics.add.sprite(0,0,'asteroid1')
-                .setScale(Phaser.Math.FloatBetween(0.8,0.1))
-                .setRotation(Phaser.Math.FloatBetween(3,0.1)))
+    onApplyPlayerUpdate = (update:ShipUpdate) => {
+        //perform change on entity TODO: maybe also send acks if needed
+        let ship = this.ships.get(update.shipData.id)
+        if(ship){
+            switch(update.type){
+                case PlayerEvents.FIRE_PRIMARY: 
+                    ship.sprite.firePrimary()
+                    break
+                case PlayerEvents.ROTATE_L: 
+                    ship.sprite.rotateLeft()
+                    break
+                case PlayerEvents.ROTATE_R: 
+                    ship.sprite.rotateRight()
+                    break
+                case PlayerEvents.THRUST: 
+                    ship.sprite.thrust()
+                    break
+                case PlayerEvents.THRUST_OFF: 
+                    ship.sprite.thrustOff()
+                    break
+            }
         }
-        for(var i=0; i< 48; i++){
-            asteroids.push(this.physics.add.sprite(0,0,'asteroid2')
-                .setScale(Phaser.Math.FloatBetween(0.8,0.1))
-                .setRotation(Phaser.Math.FloatBetween(3,0.1)))
+        else if(update.type === PlayerEvents.PLAYER_SPAWNED){
+            console.log('ship spawned at '+update.shipData.x+','+update.shipData.y)
+            this.spawnShip(update.shipData, {x: update.shipData.x, y: update.shipData.y, rotation: update.shipData.rotation })
         }
+    }
 
-        var rect = new Phaser.Geom.Ellipse(1600, 1600, 1000, 1000);
-        Phaser.Actions.RandomEllipse(asteroids, rect);
-
-        asteroids.forEach((sprite:Physics.Arcade.Sprite)=>{
-            let d=Phaser.Math.Between(700,1000)
-            let r=Phaser.Math.FloatBetween(-0.01,0.1)
-            sprite.setData('hp', 3)
-            this.time.addEvent({
-                delay: 1, 
-                callback: ()=>{
-                    sprite.rotation+=r
-                    Phaser.Actions.RotateAroundDistance([sprite], { x: 1600, y: 1600 }, 0.001, d)
-                },
-                loop: true 
-            });
+    addPlanets = () => {
+        let planets = []
+        this.state.stellarObjects.forEach(obj=>{
+            planets.push(this.add.sprite(obj.x, obj.y, obj.asset))
         })
-        return asteroids
+        this.planets = planets
     }
 
-    playerRotateLeft = (player:Player) => {
-        //TODO: message
+    addAsteroids()
+    {
+        let asteroids = new Map()
+        let roidRay = []
+        this.state.asteroidConfig.forEach(aConfig=> {
+            for(var i=0; i< aConfig.density*20; i++){
+                let id = v4()
+                asteroids.set(id, this.spawnAsteroid(id, aConfig.type))
+            }
+            
+            let arr = []
+            asteroids.forEach(roid=>arr.push(roid))
+
+            if(aConfig.isBelt)
+                Phaser.Actions.RandomEllipse(arr, new Phaser.Geom.Ellipse(1600, 1600, 1000, 1000));
+            else
+                Phaser.Actions.RandomRectangle(arr, new Phaser.Geom.Rectangle(0, 0, 3200, 3200));
+                    
+            asteroids.forEach((sprite:Physics.Arcade.Sprite)=>{
+                let d=Phaser.Math.Between(700,1000)
+                let r=Phaser.Math.FloatBetween(-0.01,0.1)
+                this.time.addEvent({
+                    delay: 1, 
+                    callback: ()=>{
+                        sprite.rotation+=r
+                        Phaser.Actions.RotateAroundDistance([sprite], { x: 1600, y: 1600 }, 0.001, d)
+                    },
+                    loop: true 
+                });
+                roidRay.push(sprite)
+            })              
+        })
+        this.asteroids = asteroids
     }
 
-    playerRotateRight = (player:Player) => {
-        //TODO: message
+    spawnAsteroid = (id:string, type:string) => {
+        //Position will be set shortly
+        return this.physics.add.sprite(0,0,type)
+            .setData('hp', 3)
+            .setData('id', id)
+            .setData('type', type)
+            .setScale(Phaser.Math.FloatBetween(0.8,0.1))
+            .setRotation(Phaser.Math.FloatBetween(3,0.1))
     }
 
-    playerThrust = (player:Player) => {
-        //TODO: message
-    }
-
-    playerEntered = (player:Player, jumpVector:Tuple) => {
-        //TODO: send player entered system message with player id and entry vector
-        //  Add ships that exist
-        const activeShip = player.ships.find(ship=>ship.id===player.activeShipId)
-        activeShip.sprite = new ShipSprite(this.scene.scene, 1600, 400, activeShip.asset, this.projectiles, activeShip);
-        activeShip.sprite.setVelocity(jumpVector.x*500, jumpVector.y*-500)
-        activeShip.sprite.rotation = jumpVector.rotation
-        this.ships.push(activeShip.sprite)
+    spawnShip = (ship:ShipDataOnly, spawnPoint:PlayerSpawnPoint) => {
+        let thisShip = {...Ships[ship.name], ...ship}
+        thisShip.sprite = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, ship.asset, this.projectiles, thisShip)
+        
+        //Can spawn from a planet or some edge if jumping in
+        //thisShip.sprite.setVelocity(spawnPoint.xVelocity*ship.maxSpeed, spawnPoint.yVelocity*-ship.maxSpeed)
+        thisShip.sprite.rotation = spawnPoint.rotation
+        this.ships.set(ship.id, thisShip)
     }
 
     playerLeft = (player:Player) => {
@@ -121,8 +165,8 @@ export default class ServerStarSystem extends Scene {
         //TODO: send asteroid hp reduction message with id of projectile to destroy also
 
         if(asteroid.data.values.hp <= 0){
-            asteroid.destroy()
-            this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
+            // asteroid.destroy()
+            // this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
             //TODO: send spawn resources message with id of asteroid to destroy also
         }
     }

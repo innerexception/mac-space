@@ -5,8 +5,6 @@ import { createStore, applyMiddleware } from 'redux'
 import appReducer from '../client/components/uiManager/UIManagerReducer'
 import { Provider } from 'react-redux'
 const thunkMiddleware = require('redux-thunk')
-import WS from './WebsocketClient'
-export const server = new WS()
 
 export const store = createStore(appReducer, applyMiddleware(
     thunkMiddleware // lets us dispatch() functions

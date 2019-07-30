@@ -7,6 +7,23 @@ declare enum Direction {
     DOWN, UP, FORWARD, REVERSE, RIGHT, LEFT
 }
 
+declare enum PlayerEvents { 
+    ROTATE_L= 'rl',
+    ROTATE_R= 'rr',
+    THRUST_OFF= 'to',
+    THRUST= 't',
+    FIRE_PRIMARY= 'fp',
+    SERVER_STATE= 'ss',
+    PLAYER_SPAWNED= 'ps'
+}
+
+declare enum ServerMessages {
+    HEADLESS_CONNECT= 'hct',
+    PLAYER_EVENT_ACK= 'pea',
+    PLAYER_EVENT= 'pe',
+    SERVER_UPDATE= 'su'
+}
+
 interface Tuple {
     x: number
     y: number
@@ -22,6 +39,14 @@ interface Player {
     notoriety: number
 }
 
+interface PlayerSpawnPoint {
+    x: number
+    y: number
+    rotation: number
+    xVelocity?: number
+    yVelocity?: number
+}
+
 interface Faction {
     name: string
     reputation: number
@@ -32,6 +57,13 @@ interface ShipSprite extends Phaser.Physics.Arcade.Sprite {
     startJumpSequence(targetSystem:SystemState)
     firePrimary()
     fireSecondary()
+    rotateRight()
+    rotateLeft()
+    thrust()
+    thrustOff()
+    landingSequence: boolean
+    applyUpdate(update:ShipUpdate)
+    sendSpawnUpdate()
 }
 
 interface Ship {
@@ -86,12 +118,75 @@ interface SystemState {
     assetList: Array<Asset>
 }
 
+interface JumpVector {
+    x:number,
+    y:number,
+    rotation: number,
+    startX?: number,
+    startY?: number
+}
+
+interface ServerSystemUpdate {
+    ships: Array<ShipUpdate>
+    asteroids: Array<AsteroidUpdate>
+}
+
+interface AsteroidUpdate {
+    x: number
+    y: number
+    hp: number
+    id:string
+    type: 'Iron'|'Silver'|'Platinum',
+}
+
+interface ShipUpdate {
+    type: PlayerEvents
+    sequence: number
+    shipData: ShipDataOnly
+}
+
+interface ShipDataOnly {
+    x: number
+    y: number
+    rotation: number
+    acceleration: Tuple
+    name: string
+    id:string
+    shields: number
+    armor: number
+    hull: number
+    fuel: number
+    maxFuel: number
+    energy: number
+    maxEnergy: number
+    heat: number
+    maxHeat: number
+    fighters: Array<ShipDataOnly>
+    turn: number
+    accel: number
+    speed: number
+    maxSpeed: number
+    cargoSpace: number
+    maxCargoSpace: number
+    gunMounts: number
+    turrentMounts: number
+    hardPoints: number
+    guns: Array<Gun>
+    asset: string
+    jumpVector: JumpVector
+}
+
+interface ServerMessage {
+    type: ServerMessages
+    system: string
+    event: ShipUpdate | AsteroidUpdate | ServerSystemUpdate
+}
+
 interface StellarObjectConfig {
-    name: string,
     x: number,
     y: number,
     asset: string,
-    landable: boolean
+    landable?: boolean
 }
 
 interface AsteroidConfig {

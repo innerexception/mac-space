@@ -2,6 +2,8 @@ import * as React from 'react'
 import * as Phaser from 'phaser'
 import StarSystem from '../util/StarSystem'
 import { Rigel } from '../../data/StarSystems';
+import WebsocketClient from '../../WebsocketClient'
+const server = new WebsocketClient()
 
 interface Props {
     me: Player
@@ -27,18 +29,9 @@ export default class Viewscreen extends React.Component<Props, State> {
             height: this.state.containerRef.current.clientHeight,
             parent: 'canvasEl',
             physics: {
-                default: 'arcade',
-                impact: {
-                    setBounds: {
-                        x: 0,
-                        y: 0,
-                        width: 3200,
-                        height: 600,
-                        thickness: 32
-                    }
-                }
+                default: 'arcade'
             },
-            scene: [new StarSystem({}, Rigel.assetList)]
+            scene: [new StarSystem({key:Rigel.name, server:server, initialState: Rigel})]
         });
         window.addEventListener("resize", ()=>{
             let game = (this.state.phaserInstance as Phaser.Game)

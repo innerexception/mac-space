@@ -1,152 +1,101 @@
-import { Scene } from "phaser";
+import { Scene, Physics } from "phaser";
 import { StarSystems } from '../../client/data/StarSystems'
 import StarSystem from './ServerStarSystem'
-import WS from './WebsocketClient'
-const ServerMessages = require('./ServerMessages.js')
+import ServerStarSystem from "./ServerStarSystem";
+import WebsocketClient from "./WebsocketClient";
+import { ServerMessages, PlayerEvents } from "../../enum";
 
 export default class GalaxyScene extends Scene {
 
-    constructor(config,){
+    server: WebsocketClient
+    scenes: Array<string>
+    playerUpdates: Array<ShipUpdate>
+    frameLengthMs: number
+
+    constructor(config, server:WebsocketClient){
       super(config)
+      this.scenes = StarSystems.map(system=>system.name)
+      this.server = new WebsocketClient(this.onWSMessage, this.onConnected, this.onConnectionError)
+      this.frameLengthMs = 100
+      this.playerUpdates = []
     }
 
-    preload() {
-
-    }
-      
     create() {
-        
         //TODO: load up all the systems in the galaxy. In future, we want 1 server per system probs
         StarSystems.forEach((system)=>{
-          this.scene.add(system.name, new StarSystem({key:system.name}, system.assetList), true)
+          this.scene.add(system.name, new StarSystem({key:system.name}, system, this.server), true)
         })
-
-        // this.star = this.physics.add.image(randomPosition(700), randomPosition(500), 'star');
-        // this.physics.add.collider(this.players);
-      
-        // this.physics.add.overlap(this.players, this.star, function (star, player) {
-        //   if (players[player.playerId].team === 'red') {
-        //     self.scores.red += 10;
-        //   } else {
-        //     self.scores.blue += 10;
-        //   }
-        //   self.star.setPosition(randomPosition(700), randomPosition(500));
-        //   io.emit('updateScore', self.scores);
-        //   io.emit('starLocation', { x: self.star.x, y: self.star.y });
-        // });
-      
-        // io.on('connection', function (socket) {
-        //   console.log('a user connected');
-        //   // create a new player and add it to our players object
-        //   players[socket.id] = {
-        //     rotation: 0,
-        //     x: Math.floor(Math.random() * 700) + 50,
-        //     y: Math.floor(Math.random() * 500) + 50,
-        //     playerId: socket.id,
-        //     team: (Math.floor(Math.random() * 2) == 0) ? 'red' : 'blue',
-        //     input: {
-        //       left: false,
-        //       right: false,
-        //       up: false
-        //     }
-        //   };
-        //   // add player to server
-        //   addPlayer(self, players[socket.id]);
-        //   // send the players object to the new player
-        //   socket.emit('currentPlayers', players);
-        //   // update all other players of the new player
-        //   socket.broadcast.emit('newPlayer', players[socket.id]);
-        //   // send the star object to the new player
-        //   socket.emit('starLocation', { x: self.star.x, y: self.star.y });
-        //   // send the current scores
-        //   socket.emit('updateScore', self.scores);
-      
-        //   socket.on('disconnect', function () {
-        //     console.log('user disconnected');
-        //     // remove player from server
-        //     removePlayer(self, socket.id);
-        //     // remove this player from our players object
-        //     delete players[socket.id];
-        //     // emit a message to all players to remove this player
-        //     io.emit('disconnect', socket.id);
-        //   });
-      
-        //   // when a player moves, update the player data
-        //   socket.on('playerInput', function (inputData) {
-        //     handlePlayerInput(self, socket.id, inputData);
-        //   });
-        // });
-      }
-      
-    update(time, delta) {
-      //TODO: a delta is applied here such that message broadcast only happens once every 100ms
-
-
-      //However the physics simulation still runs at 60fps
-      //   this.players.getChildren().forEach((player) => {
-      //     const input = players[player.playerId].input;
-      //     if (input.left) {
-      //       player.setAngularVelocity(-300);
-      //     } else if (input.right) {
-      //       player.setAngularVelocity(300);
-      //     } else {
-      //       player.setAngularVelocity(0);
-      //     }
-      
-      //     if (input.up) {
-      //       this.physics.velocityFromRotation(player.rotation + 1.5, 200, player.body.acceleration);
-      //     } else {
-      //       player.setAcceleration(0);
-      //     }
-      
-      //     players[player.playerId].x = player.x;
-      //     players[player.playerId].y = player.y;
-      //     players[player.playerId].rotation = player.rotation;
-      //   });
-      //   this.physics.world.wrap(this.players, 5);
-      //TODO: when publishing messages, send server timestamp for client resolution
-      //   io.emit('playerUpdates', players);
+        this.time.addEvent({ delay: 100, callback: this.step, loop: true });
     }
       
-      //Player sent input command
-    // handlePlayerInput(self, playerId, input) {
-    //     self.players.getChildren().forEach((player) => {
-    //       if (playerId === player.playerId) {
-    //         //players[player.playerId].input = input;
-    //       }
-    //     });
-    //   }
-      
-    //   //Player sent entered event
-    // addPlayer(self, playerInfo) {
-    //     const player = self.physics.add.image(playerInfo.x, playerInfo.y, 'ship').setOrigin(0.5, 0.5).setDisplaySize(53, 40);
-    //     player.setDrag(100);
-    //     player.setAngularDrag(100);
-    //     player.setMaxVelocity(200);
-    //     player.playerId = playerInfo.playerId;
-    //     self.players.add(player);
-    //   }
-    //   //Player sent leave event
-    // removePlayer(self, playerId) {
-    //     self.players.getChildren().forEach((player) => {
-    //       if (playerId === player.playerId) {
-    //         player.destroy();
-    //       }
-    //     });
-    //   }
+    step= () => {
+      for(var i=0; i<this.scenes.length; i++){
+        let scene = this.scene.get(this.scenes[i]) as ServerStarSystem
+        for(var j=0; j<this.playerUpdates.length; j++){
+          console.log('recieved player update with keys: ')
+          Object.keys(this.playerUpdates[j]).forEach(key=>console.log(key))
+          scene.onApplyPlayerUpdate(this.playerUpdates[j])
+        }
+        this.playerUpdates = []
+        this.server.publishMessage({
+          type: ServerMessages.SERVER_UPDATE,
+          system: scene.name,
+          event: {
+              ships: getShipUpdates(scene.ships),
+              asteroids: getAsteroidUpdates(scene.asteroids)
+          }
+        })
+      }
+    }
+
+    onRecievePlayerUpdate = (update:ShipUpdate) => {
+        this.playerUpdates.push(update)
+    }
+
+    onWSMessage = (data) => {
+        const payload = JSON.parse(data.data) as ServerMessage
+        this.onRecievePlayerUpdate(payload.event as ShipUpdate)
+    }
+
+    onConnected = () => {
+      this.server.publishMessage({type: ServerMessages.HEADLESS_CONNECT, event: null, system: '-Server-'})
+    }
+
+    onConnectionError = () => {
+        console.log('wtf----')
+    }
 }
 
-export const onWSMessage = (data) => {
-    const payload = JSON.parse(data.data)
-    console.log("I got it: "+payload)
-}
-export const onConnected = () => {
-    //TODO: connect to wss instance from the headless browser
-    server.publishMessage({type: ServerMessages.HEADLESS_CONNECT})
-}
-export const onConnectionError = () => {
-    //TODO: connect to wss instance from the headless browser
-    console.log('wtf----')
+const getShipUpdates = (ships:Map<string,Ship>) => {
+  let updates = new Array<ShipUpdate>()
+  ships.forEach(ship=>{
+    updates.push({
+      type: PlayerEvents.SERVER_STATE,
+      sequence: Date.now(),
+      shipData: {
+        ...ship,
+        x: ship.sprite.x,
+        y: ship.sprite.y,
+        rotation: ship.sprite.rotation,
+        acceleration : (ship.sprite.body as any).acceleration,
+        jumpVector: null,
+        fighters: []
+      }
+    })
+  })
+  return updates
 }
 
-export const server = new WS()
+const getAsteroidUpdates = (asteroids:Map<string, Physics.Arcade.Sprite>) => {
+  let updates = new Array<AsteroidUpdate>()
+  asteroids.forEach(asteroid=>{
+    updates.push({
+      x: asteroid.x,
+      y: asteroid.y,
+      hp: asteroid.data.values.hp,
+      id: asteroid.data.values.id,
+      type: asteroid.data.values.type,
+    })
+  })
+  return updates
+}

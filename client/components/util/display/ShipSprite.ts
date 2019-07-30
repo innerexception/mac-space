@@ -1,8 +1,9 @@
 import { GameObjects, Physics, Scene, } from "phaser";
 import System from "../StarSystem";
 import { onTogglePlanetMenu } from "../../uiManager/Thunks";
-import { server } from "../../../App";
-import { ServerMessages, PlayerEvents } from "../../../../enum";
+import WebsocketClient from "../../../WebsocketClient";
+import { PlayerEvents, ServerMessages } from "../../../../enum";
+import StarSystem from "../StarSystem";
 
 export default class ShipSprite extends Physics.Arcade.Sprite {
 
@@ -12,18 +13,22 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     jumpSequence: boolean
     landingTarget: GameObjects.Sprite
     isPlayerControlled: boolean
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys
     shipData: Ship
+    lastAckSequence: number
+    bufferedInputs: Array<ShipUpdate>
+    server:WebsocketClient
 
-    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, isPlayerControlled:boolean, ship:Ship){
+    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, isPlayerControlled:boolean, ship:Ship, server:WebsocketClient){
         super(scene, x, y, texture)
+        this.server=server
+        this.bufferedInputs = []
         this.scene.add.existing(this)
         this.scene.physics.world.enable(this);
         this.shipData = ship
         this.scaleX = 0.3
         this.scaleY = 0.3
         this.setMaxVelocity(ship.maxSpeed).setFriction(400, 400);
-        this.thruster = this.scene.add.particles('jets').createEmitter({
+        this.thruster = this.scene.add.particles('proton').createEmitter({
             x: this.x,
             y: this.y,
             angle: this.angle,
@@ -36,7 +41,11 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         this.depth = 3
         this.projectiles = projectiles
         this.isPlayerControlled = isPlayerControlled
-        this.cursors = this.scene.input.keyboard.createCursorKeys();
+        
+    }
+
+    sendSpawnUpdate = () => {
+        this.addShipUpdate(this.shipData, PlayerEvents.PLAYER_SPAWNED)
     }
 
     startLandingSequence = (target:GameObjects.Sprite) => {
@@ -63,7 +72,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         if(!targetScene)
             this.scene.scene.add(
                 targetSystem.name, 
-                new System({ key: targetSystem.name, active: false, visible:false }, targetSystem.assetList, systemVector), 
+                new System({ key: targetSystem.name, active: false, visible:false, state: targetSystem }, systemVector), 
                 false
             )
         this.scene.physics.world.setBoundsCollision(false, false, false, false)
@@ -96,10 +105,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         const projectile = this.projectiles.get().setActive(true).setVisible(true)
         if(projectile){
             projectile.fire(this)
-            server.publishMessage({ 
-                type: ServerMessages.PLAYER_EVENT, 
-                event: { shipId: this.shipData.id, type: PlayerEvents.FIRE_PRIMARY }
-            })
+            this.addShipUpdate(this.shipData, PlayerEvents.FIRE_PRIMARY)
         }
     }
 
@@ -107,65 +113,33 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     }
 
+    rotateLeft = () => {
+        this.rotation -= this.shipData.turn
+        this.addShipUpdate(this.shipData, PlayerEvents.ROTATE_L)
+    }
+    rotateRight = () => {
+        this.rotation += this.shipData.turn
+        this.addShipUpdate(this.shipData, PlayerEvents.ROTATE_R)
+    }
+
+    thrust = () => {
+        let vector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
+        this.setAcceleration(vector.x*this.shipData.maxSpeed, vector.y*-this.shipData.maxSpeed); //negative b/c y is inverted in crazyland
+        this.thruster.emitParticle(16);
+        this.addShipUpdate(this.shipData, PlayerEvents.THRUST)
+        
+    }
+
+    thrustOff = () => {
+        this.thruster.stop()
+        this.setAcceleration(0,0)
+        this.addShipUpdate(this.shipData, PlayerEvents.THRUST_OFF)
+    }
+
     //Custom sprite needs this magical named method
     preUpdate = (time, delta) =>
     {
-        if(this.isPlayerControlled && !this.landingSequence){
-            if (this.cursors.left.isDown)
-            {
-                this.rotation -= this.shipData.turn
-                server.publishMessage({ 
-                    type: ServerMessages.PLAYER_EVENT, 
-                    event: { 
-                        shipId: this.shipData.id, 
-                        type: PlayerEvents.ROTATE, 
-                        expectedValue: this.rotation, 
-                        sequence: Date.now() 
-                    }
-                })
-            }
-            else if (this.cursors.right.isDown)
-            {
-                this.rotation += this.shipData.turn
-                server.publishMessage({ 
-                    type: ServerMessages.PLAYER_EVENT, 
-                    event: { 
-                        shipId: this.shipData.id, 
-                        type: PlayerEvents.ROTATE, 
-                        expectedValue: this.rotation, 
-                        sequence: Date.now() 
-                    }
-                })
-            }
-
-            if (this.cursors.up.isDown)
-            {
-                let vector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
-                this.setAcceleration(vector.x*this.shipData.maxSpeed, vector.y*-this.shipData.maxSpeed); //negative b/c y is inverted in crazyland
-                this.thruster.emitParticle(16);
-                server.publishMessage({
-                    type: ServerMessages.PLAYER_EVENT, 
-                    event: { 
-                        shipId: this.shipData.id, 
-                        type: PlayerEvents.THRUST,
-                        sequence: Date.now() 
-                    }
-                })
-            }
-            else if((this.body as any).acceleration.x !== 0 || (this.body as any).acceleration.y !== 0) {
-                this.thruster.stop()
-                this.setAcceleration(0,0)
-                server.publishMessage({
-                    type: ServerMessages.PLAYER_EVENT, 
-                    event: { 
-                        shipId: this.shipData.id, 
-                        type: PlayerEvents.THRUST_OFF,
-                        sequence: Date.now() 
-                    }
-                })
-            }
-        }
-        else if(this.landingSequence){
+        if(this.landingSequence){
             let distance = Phaser.Math.Distance.Between(this.x, this.y, this.landingTarget.x, this.landingTarget.y)
             let planetAngle = Phaser.Math.Angle.Between(this.x, this.y, this.landingTarget.x, this.landingTarget.y)
             this.rotation = planetAngle+(Math.PI/2)
@@ -195,6 +169,49 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         this.thruster.setPosition(this.x + vector.x, this.y +vector.y);
         this.thruster.setAngle(this.angle+45)
     }
+
+    applyUpdate = (update:ShipUpdate) => {
+        this.lastAckSequence = update.sequence
+        //Here we need to re-apply any inputs the server hasn't yet applied in the update, 
+        //Else our ship will jump backwards on most connections
+        for(let i=0; i<this.bufferedInputs.length; i++){
+            let bupdate = this.bufferedInputs[i]
+            if(bupdate.sequence <= this.lastAckSequence)
+                this.bufferedInputs.splice(i, 1)
+            else {
+                this.applyState(bupdate.shipData)
+            }
+        }
+        this.applyState(update.shipData)
+    }
+
+    applyState = (update:ShipDataOnly) => {
+        this.setPosition(update.x, update.y)
+        this.setAcceleration(update.acceleration.x, update.acceleration.y)
+        this.rotation = update.rotation
+    }
+
+    addShipUpdate = (ship:Ship, event:PlayerEvents) => {
+        let update = {
+            id: ship.id,
+            sequence: Date.now(),
+            type: event,
+            shipData: {
+                ...ship, 
+                sprite: null, 
+                jumpVector: null, 
+                fighters: [] ,
+                x: ship.sprite.x,
+                y: ship.sprite.y,
+                rotation: ship.sprite.rotation,
+                acceleration: (ship.sprite.body as any).acceleration
+            }
+        }
+        this.server.publishMessage({
+            type: ServerMessages.PLAYER_EVENT, 
+            event: update,
+            system: (this.scene as StarSystem).name
+        })
+        this.bufferedInputs.push(update)
+    }
 }
-
-

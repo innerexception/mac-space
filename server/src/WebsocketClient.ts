@@ -1,15 +1,14 @@
 import { ApiUrl } from '../../enum'
-import { onWSMessage, onConnected, onConnectionError } from './GalaxyScene'
 
 export default class WebsocketClient {
 
     websocket: ReconnectingWebSocket
 
-    constructor(){
-      this.launch(ApiUrl)
+    constructor(onWSMessage, onConnected, onConnectionError){
+      this.launch(ApiUrl, onWSMessage, onConnected, onConnectionError)
     }
 
-    launch = (url:string) => {
+    launch = (url:string, onWSMessage, onConnected, onConnectionError) => {
         console.log('ws: connecting');
         this.websocket = new ReconnectingWebSocket(url)
         this.websocket.onopen = onConnected
@@ -27,7 +26,7 @@ export default class WebsocketClient {
         this.websocket.close()
     }
 
-    publishMessage= (msg:any) => {
+    publishMessage= (msg:ServerMessage) => {
       var message = JSON.stringify(msg)
       if(message) {
           this.websocket.send(message);

@@ -21,16 +21,19 @@ export const ReducerActions= {
     OPEN_PLANET: 'op'
 }
 
-export const ServerMessages = {
-    HEADLESS_CONNECT: 'hct',
-    PLAYER_EVENT_ACK: 'pea',
-    PLAYER_EVENT: 'pe',
-    SERVER_UPDATE: 'su'
+export enum PlayerEvents { 
+    ROTATE_L= 'rl',
+    ROTATE_R= 'rr',
+    THRUST_OFF= 'to',
+    THRUST= 't',
+    FIRE_PRIMARY= 'fp',
+    SERVER_STATE= 'ss',
+    PLAYER_SPAWNED= 'ps'
 }
 
-export const PlayerEvents = { 
-    ROTATE: 'ro',
-    THRUST_OFF: 'to',
-    THRUST: 't',
-    FIRE_PRIMARY: 'fp'
+export enum ServerMessages {
+    HEADLESS_CONNECT= 'hct',
+    PLAYER_EVENT_ACK= 'pea',
+    PLAYER_EVENT= 'pe',
+    SERVER_UPDATE= 'su'
 }
