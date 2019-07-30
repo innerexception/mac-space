@@ -8,7 +8,8 @@ declare enum Direction {
 }
 
 declare enum PlayerEvents { 
-    ROTATE= 'ro',
+    ROTATE_L= 'rl',
+    ROTATE_R= 'rr',
     THRUST_OFF= 'to',
     THRUST= 't',
     FIRE_PRIMARY= 'fp'

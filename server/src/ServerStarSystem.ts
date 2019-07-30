@@ -49,20 +49,22 @@ export default class ServerStarSystem extends Scene {
     
     update = (time, delta) =>
     {
-        //TODO: use delta to fire position updates at 100ms interval for client reconciliation
-        if(delta%100===0){
-            this.server.publishMessage({
-                type: ServerMessages.SERVER_UPDATE,
-                event: {
-
-                }
-            })
-        }
+        
     }
 
-    onPlayerRequestUpdate = (update:ShipUpdate) => {
+    onApplyPlayerUpdate = (update:ShipUpdate) => {
         //perform change on entity TODO: maybe also send acks if needed
-        
+        let ship = this.ships.get(update.id)
+        if(ship)
+            switch(update.type){
+                case PlayerEvents.FIRE_PRIMARY: //TODO
+                case PlayerEvents.ROTATE_L: 
+                    ship.sprite.rotation -= ship.turn
+                case PlayerEvents.ROTATE_R: 
+                    ship.sprite.rotation += ship.turn
+                case PlayerEvents.THRUST: //TODO
+                case PlayerEvents.THRUST_OFF: //TODO
+            }
     }
 
     addPlanets = () => {

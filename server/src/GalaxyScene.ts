@@ -2,11 +2,16 @@ import { Scene } from "phaser";
 import { StarSystems } from '../../client/data/StarSystems'
 import StarSystem from './ServerStarSystem'
 import WS from './WebsocketClient'
+import ServerStarSystem from "./ServerStarSystem";
 
 export default class GalaxyScene extends Scene {
 
+    scenes: Array<string>
+    playerUpdates: Array<ShipUpdate>
+
     constructor(config,){
       super(config)
+      this.scenes = StarSystems.map(system=>system.name)
     }
 
     preload() {
@@ -19,40 +24,32 @@ export default class GalaxyScene extends Scene {
         StarSystems.forEach((system)=>{
           this.scene.add(system.name, new StarSystem({key:system.name}, system, server), true)
         })
-
-
       }
       
     update(time, delta) {
-      //TODO: a delta is applied here such that message broadcast only happens once every 100ms
-
-
-      //However the physics simulation still runs at 60fps
-      //   this.players.getChildren().forEach((player) => {
-      //     const input = players[player.playerId].input;
-      //     if (input.left) {
-      //       player.setAngularVelocity(-300);
-      //     } else if (input.right) {
-      //       player.setAngularVelocity(300);
-      //     } else {
-      //       player.setAngularVelocity(0);
-      //     }
-      
-      //     if (input.up) {
-      //       this.physics.velocityFromRotation(player.rotation + 1.5, 200, player.body.acceleration);
-      //     } else {
-      //       player.setAcceleration(0);
-      //     }
-      
-      //     players[player.playerId].x = player.x;
-      //     players[player.playerId].y = player.y;
-      //     players[player.playerId].rotation = player.rotation;
-      //   });
-      //   this.physics.world.wrap(this.players, 5);
-      //TODO: when publishing messages, send server timestamp for client resolution
-      //   io.emit('playerUpdates', players);
+      //TODO: use delta to fire position updates at 100ms interval for client reconciliation
+      if(delta%100===0){
+        for(var i=0; i<this.scenes.length; i++){
+          let scene = this.scene.get(this.scenes[i]) as ServerStarSystem
+          for(var i=0; i<this.playerUpdates.length; i++){
+            scene.onApplyPlayerUpdate(this.playerUpdates[i])
+          }
+          server.publishMessage({
+            type: ServerMessages.SERVER_UPDATE,
+            event: {
+                ships: Array.from(scene.ships),
+                asteroids: Array.from(scene.asteroids)
+            }
+          })
+        }
+        this.playerUpdates = []
+      }
     }
-      
+
+    onRecievePlayerUpdate = (update:ShipUpdate) => {
+        this.playerUpdates.push(update)
+    }
+
       //Player sent input command
     // handlePlayerInput(self, playerId, input) {
     //     self.players.getChildren().forEach((player) => {
@@ -82,12 +79,12 @@ export default class GalaxyScene extends Scene {
 }
 
 export const onWSMessage = (data) => {
+  //TODO: connect to wss instance from the headless browser
     const payload = JSON.parse(data.data)
     console.log("I got it: "+payload)
     processEvent(payload)
 }
 export const onConnected = () => {
-    //TODO: connect to wss instance from the headless browser
     server.publishMessage({type: ServerMessages.HEADLESS_CONNECT, event: null})
 }
 export const onConnectionError = () => {

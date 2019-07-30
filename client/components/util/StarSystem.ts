@@ -38,7 +38,7 @@ export default class StarSystem extends Scene {
     }
 
     onServerUpdate = (state:ServerSystemUpdate) => {
-        //apply latest system state from server.
+        //apply latest system state from server. TODO: connect this to wss instance somehow
         let initRoids = this.asteroids.size === 0
         state.asteroids.forEach(update=> {
             let asteroid = this.asteroids.get(update.id)
