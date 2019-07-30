@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { onMovePlayer } from '../uiManager/Thunks'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
 import { compute } from '../util/Fov';

@@ -2,6 +2,7 @@ import { GameObjects, Physics, Scene, } from "phaser";
 import System from "../StarSystem";
 import { onTogglePlanetMenu } from "../../uiManager/Thunks";
 import WebsocketClient from "../../../WebsocketClient";
+import { PlayerEvents, ServerMessages } from "../../../../enum";
 
 export default class ShipSprite extends Physics.Arcade.Sprite {
 
@@ -19,6 +20,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, isPlayerControlled:boolean, ship:Ship, server:WebsocketClient){
         super(scene, x, y, texture)
         this.server=server
+        this.bufferedInputs = []
         this.scene.add.existing(this)
         this.scene.physics.world.enable(this);
         this.shipData = ship
@@ -38,6 +40,11 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         this.depth = 3
         this.projectiles = projectiles
         this.isPlayerControlled = isPlayerControlled
+        
+    }
+
+    sendSpawnUpdate = () => {
+        this.addShipUpdate(this.shipData, PlayerEvents.PLAYER_SPAWNED)
     }
 
     startLandingSequence = (target:GameObjects.Sprite) => {
@@ -64,7 +71,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         if(!targetScene)
             this.scene.scene.add(
                 targetSystem.name, 
-                new System({ key: targetSystem.name, active: false, visible:false }, targetSystem, systemVector), 
+                new System({ key: targetSystem.name, active: false, visible:false, state: targetSystem }, systemVector), 
                 false
             )
         this.scene.physics.world.setBoundsCollision(false, false, false, false)

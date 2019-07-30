@@ -4,6 +4,7 @@ import Projectile from "./display/Projectile";
 import ShipSprite from "./display/ShipSprite";
 import * as Ships from '../../data/Ships'
 import WebsocketClient from "../../WebsocketClient";
+import { store } from "../../App";
 
 export default class StarSystem extends Scene {
 
@@ -27,16 +28,18 @@ export default class StarSystem extends Scene {
     constructor(config, jumpVector?:JumpVector){
         super(config)
         this.jumpVector = jumpVector
-        this.state = config.state
+        this.state = config.initialState
         this.name = config.key
         this.server = config.server
+        this.ships = new Map()
+        this.asteroids = new Map()
+        this.planets = []
         this.server.setListeners(this.onServerUpdate, this.onConnected, this.onConnectionError)
-        console.log('star system '+config.key+' was booted.')
     }
 
     onReduxUpdate = () => {
         //TODO: rebuild ship sprites if needed (you bought a new ship or upgrade, etc)
-        // this.player = store.getState().currentUser
+        this.player = store.getState().currentUser
         // store.subscribe(this.onReduxUpdate)
     }
 
@@ -49,7 +52,7 @@ export default class StarSystem extends Scene {
     }
 
     onServerUpdate = (state:ServerSystemUpdate) => {
-        //apply latest system state from server. TODO: connect this to wss instance somehow
+        console.log('recieved update from server.')
         let initRoids = this.asteroids.size === 0
         state.asteroids.forEach(update=> {
             let asteroid = this.asteroids.get(update.id)
@@ -61,6 +64,7 @@ export default class StarSystem extends Scene {
                 }
             }
             else {
+                console.log('spawning new asteroid at '+update.x+','+update.y)
                 this.spawnAsteroid(update)
             }
         })
@@ -68,14 +72,16 @@ export default class StarSystem extends Scene {
             let roids = []
             this.asteroids.forEach(aster=>roids.push(aster))
             this.physics.add.collider(this.projectiles, roids, this.playerShotAsteroid);
+            console.log('asteroid physics init completed.')
         }
         
         state.ships.forEach(update=> {
-            let ship = this.ships.get(update.id)
+            let ship = this.ships.get(update.shipData.id)
             if(ship){
                 ship.sprite.applyUpdate(update)
             }
             else {
+                console.log('spawning new ship at '+update.shipData.x+','+update.shipData.y)
                 this.spawnShip(update.shipData)
             }
         })
@@ -86,10 +92,12 @@ export default class StarSystem extends Scene {
         this.state.assetList.forEach(asset=>{
             (this.load[asset.type] as any)(asset.key, asset.resource, asset.data)
         })
+        console.log('star system '+this.name+' was booted.')
     }
     
     create = () =>
     {
+        this.player = store.getState().currentUser
         this.cameras.main.setBounds(0, 0, 3200, 3200).setName('main');
         this.physics.world.setBoundsCollision();
         //  The miniCam is 400px wide, so can display the whole world at a zoom of 0.2
@@ -111,14 +119,15 @@ export default class StarSystem extends Scene {
 
         this.projectiles = this.physics.add.group({ classType: Projectile  })
         this.projectiles.runChildUpdate = true
+        
+        this.createStarfield()
+        this.addPlanets()
 
         //  Add player ship
         this.activeShip = this.player.ships.find(ship=>ship.id===this.player.activeShipId)
-        this.activeShip.sprite = new ShipSprite(this.scene.scene, 1600, 400, this.activeShip.asset, this.projectiles, true, this.activeShip, this.server);
+        this.activeShip.sprite = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, this.activeShip.asset, this.projectiles, true, this.activeShip, this.server);
         this.ships.set(this.activeShip.id, this.activeShip)
-    
-        this.createStarfield()
-        this.addPlanets()
+        this.activeShip.sprite.sendSpawnUpdate()
         
         this.input.keyboard.on('keydown-L', (event) => {
             //TODO cycle available sites
@@ -211,6 +220,7 @@ export default class StarSystem extends Scene {
         this.physics.add.sprite(update.x,update.y, update.type)
             .setData('hp', 3)
             .setData('id', update.id)
+            .setData('type', update.type)
             .setScale(Phaser.Math.FloatBetween(0.8,0.1))
             .setRotation(Phaser.Math.FloatBetween(3,0.1))
     }

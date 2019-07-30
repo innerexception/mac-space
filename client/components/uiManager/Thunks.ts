@@ -1,6 +1,5 @@
 import { dispatch } from '../../../client/App'
 import { ReducerActions } from '../../../enum'
-import { server } from '../../App'
 
 export const setUser = (currentUser:object) => {
     dispatch({

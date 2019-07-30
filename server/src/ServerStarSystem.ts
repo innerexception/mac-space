@@ -2,28 +2,28 @@ import { Scene, GameObjects, Physics, } from "phaser";
 import Projectile from '../../client/components/util/display/Projectile'
 import ShipSprite from './ServerShipSprite'
 import WebsocketClient from "./WebsocketClient";
-import v4 from 'uuid'
+import * as Ships from '../../client/data/Ships'
+import { v4 } from 'uuid'
 
 export default class ServerStarSystem extends Scene {
 
     ships: Map<string,Ship>
-    shipArray: Array<Ship>
     planets: Array<GameObjects.Sprite>
     asteroids: Map<string, Physics.Arcade.Sprite>
-    asteroidArray: Array<Physics.Arcade.Sprite>
-    resources: GameObjects.Group
     projectiles: GameObjects.Group
     name: string
     server: WebsocketClient
     jumpVector: JumpVector
     state:SystemState
 
-    constructor(config, server:WebsocketClient){
+    constructor(config, state:SystemState, server:WebsocketClient){
         super(config)
-        this.state = config.state
+        this.state = state
         this.name = config.key
         this.server = server
-        console.log('star system '+this.name+' is booting.')
+        this.planets = []
+        this.asteroids = new Map()
+        this.ships = new Map()
     }
 
     preload = () =>
@@ -31,6 +31,7 @@ export default class ServerStarSystem extends Scene {
         this.state.assetList.forEach(asset=>{
             (this.load[asset.type] as any)(asset.key, asset.resource, asset.data)
         })
+        console.log('star system '+this.name+' was booted.')
     }
     
     create = () =>
@@ -56,19 +57,28 @@ export default class ServerStarSystem extends Scene {
 
     onApplyPlayerUpdate = (update:ShipUpdate) => {
         //perform change on entity TODO: maybe also send acks if needed
-        let ship = this.ships.get(update.id)
+        let ship = this.ships.get(update.shipData.id)
         if(ship)
             switch(update.type){
                 case PlayerEvents.FIRE_PRIMARY: 
                     ship.sprite.firePrimary()
+                    break
                 case PlayerEvents.ROTATE_L: 
                     ship.sprite.rotateLeft()
+                    break
                 case PlayerEvents.ROTATE_R: 
                     ship.sprite.rotateRight()
+                    break
                 case PlayerEvents.THRUST: 
                     ship.sprite.thrust()
+                    break
                 case PlayerEvents.THRUST_OFF: 
                     ship.sprite.thrustOff()
+                    break
+                case PlayerEvents.PLAYER_SPAWNED:
+                    console.log('ship spawned at '+update.shipData.x+','+update.shipData.y)
+                    this.spawnShip(update.shipData, {x: update.shipData.x, y: update.shipData.y, rotation: update.shipData.rotation })
+                    break
             }
     }
 
@@ -113,31 +123,26 @@ export default class ServerStarSystem extends Scene {
             })              
         })
         this.asteroids = asteroids
-        this.asteroidArray = roidRay
     }
 
     spawnAsteroid = (id:string, type:string) => {
         //Position will be set shortly
-        this.physics.add.sprite(0,0,type)
+        return this.physics.add.sprite(0,0,type)
             .setData('hp', 3)
             .setData('id', id)
+            .setData('type', type)
             .setScale(Phaser.Math.FloatBetween(0.8,0.1))
             .setRotation(Phaser.Math.FloatBetween(3,0.1))
     }
 
-    playerEntered = (player:Player, spawnPoint:PlayerSpawnPoint) => {
-        player.ships.forEach(ship=>{
-            this.spawnShip(ship, spawnPoint)
-        })
-    }
-
-    spawnShip = (ship:Ship, spawnPoint:PlayerSpawnPoint) => {
-        ship.sprite = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, ship.asset, this.projectiles, ship);
+    spawnShip = (ship:ShipDataOnly, spawnPoint:PlayerSpawnPoint) => {
+        let thisShip = {...Ships[ship.name], ...ship}
+        thisShip.sprite = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, ship.asset, this.projectiles, thisShip)
+        
         //Can spawn from a planet or some edge if jumping in
-        ship.sprite.setVelocity(spawnPoint.xVelocity*ship.maxSpeed, spawnPoint.yVelocity*-ship.maxSpeed)
-        ship.sprite.rotation = spawnPoint.rotation
-        this.ships.set(ship.id, ship)
-        this.shipArray.push(ship)
+        thisShip.sprite.setVelocity(spawnPoint.xVelocity*ship.maxSpeed, spawnPoint.yVelocity*-ship.maxSpeed)
+        thisShip.sprite.rotation = spawnPoint.rotation
+        this.ships.set(ship.id, thisShip)
     }
 
     playerLeft = (player:Player) => {
@@ -158,8 +163,8 @@ export default class ServerStarSystem extends Scene {
         //TODO: send asteroid hp reduction message with id of projectile to destroy also
 
         if(asteroid.data.values.hp <= 0){
-            asteroid.destroy()
-            this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
+            // asteroid.destroy()
+            // this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
             //TODO: send spawn resources message with id of asteroid to destroy also
         }
     }

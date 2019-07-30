@@ -31,7 +31,7 @@ export default class Viewscreen extends React.Component<Props, State> {
             physics: {
                 default: 'arcade'
             },
-            scene: [new StarSystem({key:Rigel.name, server, initialState: Rigel})]
+            scene: [new StarSystem({key:Rigel.name, server:server, initialState: Rigel})]
         });
         window.addEventListener("resize", ()=>{
             let game = (this.state.phaserInstance as Phaser.Game)

@@ -12,7 +12,9 @@ declare enum PlayerEvents {
     ROTATE_R= 'rr',
     THRUST_OFF= 'to',
     THRUST= 't',
-    FIRE_PRIMARY= 'fp'
+    FIRE_PRIMARY= 'fp',
+    SERVER_STATE= 'ss',
+    PLAYER_SPAWNED= 'ps'
 }
 
 declare enum ServerMessages {
@@ -41,8 +43,8 @@ interface PlayerSpawnPoint {
     x: number
     y: number
     rotation: number
-    xVelocity: number
-    yVelocity: number
+    xVelocity?: number
+    yVelocity?: number
 }
 
 interface Faction {
@@ -61,6 +63,7 @@ interface ShipSprite extends Phaser.Physics.Arcade.Sprite {
     thrustOff()
     landingSequence: boolean
     applyUpdate(update:ShipUpdate)
+    sendSpawnUpdate()
 }
 
 interface Ship {
@@ -137,7 +140,6 @@ interface AsteroidUpdate {
 }
 
 interface ShipUpdate {
-    id: string
     type: PlayerEvents
     sequence: number
     shipData: ShipDataOnly

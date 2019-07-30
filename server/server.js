@@ -94,7 +94,7 @@ wsServer.on('request', function(request) {
             session.serverSocketId = socketId
             break
           case ServerMessages.PLAYER_EVENT:
-            console.log('Player '+obj.playerId+' sent event: '+obj.event)
+            console.log('Player event.')
             publishToServer(obj.event)
             break
           case ServerMessages.PLAYER_EVENT_ACK: 
