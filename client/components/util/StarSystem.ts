@@ -3,7 +3,7 @@ import { Arcturus, Rigel } from "../../data/StarSystems";
 import Projectile from "./display/Projectile";
 import ShipSprite from "./display/ShipSprite";
 import * as Ships from '../../data/Ships'
-import { onWSMessage } from "../uiManager/Thunks";
+import WebsocketClient from "../../WebsocketClient";
 
 export default class StarSystem extends Scene {
 
@@ -22,12 +22,15 @@ export default class StarSystem extends Scene {
     name: string
     jumpVector: JumpVector
     state:SystemState
+    server: WebsocketClient
 
-    constructor(config, state:SystemState, jumpVector?:JumpVector){
+    constructor(config, jumpVector?:JumpVector){
         super(config)
         this.jumpVector = jumpVector
-        this.state = state
+        this.state = config.state
         this.name = config.key
+        this.server = config.server
+        this.server.setListeners(this.onServerUpdate, this.onConnected, this.onConnectionError)
         console.log('star system '+config.key+' was booted.')
     }
 
@@ -35,6 +38,14 @@ export default class StarSystem extends Scene {
         //TODO: rebuild ship sprites if needed (you bought a new ship or upgrade, etc)
         // this.player = store.getState().currentUser
         // store.subscribe(this.onReduxUpdate)
+    }
+
+    onConnected = () => {
+        console.log('star system '+this.name+' connected!')
+    }
+
+    onConnectionError = () => {
+        console.log('star system '+this.name+' FAILED to connect.')
     }
 
     onServerUpdate = (state:ServerSystemUpdate) => {
@@ -103,7 +114,7 @@ export default class StarSystem extends Scene {
 
         //  Add player ship
         this.activeShip = this.player.ships.find(ship=>ship.id===this.player.activeShipId)
-        this.activeShip.sprite = new ShipSprite(this.scene.scene, 1600, 400, this.activeShip.asset, this.projectiles, true, this.activeShip);
+        this.activeShip.sprite = new ShipSprite(this.scene.scene, 1600, 400, this.activeShip.asset, this.projectiles, true, this.activeShip, this.server);
         this.ships.set(this.activeShip.id, this.activeShip)
     
         this.createStarfield()
@@ -127,11 +138,11 @@ export default class StarSystem extends Scene {
         if(!this.activeShip.sprite.landingSequence){
             if (this.cursors.left.isDown)
             {
-                this.activeShip.sprite.rotate(-this.activeShip.turn)
+                this.activeShip.sprite.rotateLeft()
             }
             else if (this.cursors.right.isDown)
             {
-                this.activeShip.sprite.rotate(this.activeShip.turn)
+                this.activeShip.sprite.rotateRight()
             }
             if (this.cursors.up.isDown)
             {
@@ -152,7 +163,7 @@ export default class StarSystem extends Scene {
     
     spawnShip = (config:ShipDataOnly) => {
         let ship = {...Ships[config.name], ...config}
-        ship.sprite = new ShipSprite(this.scene.scene, 1600, 400, ship.asset, this.projectiles, false, ship)
+        ship.sprite = new ShipSprite(this.scene.scene, 1600, 400, ship.asset, this.projectiles, false, ship, this.server)
         if(config.jumpVector){
             //TODO: set starting edge coords based on previous system coords, right now defaults to top left corner
             //ship.sprite.setPosition(config.jumpVector.startX, config.jumpVector.startY)

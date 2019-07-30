@@ -7,8 +7,10 @@ import v4 from 'uuid'
 export default class ServerStarSystem extends Scene {
 
     ships: Map<string,Ship>
+    shipArray: Array<Ship>
     planets: Array<GameObjects.Sprite>
     asteroids: Map<string, Physics.Arcade.Sprite>
+    asteroidArray: Array<Physics.Arcade.Sprite>
     resources: GameObjects.Group
     projectiles: GameObjects.Group
     name: string
@@ -16,9 +18,9 @@ export default class ServerStarSystem extends Scene {
     jumpVector: JumpVector
     state:SystemState
 
-    constructor(config, state:SystemState, server:WebsocketClient){
+    constructor(config, server:WebsocketClient){
         super(config)
-        this.state = state
+        this.state = config.state
         this.name = config.key
         this.server = server
         console.log('star system '+this.name+' is booting.')
@@ -57,13 +59,16 @@ export default class ServerStarSystem extends Scene {
         let ship = this.ships.get(update.id)
         if(ship)
             switch(update.type){
-                case PlayerEvents.FIRE_PRIMARY: //TODO
+                case PlayerEvents.FIRE_PRIMARY: 
+                    ship.sprite.firePrimary()
                 case PlayerEvents.ROTATE_L: 
-                    ship.sprite.rotation -= ship.turn
+                    ship.sprite.rotateLeft()
                 case PlayerEvents.ROTATE_R: 
-                    ship.sprite.rotation += ship.turn
-                case PlayerEvents.THRUST: //TODO
-                case PlayerEvents.THRUST_OFF: //TODO
+                    ship.sprite.rotateRight()
+                case PlayerEvents.THRUST: 
+                    ship.sprite.thrust()
+                case PlayerEvents.THRUST_OFF: 
+                    ship.sprite.thrustOff()
             }
     }
 
@@ -78,6 +83,7 @@ export default class ServerStarSystem extends Scene {
     addAsteroids()
     {
         let asteroids = new Map()
+        let roidRay = []
         this.state.asteroidConfig.forEach(aConfig=> {
             for(var i=0; i< aConfig.density*20; i++){
                 let id = v4()
@@ -103,31 +109,35 @@ export default class ServerStarSystem extends Scene {
                     },
                     loop: true 
                 });
+                roidRay.push(sprite)
             })              
         })
         this.asteroids = asteroids
+        this.asteroidArray = roidRay
     }
 
-    playerRotateLeft = (player:Player) => {
-        //TODO: message
+    spawnAsteroid = (id:string, type:string) => {
+        //Position will be set shortly
+        this.physics.add.sprite(0,0,type)
+            .setData('hp', 3)
+            .setData('id', id)
+            .setScale(Phaser.Math.FloatBetween(0.8,0.1))
+            .setRotation(Phaser.Math.FloatBetween(3,0.1))
     }
 
-    playerRotateRight = (player:Player) => {
-        //TODO: message
+    playerEntered = (player:Player, spawnPoint:PlayerSpawnPoint) => {
+        player.ships.forEach(ship=>{
+            this.spawnShip(ship, spawnPoint)
+        })
     }
 
-    playerThrust = (player:Player) => {
-        //TODO: message
-    }
-
-    playerEntered = (player:Player, jumpVector:Tuple) => {
-        //TODO: send player entered system message with player id and entry vector
-        //  Add ships that exist
-        const activeShip = player.ships.find(ship=>ship.id===player.activeShipId)
-        activeShip.sprite = new ShipSprite(this.scene.scene, 1600, 400, activeShip.asset, this.projectiles, activeShip);
-        activeShip.sprite.setVelocity(jumpVector.x*500, jumpVector.y*-500)
-        activeShip.sprite.rotation = jumpVector.rotation
-        this.ships.push(activeShip.sprite)
+    spawnShip = (ship:Ship, spawnPoint:PlayerSpawnPoint) => {
+        ship.sprite = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, ship.asset, this.projectiles, ship);
+        //Can spawn from a planet or some edge if jumping in
+        ship.sprite.setVelocity(spawnPoint.xVelocity*ship.maxSpeed, spawnPoint.yVelocity*-ship.maxSpeed)
+        ship.sprite.rotation = spawnPoint.rotation
+        this.ships.set(ship.id, ship)
+        this.shipArray.push(ship)
     }
 
     playerLeft = (player:Player) => {

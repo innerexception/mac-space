@@ -111,6 +111,11 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             }
         }
     }
+
+    applyUpdate = (update:ShipUpdate) => {
+        //not used on server side
+    }
+
 }
 
 

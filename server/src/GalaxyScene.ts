@@ -1,17 +1,19 @@
 import { Scene } from "phaser";
 import { StarSystems } from '../../client/data/StarSystems'
 import StarSystem from './ServerStarSystem'
-import WS from './WebsocketClient'
 import ServerStarSystem from "./ServerStarSystem";
+import WebsocketClient from "./WebsocketClient";
 
 export default class GalaxyScene extends Scene {
 
+    server: WebsocketClient
     scenes: Array<string>
     playerUpdates: Array<ShipUpdate>
 
-    constructor(config,){
+    constructor(config, server:WebsocketClient){
       super(config)
       this.scenes = StarSystems.map(system=>system.name)
+      this.server = new WebsocketClient(this.onWSMessage, this.onConnected, this.onConnectionError)
     }
 
     preload() {
@@ -22,23 +24,23 @@ export default class GalaxyScene extends Scene {
         
         //TODO: load up all the systems in the galaxy. In future, we want 1 server per system probs
         StarSystems.forEach((system)=>{
-          this.scene.add(system.name, new StarSystem({key:system.name}, system, server), true)
+          this.scene.add(system.name, new StarSystem({key:system.name, system}, this.server), true)
         })
       }
       
     update(time, delta) {
       //TODO: use delta to fire position updates at 100ms interval for client reconciliation
-      if(delta%100===0){
+      if(time%100===0){
         for(var i=0; i<this.scenes.length; i++){
           let scene = this.scene.get(this.scenes[i]) as ServerStarSystem
           for(var i=0; i<this.playerUpdates.length; i++){
             scene.onApplyPlayerUpdate(this.playerUpdates[i])
           }
-          server.publishMessage({
+          this.server.publishMessage({
             type: ServerMessages.SERVER_UPDATE,
             event: {
-                ships: Array.from(scene.ships),
-                asteroids: Array.from(scene.asteroids)
+                ships: scene.shipUpdates,
+                asteroids: scene.asteroidUpdates
             }
           })
         }
@@ -48,6 +50,19 @@ export default class GalaxyScene extends Scene {
 
     onRecievePlayerUpdate = (update:ShipUpdate) => {
         this.playerUpdates.push(update)
+    }
+
+    onWSMessage = (data) => {
+        const payload = JSON.parse(data.data) as ServerMessage
+        console.log("I got it: "+payload)
+        this.onRecievePlayerUpdate(payload.event as ShipUpdate)
+    }
+
+    onConnected = () => {
+      this.server.publishMessage({type: ServerMessages.HEADLESS_CONNECT, event: null})
+    }
+    onConnectionError = () => {
+        console.log('wtf----')
     }
 
       //Player sent input command
@@ -77,19 +92,3 @@ export default class GalaxyScene extends Scene {
     //     });
     //   }
 }
-
-export const onWSMessage = (data) => {
-  //TODO: connect to wss instance from the headless browser
-    const payload = JSON.parse(data.data)
-    console.log("I got it: "+payload)
-    processEvent(payload)
-}
-export const onConnected = () => {
-    server.publishMessage({type: ServerMessages.HEADLESS_CONNECT, event: null})
-}
-export const onConnectionError = () => {
-    //TODO: connect to wss instance from the headless browser
-    console.log('wtf----')
-}
-
-export const server = new WS()

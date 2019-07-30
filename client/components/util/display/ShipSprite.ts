@@ -1,7 +1,7 @@
 import { GameObjects, Physics, Scene, } from "phaser";
 import System from "../StarSystem";
 import { onTogglePlanetMenu } from "../../uiManager/Thunks";
-import { server } from "../../../App";
+import WebsocketClient from "../../../WebsocketClient";
 
 export default class ShipSprite extends Physics.Arcade.Sprite {
 
@@ -14,9 +14,11 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     shipData: Ship
     lastAckSequence: number
     bufferedInputs: Array<ShipUpdate>
+    server:WebsocketClient
 
-    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, isPlayerControlled:boolean, ship:Ship){
+    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, isPlayerControlled:boolean, ship:Ship, server:WebsocketClient){
         super(scene, x, y, texture)
+        this.server=server
         this.scene.add.existing(this)
         this.scene.physics.world.enable(this);
         this.shipData = ship
@@ -103,9 +105,13 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     }
 
-    rotate = (rotate:number) => {
-        this.rotation += rotate
-        this.addShipUpdate(this.shipData, PlayerEvents.ROTATE)
+    rotateLeft = () => {
+        this.rotation -= this.shipData.turn
+        this.addShipUpdate(this.shipData, PlayerEvents.ROTATE_L)
+    }
+    rotateRight = () => {
+        this.rotation += this.shipData.turn
+        this.addShipUpdate(this.shipData, PlayerEvents.ROTATE_R)
     }
 
     thrust = () => {
@@ -180,7 +186,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
                 break
             case PlayerEvents.FIRE_PRIMARY:
                 break
-            case PlayerEvents.ROTATE:
+            case PlayerEvents.ROTATE_L:
+            case PlayerEvents.ROTATE_R:
                 this.rotation = update.shipData.rotation
                 break
         }
@@ -202,23 +209,10 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
                 acceleration: (ship.sprite.body as any).acceleration
             }
         }
-        server.publishMessage({
+        this.server.publishMessage({
             type: ServerMessages.PLAYER_EVENT, 
             event: update
         })
         this.bufferedInputs.push(update)
-    }
-}
-
-const getValueForEvent = (event:PlayerEvents, ship:ShipSprite) => {
-    switch(event){
-        case PlayerEvents.FIRE_PRIMARY:
-            return true
-        case PlayerEvents.ROTATE:
-            return ship.rotation
-        case PlayerEvents.THRUST:
-            return (ship.body as any).acceleration
-        case PlayerEvents.THRUST_OFF:
-            return true
     }
 }

@@ -37,6 +37,14 @@ interface Player {
     notoriety: number
 }
 
+interface PlayerSpawnPoint {
+    x: number
+    y: number
+    rotation: number
+    xVelocity: number
+    yVelocity: number
+}
+
 interface Faction {
     name: string
     reputation: number
@@ -47,7 +55,8 @@ interface ShipSprite extends Phaser.Physics.Arcade.Sprite {
     startJumpSequence(targetSystem:SystemState)
     firePrimary()
     fireSecondary()
-    rotate(rotation:number)
+    rotateRight()
+    rotateLeft()
     thrust()
     thrustOff()
     landingSequence: boolean
@@ -115,8 +124,8 @@ interface JumpVector {
 }
 
 interface ServerSystemUpdate {
-    ships: Map<string, ShipUpdate>
-    asteroids: Map<string, AsteroidUpdate>
+    ships: Array<ShipUpdate>
+    asteroids: Array<AsteroidUpdate>
 }
 
 interface AsteroidUpdate {
@@ -167,7 +176,7 @@ interface ShipDataOnly {
 
 interface ServerMessage {
     type: ServerMessages
-    event: ShipUpdate | AsteroidUpdate
+    event: ShipUpdate | AsteroidUpdate | ServerSystemUpdate
 }
 
 interface StellarObjectConfig {
