@@ -3,6 +3,7 @@ import System from "../StarSystem";
 import { onTogglePlanetMenu } from "../../uiManager/Thunks";
 import WebsocketClient from "../../../WebsocketClient";
 import { PlayerEvents, ServerMessages } from "../../../../enum";
+import StarSystem from "../StarSystem";
 
 export default class ShipSprite extends Physics.Arcade.Sprite {
 
@@ -218,7 +219,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         }
         this.server.publishMessage({
             type: ServerMessages.PLAYER_EVENT, 
-            event: update
+            event: update,
+            system: (this.scene as StarSystem).name
         })
         this.bufferedInputs.push(update)
     }

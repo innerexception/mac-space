@@ -51,40 +51,44 @@ export default class StarSystem extends Scene {
         console.log('star system '+this.name+' FAILED to connect.')
     }
 
-    onServerUpdate = (state:ServerSystemUpdate) => {
-        console.log('recieved update from server.')
-        let initRoids = this.asteroids.size === 0
-        state.asteroids.forEach(update=> {
-            let asteroid = this.asteroids.get(update.id)
-            if(asteroid){
-                asteroid.setPosition(update.x, update.y)
-                asteroid.data.values.hp = update.hp
-                if(update.hp <= 0) {
-                    this.destroyAsteroid(asteroid)
+    onServerUpdate = (data:any) => {
+        const payload = JSON.parse(data.data) as ServerMessage
+        if(payload.system === this.name){
+            const state = payload.event as ServerSystemUpdate
+            console.log('recieved update from server.')
+            let initRoids = this.asteroids.size === 0
+            state.asteroids.forEach(update=> {
+                let asteroid = this.asteroids.get(update.id)
+                if(asteroid){
+                    asteroid.setPosition(update.x, update.y)
+                    asteroid.data.values.hp = update.hp
+                    if(update.hp <= 0) {
+                        this.destroyAsteroid(asteroid)
+                    }
                 }
+                else {
+                    console.log('spawning new asteroid at '+update.x+','+update.y)
+                    this.asteroids.set(update.id, this.spawnAsteroid(update))
+                }
+            })
+            if(initRoids){
+                let roids = []
+                this.asteroids.forEach(aster=>roids.push(aster))
+                this.physics.add.collider(this.projectiles, roids, this.playerShotAsteroid);
+                console.log('asteroid physics init completed.')
             }
-            else {
-                console.log('spawning new asteroid at '+update.x+','+update.y)
-                this.spawnAsteroid(update)
-            }
-        })
-        if(initRoids){
-            let roids = []
-            this.asteroids.forEach(aster=>roids.push(aster))
-            this.physics.add.collider(this.projectiles, roids, this.playerShotAsteroid);
-            console.log('asteroid physics init completed.')
+            
+            state.ships.forEach(update=> {
+                let ship = this.ships.get(update.shipData.id)
+                if(ship){
+                    ship.sprite.applyUpdate(update)
+                }
+                else {
+                    console.log('spawning new ship at '+update.shipData.x+','+update.shipData.y)
+                    this.spawnShip(update.shipData)
+                }
+            })
         }
-        
-        state.ships.forEach(update=> {
-            let ship = this.ships.get(update.shipData.id)
-            if(ship){
-                ship.sprite.applyUpdate(update)
-            }
-            else {
-                console.log('spawning new ship at '+update.shipData.x+','+update.shipData.y)
-                this.spawnShip(update.shipData)
-            }
-        })
     }
     
     preload = () =>
@@ -217,12 +221,12 @@ export default class StarSystem extends Scene {
     }
 
     spawnAsteroid = (update:AsteroidUpdate) => {
-        this.physics.add.sprite(update.x,update.y, update.type)
-            .setData('hp', 3)
-            .setData('id', update.id)
-            .setData('type', update.type)
-            .setScale(Phaser.Math.FloatBetween(0.8,0.1))
-            .setRotation(Phaser.Math.FloatBetween(3,0.1))
+        return this.physics.add.sprite(update.x,update.y, update.type)
+                .setData('hp', 3)
+                .setData('id', update.id)
+                .setData('type', update.type)
+                .setScale(Phaser.Math.FloatBetween(0.8,0.1))
+                .setRotation(Phaser.Math.FloatBetween(3,0.1))
     }
 
     playerGotResource = (player:Physics.Arcade.Sprite, resource:GameObjects.Sprite) =>

@@ -178,6 +178,7 @@ interface ShipDataOnly {
 
 interface ServerMessage {
     type: ServerMessages
+    system: string
     event: ShipUpdate | AsteroidUpdate | ServerSystemUpdate
 }
 

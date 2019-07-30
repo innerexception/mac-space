@@ -32,12 +32,14 @@ export default class GalaxyScene extends Scene {
       for(var i=0; i<this.scenes.length; i++){
         let scene = this.scene.get(this.scenes[i]) as ServerStarSystem
         for(var j=0; j<this.playerUpdates.length; j++){
-          console.log('applied update.')
+          console.log('recieved player update with keys: ')
+          Object.keys(this.playerUpdates[j]).forEach(key=>console.log(key))
           scene.onApplyPlayerUpdate(this.playerUpdates[j])
         }
         this.playerUpdates = []
         this.server.publishMessage({
           type: ServerMessages.SERVER_UPDATE,
+          system: scene.name,
           event: {
               ships: getShipUpdates(scene.ships),
               asteroids: getAsteroidUpdates(scene.asteroids)
@@ -52,12 +54,11 @@ export default class GalaxyScene extends Scene {
 
     onWSMessage = (data) => {
         const payload = JSON.parse(data.data) as ServerMessage
-        console.log("I got event of type: "+payload.type + ' with payload: '+payload.event)
         this.onRecievePlayerUpdate(payload.event as ShipUpdate)
     }
 
     onConnected = () => {
-      this.server.publishMessage({type: ServerMessages.HEADLESS_CONNECT, event: null})
+      this.server.publishMessage({type: ServerMessages.HEADLESS_CONNECT, event: null, system: '-Server-'})
     }
 
     onConnectionError = () => {

@@ -81,7 +81,6 @@ wsServer.on('request', function(request) {
   var socketId = Date.now()+''+Math.random()
   connection.id = socketId
   sockets[socketId] = connection
-
   console.log((new Date()) + ' Connection accepted.');
 
   // user sent some message
@@ -94,7 +93,6 @@ wsServer.on('request', function(request) {
             session.serverSocketId = socketId
             break
           case ServerMessages.PLAYER_EVENT:
-            console.log('Player event.')
             publishToServer(obj.event)
             break
           case ServerMessages.PLAYER_EVENT_ACK: 
@@ -102,8 +100,7 @@ wsServer.on('request', function(request) {
             publishToPlayers(obj.event)
             break
           case ServerMessages.SERVER_UPDATE:
-            console.log('Server 100ms update sent.')
-            publishToPlayers(obj.playerStates)
+            publishToPlayers(obj.event, obj.system)
             break
         }
     }
@@ -116,18 +113,20 @@ wsServer.on('request', function(request) {
       let player = session.players.find((player) => player.socketId === socketId)
       if(player){
         console.log('removing player '+player.name+' from session '+name)
-        session.players = session.players.filter((rplayer) => rplayer.id !== player.id)
+        session.players = session.players.filter((rplayer) => rplayer.socketId !== player.socketId)
         delete sockets[socketId]
       }
   });
 });
 
 
-const publishToPlayers = (playerStates) => {
-  session.players.forEach((player) => {
-    var message = getPlayerUpdateMessage(playerStates[player.id])
-    var json = JSON.stringify({ type:'message', data: message });
-    sockets[player.socketId].sendUTF(json);
+const publishToPlayers = (event, system) => {
+  Object.keys(sockets).forEach((socketId) => {
+    if(socketId !== session.serverSocketId){
+      var message = getPlayerUpdateMessage(event, system)
+      var json = JSON.stringify({ type:'message', data: message });
+      sockets[socketId].sendUTF(json);
+    }
   })
 }
 
@@ -148,28 +147,29 @@ const publishToServer = (playerEvent) => {
 //An event a player claims to have done: 
 //rotate, fire, thrust, land, jump, or any non-physics transaction
 //Server needs to ACK these with the sequence timestamp
-const getPlayerEventMessage = (playerEvent) => {
+const getPlayerEventMessage = (event) => {
   return JSON.stringify({
     type: ServerMessages.PLAYER_EVENT,
-    playerEvent
+    event
   })
 }
 
 //Ack an event a player previously send with resulting state snapshot
 //PlayerEvent object has sequence timestamp so that the client can DROP older ACKs if they come in out of order
-const getPlayerEventAckMessage = (playerEvent) => {
+const getPlayerEventAckMessage = (event) => {
   return JSON.stringify({
     type: ServerMessages.PLAYER_EVENT_ACK,
-    playerEvent
+    event
   })
 }
 
 //The 100ms state update for each player. 
 //Contains entire star system snapshot: stellar objects, ships, projectiles
 //Clients will validate against these, and potentially be corrected.
-const getPlayerUpdateMessage = (playerState) => {
+const getPlayerUpdateMessage = (event, system) => {
   return JSON.stringify({
-    type: ServerMessages.MATCH_UPDATE,
-    playerState: playerState
+    type: ServerMessages.SERVER_UPDATE,
+    event,
+    system
   })
 }
