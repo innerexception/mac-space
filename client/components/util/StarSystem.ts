@@ -14,7 +14,6 @@ export default class StarSystem extends Scene {
     ships: Map<string,Ship>
     planets: Array<GameObjects.Sprite>
     asteroids: Map<string, Physics.Arcade.Sprite>
-    resources: GameObjects.Group
     explosions: GameObjects.Group
     projectiles: GameObjects.Group
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
@@ -72,9 +71,9 @@ export default class StarSystem extends Scene {
                 }
             })
             if(initRoids){
-                let roids = []
-                this.asteroids.forEach(aster=>roids.push(aster))
-                this.physics.add.collider(this.projectiles, roids, this.playerShotAsteroid);
+                // let roids = []
+                // this.asteroids.forEach(aster=>roids.push(aster))
+                // this.physics.add.collider(this.projectiles, roids, this.playerShotAsteroid);
                 console.log('asteroid physics init completed.')
             }
             
@@ -85,7 +84,7 @@ export default class StarSystem extends Scene {
                 }
                 else {
                     console.log('spawning new ship at '+update.shipData.x+','+update.shipData.y)
-                    this.spawnShip(update.shipData)
+                    this.spawnShip(update.shipData, { x: this.planets[0].x, y: this.planets[0].y, rotation: 0 })
                 }
             })
         }
@@ -174,14 +173,13 @@ export default class StarSystem extends Scene {
         this.minimap.scrollY = Phaser.Math.Clamp(this.activeShip.sprite.y, 0, 3000);
     }
     
-    spawnShip = (config:ShipDataOnly) => {
+    spawnShip = (config:ShipDataOnly, spawnPoint:PlayerSpawnPoint) => {
         let ship = {...Ships[config.name], ...config}
-        ship.sprite = new ShipSprite(this.scene.scene, 1600, 400, ship.asset, this.projectiles, false, ship, this.server)
-        if(config.jumpVector){
+        ship.sprite = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, ship.asset, this.projectiles, false, ship, this.server)
+        ship.sprite.rotation = spawnPoint.rotation
+        if(spawnPoint.xVelocity){
             //TODO: set starting edge coords based on previous system coords, right now defaults to top left corner
-            //ship.sprite.setPosition(config.jumpVector.startX, config.jumpVector.startY)
             ship.sprite.setVelocity(config.jumpVector.x*500, config.jumpVector.y*-500)
-            ship.sprite.rotation = config.jumpVector.rotation
         }
         this.ships.set(ship.id, ship)
     }

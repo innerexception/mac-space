@@ -3,7 +3,7 @@ import { StarSystems } from '../../client/data/StarSystems'
 import StarSystem from './ServerStarSystem'
 import ServerStarSystem from "./ServerStarSystem";
 import WebsocketClient from "./WebsocketClient";
-import { ServerMessages } from "../../enum";
+import { ServerMessages, PlayerEvents } from "../../enum";
 
 export default class GalaxyScene extends Scene {
 

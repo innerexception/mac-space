@@ -4,6 +4,7 @@ import ShipSprite from './ServerShipSprite'
 import WebsocketClient from "./WebsocketClient";
 import * as Ships from '../../client/data/Ships'
 import { v4 } from 'uuid'
+import { PlayerEvents } from "../../enum";
 
 export default class ServerStarSystem extends Scene {
 
@@ -58,7 +59,7 @@ export default class ServerStarSystem extends Scene {
     onApplyPlayerUpdate = (update:ShipUpdate) => {
         //perform change on entity TODO: maybe also send acks if needed
         let ship = this.ships.get(update.shipData.id)
-        if(ship)
+        if(ship){
             switch(update.type){
                 case PlayerEvents.FIRE_PRIMARY: 
                     ship.sprite.firePrimary()
@@ -75,11 +76,12 @@ export default class ServerStarSystem extends Scene {
                 case PlayerEvents.THRUST_OFF: 
                     ship.sprite.thrustOff()
                     break
-                case PlayerEvents.PLAYER_SPAWNED:
-                    console.log('ship spawned at '+update.shipData.x+','+update.shipData.y)
-                    this.spawnShip(update.shipData, {x: update.shipData.x, y: update.shipData.y, rotation: update.shipData.rotation })
-                    break
             }
+        }
+        else if(update.type === PlayerEvents.PLAYER_SPAWNED){
+            console.log('ship spawned at '+update.shipData.x+','+update.shipData.y)
+            this.spawnShip(update.shipData, {x: update.shipData.x, y: update.shipData.y, rotation: update.shipData.rotation })
+        }
     }
 
     addPlanets = () => {
@@ -140,7 +142,7 @@ export default class ServerStarSystem extends Scene {
         thisShip.sprite = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, ship.asset, this.projectiles, thisShip)
         
         //Can spawn from a planet or some edge if jumping in
-        thisShip.sprite.setVelocity(spawnPoint.xVelocity*ship.maxSpeed, spawnPoint.yVelocity*-ship.maxSpeed)
+        //thisShip.sprite.setVelocity(spawnPoint.xVelocity*ship.maxSpeed, spawnPoint.yVelocity*-ship.maxSpeed)
         thisShip.sprite.rotation = spawnPoint.rotation
         this.ships.set(ship.id, thisShip)
     }

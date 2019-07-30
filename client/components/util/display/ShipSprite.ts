@@ -179,26 +179,16 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             if(bupdate.sequence <= this.lastAckSequence)
                 this.bufferedInputs.splice(i, 1)
             else {
-                this.applyState(bupdate)
+                this.applyState(bupdate.shipData)
             }
         }
+        this.applyState(update.shipData)
     }
 
-    applyState = (update:ShipUpdate) => {
-        switch(update.type){
-            case PlayerEvents.THRUST:
-                this.setAcceleration(update.shipData.acceleration.x, update.shipData.acceleration.y)
-                break
-            case PlayerEvents.THRUST_OFF:
-                this.setAcceleration(0,0)
-                break
-            case PlayerEvents.FIRE_PRIMARY:
-                break
-            case PlayerEvents.ROTATE_L:
-            case PlayerEvents.ROTATE_R:
-                this.rotation = update.shipData.rotation
-                break
-        }
+    applyState = (update:ShipDataOnly) => {
+        this.setPosition(update.x, update.y)
+        this.setAcceleration(update.acceleration.x, update.acceleration.y)
+        this.rotation = update.rotation
     }
 
     addShipUpdate = (ship:Ship, event:PlayerEvents) => {
