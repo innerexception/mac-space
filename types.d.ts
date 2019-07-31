@@ -92,6 +92,7 @@ interface Ship {
     guns: Array<Gun>
     asset: string
     firePrimary: boolean
+    cargo: Array<InventoryData>
 }
 
 interface Gun {
@@ -176,6 +177,13 @@ interface ShipDataOnly {
     asset: string
     jumpVector: JumpVector
     firePrimary: boolean
+    cargo: Array<InventoryData>
+}
+
+interface InventoryData {
+    name: string
+    weight: number
+    asset: string
 }
 
 interface ServerMessage {

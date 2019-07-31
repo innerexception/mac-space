@@ -1,4 +1,5 @@
 import { Scene, GameObjects, Physics, } from "phaser";
+import ResourceChunk from '../../client/components/util/display/ResourceChunk'
 import Projectile from '../../client/components/util/display/Projectile'
 import ShipSprite from './ServerShipSprite'
 import WebsocketClient from "./WebsocketClient";
@@ -9,8 +10,10 @@ import { PlayerEvents } from "../../enum";
 export default class ServerStarSystem extends Scene {
 
     ships: Map<string,Ship>
+    shipArray: Array<ShipSprite>
     planets: Array<GameObjects.Sprite>
     asteroids: Map<string, Physics.Arcade.Sprite>
+    resources: GameObjects.Group
     projectiles: GameObjects.Group
     name: string
     server: WebsocketClient
@@ -25,6 +28,7 @@ export default class ServerStarSystem extends Scene {
         this.planets = []
         this.asteroids = new Map()
         this.ships = new Map()
+        this.shipArray = []
     }
 
     preload = () =>
@@ -42,6 +46,10 @@ export default class ServerStarSystem extends Scene {
 
         this.projectiles = this.physics.add.group({ classType: Projectile  })
         this.projectiles.runChildUpdate = true
+
+        this.resources = this.physics.add.group({ classType: ResourceChunk  })
+        this.resources.runChildUpdate = true
+        this.physics.add.collider(this.resources, this.shipArray, this.playerGotResource);
         
         this.addAsteroids()
         this.addPlanets()
@@ -145,17 +153,22 @@ export default class ServerStarSystem extends Scene {
         //thisShip.sprite.setVelocity(spawnPoint.xVelocity*ship.maxSpeed, spawnPoint.yVelocity*-ship.maxSpeed)
         thisShip.sprite.rotation = spawnPoint.rotation
         this.ships.set(ship.id, thisShip)
+        this.shipArray.push(thisShip.sprite)
     }
 
     playerLeft = (player:Player) => {
         //TODO send player left system message with player id and exit vector
     }
 
-    playerGotResource = (player:any, resource:any) =>
+    playerGotResource = (ship:ShipSprite, resource:ResourceChunk) =>
     {
-        resource.destroy();
-        //TODO: send player picked up resource message with id of resource to destroy
-        //onAddCargo(resource.data.values.type, resource.data.values.weight)
+        if(ship.shipData.cargoSpace >= resource.weight){
+            console.log('you hit it')
+            resource.destroy();
+            //TODO: pick up resource and add to cargo
+            ship.shipData.cargoSpace -= resource.weight
+            ship.shipData.cargo.push(resource.inventoryData)
+        }
     }
 
     playerShotAsteroid = (asteroid:any, projectile:any) =>
@@ -165,18 +178,15 @@ export default class ServerStarSystem extends Scene {
             asteroid.data.values.hp-=1
         }
         else{
-            //asteroid.destroy()
-            // this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
-            //TODO: send spawn resources message with id of asteroid to destroy also
+            //asteroid.destroy() don't do this, we will re-use these later maybe
+            //TODO: spawn resource chunks
+            let res = this.resources.get() as ResourceChunk
+            if(res) res.spawn(asteroid)
         }
     }
 
     playerBoardedShip = (player:Physics.Arcade.Sprite, targetShip:Physics.Arcade.Sprite) => {
         //TODO: send boarding action message with 2 participant ships ids
-    }
-
-    playerFiredPrimary = (player:Player) => {
-        //TODO: send projectile fired message with projectile type and fire vector
     }
 
     shipDamaged = (ship:Physics.Arcade.Sprite) => {

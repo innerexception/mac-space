@@ -5,6 +5,7 @@ import ShipSprite from "./display/ShipSprite";
 import * as Ships from '../../data/Ships'
 import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
+import ResourceChunk from "./display/ResourceChunk";
 
 export default class StarSystem extends Scene {
 
@@ -12,9 +13,11 @@ export default class StarSystem extends Scene {
     player: Player
     activeShip: Ship
     ships: Map<string,Ship>
+    shipArray: Array<ShipSprite>
     planets: Array<GameObjects.Sprite>
     asteroids: Map<string, Physics.Arcade.Sprite>
     explosions: GameObjects.Group
+    resources: GameObjects.Group
     projectiles: GameObjects.Group
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
     currentSystem: SystemState
@@ -33,6 +36,7 @@ export default class StarSystem extends Scene {
         this.ships = new Map()
         this.asteroids = new Map()
         this.planets = []
+        this.shipArray = []
     }
 
     onReduxUpdate = () => {
@@ -55,6 +59,7 @@ export default class StarSystem extends Scene {
             const state = payload.event as ServerSystemUpdate
             let initRoids = this.asteroids.size === 0
             state.asteroids.forEach(update=> {
+                //TODO: possible memory leak from dead asteroids in the Map, if we start spawning new ones.
                 let asteroid = this.asteroids.get(update.id)
                 if(asteroid){
                     this.tweens.add({
@@ -128,6 +133,10 @@ export default class StarSystem extends Scene {
         this.projectiles = this.physics.add.group({ classType: Projectile  })
         this.projectiles.runChildUpdate = true
         
+        this.resources = this.physics.add.group({ classType: ResourceChunk  })
+        this.resources.runChildUpdate = true
+        this.physics.add.collider(this.resources, this.shipArray, this.playerGotResource);
+        
         this.createStarfield()
         this.addPlanets()
 
@@ -189,6 +198,7 @@ export default class StarSystem extends Scene {
             ship.sprite.setVelocity(config.jumpVector.x*500, config.jumpVector.y*-500)
         }
         this.ships.set(ship.id, ship)
+        this.shipArray.push(ship.sprite)
     }
 
     addPlanets = () => {
@@ -234,11 +244,10 @@ export default class StarSystem extends Scene {
                 .setRotation(Phaser.Math.FloatBetween(3,0.1))
     }
 
-    playerGotResource = (player:Physics.Arcade.Sprite, resource:GameObjects.Sprite) =>
+    playerGotResource = (player:ShipSprite, resource:ResourceChunk) =>
     {
         resource.destroy();
-        //TODO
-        //onAddCargo(resource.data.values.type, resource.data.values.weight)
+        //TODO: you'll get ur cargo if the server agrees
     }
 
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:Projectile) =>
@@ -247,6 +256,8 @@ export default class StarSystem extends Scene {
         asteroid.data.values.hp-=1
 
         if(asteroid.data.values.hp <= 0){
+            let res = this.resources.get() as ResourceChunk
+            if(res) res.spawn(asteroid)
             this.destroyAsteroid(asteroid)
         }
     }
