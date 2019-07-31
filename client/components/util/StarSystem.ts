@@ -54,12 +54,16 @@ export default class StarSystem extends Scene {
         const payload = JSON.parse(data.data) as ServerMessage
         if(payload.system === this.name){
             const state = payload.event as ServerSystemUpdate
-            console.log('recieved update from server.')
             let initRoids = this.asteroids.size === 0
             state.asteroids.forEach(update=> {
                 let asteroid = this.asteroids.get(update.id)
                 if(asteroid){
-                    asteroid.setPosition(update.x, update.y)
+                    this.tweens.add({
+                        targets: asteroid,
+                        x: update.x,
+                        y: update.y,
+                        duration: 100
+                    })
                     asteroid.data.values.hp = update.hp
                     if(update.hp <= 0) {
                         this.destroyAsteroid(asteroid)
