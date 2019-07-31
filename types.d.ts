@@ -205,8 +205,8 @@ interface Session {
 }
 
 interface Asset {
-    key: string,
-    type: 'image' | 'spritesheet'
+    key: string
+    type: string
     resource: any
     data?: any
 }

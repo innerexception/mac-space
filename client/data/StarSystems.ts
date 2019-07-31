@@ -19,17 +19,7 @@ export const Rigel:SystemState = {
         }
     ],
     ships: [],
-    assetList: [
-        { key: 'star', resource: Assets.star, type: 'image' },
-        { key: 'bigStar', resource: Assets.star2, type: 'image' },
-        { key: 'planet', resource: Assets.planet, type: 'image' },
-        { key: 'Iron', resource: Assets.asteroid1, type: 'image' },
-        { key: 'Silver', resource: Assets.asteroid2, type: 'image' },
-        { key: 'boom', resource: Assets.boom, type: 'spritesheet', data:  { frameWidth: 64, frameHeight: 64 } },
-        { key: 'lazor', resource: Assets.lazor, type: 'image' },
-        { key: 'ship', resource: Assets.ship, type: 'image' },
-        { key: 'proton', resource: Assets.proton, type: 'image' }
-    ]
+    assetList: Assets.defaults
 }
 export const Arcturus:SystemState = {
     name: 'Arcturus',
@@ -49,17 +39,7 @@ export const Arcturus:SystemState = {
         }
     ],
     ships: [],
-    assetList: [
-        { key: 'star', resource: Assets.star, type: 'image' },
-        { key: 'bigStar', resource: Assets.star2, type: 'image' },
-        { key: 'planet', resource: Assets.planet, type: 'image' },
-        { key: 'Iron', resource: Assets.asteroid1, type: 'image' },
-        { key: 'Silver', resource: Assets.asteroid2, type: 'image' },
-        { key: 'lazor', resource: Assets.lazor, type: 'image' },
-        { key: 'ship', resource: Assets.ship, type: 'image' },
-        { key: 'boom', resource: Assets.boom, type: 'spritesheet', data:  { frameWidth: 64, frameHeight: 64 } },
-        { key: 'proton', resource: Assets.proton, type: 'image' }
-    ]
+    assetList: Assets.defaults
 }
 
 export const Centauri:SystemState = {
@@ -80,17 +60,7 @@ export const Centauri:SystemState = {
         }
     ],
     ships: [],
-    assetList: [
-        { key: 'star', resource: Assets.star, type: 'image' },
-        { key: 'bigStar', resource: Assets.star2, type: 'image' },
-        { key: 'planet', resource: Assets.planet, type: 'image' },
-        { key: 'Iron', resource: Assets.asteroid1, type: 'image' },
-        { key: 'Silver', resource: Assets.asteroid2, type: 'image' },
-        { key: 'lazor', resource: Assets.lazor, type: 'image' },
-        { key: 'ship', resource: Assets.ship, type: 'image' },
-        { key: 'boom', resource: Assets.boom, type: 'spritesheet', data:  { frameWidth: 64, frameHeight: 64 } },
-        { key: 'proton', resource: Assets.proton, type: 'image' }
-    ]
+    assetList: Assets.defaults
 }
 
 export const StarSystems:Array<SystemState> = [

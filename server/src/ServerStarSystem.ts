@@ -160,15 +160,15 @@ export default class ServerStarSystem extends Scene {
 
     playerShotAsteroid = (asteroid:any, projectile:any) =>
     {
-        // if(asteroid.data.values.hp > 0){
-        //     projectile.destroy();
-        //     asteroid.data.values.hp-=1
-        // }
-        // else{
-        //     //asteroid.destroy()
-        //     // this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
-        //     //TODO: send spawn resources message with id of asteroid to destroy also
-        // }
+        if(asteroid.data.values.hp > 0){
+            projectile.destroy();
+            asteroid.data.values.hp-=1
+        }
+        else{
+            //asteroid.destroy()
+            // this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
+            //TODO: send spawn resources message with id of asteroid to destroy also
+        }
     }
 
     playerBoardedShip = (player:Physics.Arcade.Sprite, targetShip:Physics.Arcade.Sprite) => {
