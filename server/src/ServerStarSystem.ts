@@ -57,7 +57,7 @@ export default class ServerStarSystem extends Scene {
     }
 
     onApplyPlayerUpdate = (update:ShipUpdate) => {
-        //perform change on entity TODO: maybe also send acks if needed
+        //perform change on entity
         let ship = this.ships.get(update.shipData.id)
         if(ship){
             switch(update.type){
@@ -158,17 +158,17 @@ export default class ServerStarSystem extends Scene {
         //onAddCargo(resource.data.values.type, resource.data.values.weight)
     }
 
-    playerShotAsteroid = (projectile:any, asteroid:any) =>
+    playerShotAsteroid = (asteroid:any, projectile:any) =>
     {
-        projectile.destroy();
-        asteroid.data.values.hp-=1
-        //TODO: send asteroid hp reduction message with id of projectile to destroy also
-
-        if(asteroid.data.values.hp <= 0){
-            // asteroid.destroy()
-            // this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
-            //TODO: send spawn resources message with id of asteroid to destroy also
-        }
+        // if(asteroid.data.values.hp > 0){
+        //     projectile.destroy();
+        //     asteroid.data.values.hp-=1
+        // }
+        // else{
+        //     //asteroid.destroy()
+        //     // this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
+        //     //TODO: send spawn resources message with id of asteroid to destroy also
+        // }
     }
 
     playerBoardedShip = (player:Physics.Arcade.Sprite, targetShip:Physics.Arcade.Sprite) => {

@@ -81,6 +81,7 @@ const getShipUpdates = (ships:Map<string,Ship>) => {
         fighters: []
       }
     })
+    ship.firePrimary = false
   })
   return updates
 }

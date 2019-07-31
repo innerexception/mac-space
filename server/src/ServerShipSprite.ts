@@ -63,6 +63,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         const projectile = this.projectiles.get().setActive(true).setVisible(true)
         if(projectile){
             projectile.fire(this)
+            this.shipData.firePrimary = true
         }
     }
 
