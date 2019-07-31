@@ -25,15 +25,14 @@ export default class GalaxyScene extends Scene {
         StarSystems.forEach((system)=>{
           this.scene.add(system.name, new StarSystem({key:system.name}, system, this.server), true)
         })
-        this.time.addEvent({ delay: 100, callback: this.step, loop: true });
+        this.time.addEvent({ delay: 50, callback: this.step, loop: true });
     }
       
     step= () => {
       for(var i=0; i<this.scenes.length; i++){
         let scene = this.scene.get(this.scenes[i]) as ServerStarSystem
         for(var j=0; j<this.playerUpdates.length; j++){
-          console.log('recieved player update with keys: ')
-          Object.keys(this.playerUpdates[j]).forEach(key=>console.log(key))
+          //Object.keys(this.playerUpdates[j]).forEach(key=>console.log(key))
           scene.onApplyPlayerUpdate(this.playerUpdates[j])
         }
         this.playerUpdates = []
@@ -82,6 +81,7 @@ const getShipUpdates = (ships:Map<string,Ship>) => {
         fighters: []
       }
     })
+    ship.firePrimary = false
   })
   return updates
 }

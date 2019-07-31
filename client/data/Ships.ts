@@ -22,5 +22,6 @@ export const Shuttle:Ship = {
     turrentMounts: 0,
     hardPoints: 0,
     guns: [],
-    asset: 'ship'
+    asset: 'ship',
+    firePrimary: false
 }

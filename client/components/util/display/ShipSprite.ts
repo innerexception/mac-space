@@ -105,7 +105,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         const projectile = this.projectiles.get().setActive(true).setVisible(true)
         if(projectile){
             projectile.fire(this)
-            this.addShipUpdate(this.shipData, PlayerEvents.FIRE_PRIMARY)
+            if(this.isPlayerControlled)
+                this.addShipUpdate(this.shipData, PlayerEvents.FIRE_PRIMARY)
         }
     }
 
@@ -182,13 +183,25 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
                 this.applyState(bupdate.shipData)
             }
         }
-        this.applyState(update.shipData)
+        this.applyState(update.shipData, true)
     }
 
-    applyState = (update:ShipDataOnly) => {
-        this.setPosition(update.x, update.y)
+    applyState = (update:ShipDataOnly, doTween?:boolean) => {
+        if(doTween){
+            this.scene.add.tween({
+                targets: this,
+                x: update.x,
+                y: update.y,
+                rotation: update.rotation, //TODO: clamp to shortest rotation distance
+                duration: 50
+            })
+        }
+        else{
+            this.setPosition(update.x, update.y)
+            this.rotation = update.rotation
+        }
         this.setAcceleration(update.acceleration.x, update.acceleration.y)
-        this.rotation = update.rotation
+        if(update.firePrimary && !this.isPlayerControlled) this.firePrimary()
     }
 
     addShipUpdate = (ship:Ship, event:PlayerEvents) => {
@@ -204,7 +217,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
                 x: ship.sprite.x,
                 y: ship.sprite.y,
                 rotation: ship.sprite.rotation,
-                acceleration: (ship.sprite.body as any).acceleration
+                acceleration: (ship.sprite.body as any).acceleration,
+                firePrimary: event === PlayerEvents.FIRE_PRIMARY
             }
         }
         this.server.publishMessage({

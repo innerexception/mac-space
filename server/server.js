@@ -56,7 +56,8 @@ var Constants = {
  * WebSocket server
  */
 
-var sockets = {};
+var sockets = {}
+var socketIds = []
 var session = {
   players: []
 }
@@ -81,6 +82,7 @@ wsServer.on('request', function(request) {
   var socketId = Date.now()+''+Math.random()
   connection.id = socketId
   sockets[socketId] = connection
+  socketIds.push(socketId)
   console.log((new Date()) + ' Connection accepted.');
 
   // user sent some message
@@ -95,10 +97,6 @@ wsServer.on('request', function(request) {
           case ServerMessages.PLAYER_EVENT:
             publishToServer(obj.event)
             break
-          case ServerMessages.PLAYER_EVENT_ACK: 
-            console.log('Server ACK player event: '+obj.event + ', seq: '+obj.sequence)
-            publishToPlayers(obj.event)
-            break
           case ServerMessages.SERVER_UPDATE:
             publishToPlayers(obj.event, obj.system)
             break
@@ -109,32 +107,21 @@ wsServer.on('request', function(request) {
   // user disconnected
   connection.on('close', (code) => {
       console.log((new Date()) + "A Peer disconnected: "+code);
-      // remove user from the list of connected clients
-      let player = session.players.find((player) => player.socketId === socketId)
-      if(player){
-        console.log('removing player '+player.name+' from session '+name)
-        session.players = session.players.filter((rplayer) => rplayer.socketId !== player.socketId)
-        delete sockets[socketId]
-      }
+      socketIds = socketIds.filter(id=>id!==socketId)
+      delete sockets[socketId]
   });
 });
 
 
 const publishToPlayers = (event, system) => {
-  Object.keys(sockets).forEach((socketId) => {
+  for(var i=0; i<socketIds.length; i++){
+    var socketId = socketIds[i]
     if(socketId !== session.serverSocketId){
       var message = getPlayerUpdateMessage(event, system)
       var json = JSON.stringify({ type:'message', data: message });
       sockets[socketId].sendUTF(json);
     }
-  })
-}
-
-const publishToPlayer = (playerEvent) => {
-  const player = session.players.find(player => player.id === playerEvent.playerId)
-  var message = getPlayerEventAckMessage(playerEvent)
-  var json = JSON.stringify({ type:'message', data: message });
-  sockets[player.socketId].sendUTF(json);
+  }
 }
 
 const publishToServer = (playerEvent) => {

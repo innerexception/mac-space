@@ -91,6 +91,7 @@ interface Ship {
     hardPoints: number
     guns: Array<Gun>
     asset: string
+    firePrimary: boolean
 }
 
 interface Gun {
@@ -174,6 +175,7 @@ interface ShipDataOnly {
     guns: Array<Gun>
     asset: string
     jumpVector: JumpVector
+    firePrimary: boolean
 }
 
 interface ServerMessage {
@@ -203,8 +205,8 @@ interface Session {
 }
 
 interface Asset {
-    key: string,
-    type: 'image' | 'spritesheet'
+    key: string
+    type: string
     resource: any
     data?: any
 }
