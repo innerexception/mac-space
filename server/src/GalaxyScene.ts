@@ -32,7 +32,6 @@ export default class GalaxyScene extends Scene {
       for(var i=0; i<this.scenes.length; i++){
         let scene = this.scene.get(this.scenes[i]) as ServerStarSystem
         for(var j=0; j<this.playerUpdates.length; j++){
-          //Object.keys(this.playerUpdates[j]).forEach(key=>console.log(key))
           scene.onApplyPlayerUpdate(this.playerUpdates[j])
         }
         this.playerUpdates = []
@@ -41,9 +40,12 @@ export default class GalaxyScene extends Scene {
           system: scene.name,
           event: {
               ships: getShipUpdates(scene.ships),
-              asteroids: getAsteroidUpdates(scene.asteroids)
+              asteroids: getAsteroidUpdates(scene.asteroids, scene.deadAsteroids),
+              resources: getResourceUpdates(scene.resources, scene.deadResources)
           }
         })
+        scene.deadAsteroids = []
+        scene.deadResources = []
       }
     }
 
@@ -86,15 +88,56 @@ const getShipUpdates = (ships:Map<string,Ship>) => {
   return updates
 }
 
-const getAsteroidUpdates = (asteroids:Map<string, Physics.Arcade.Sprite>) => {
+const getAsteroidUpdates = (asteroids:Map<string, Physics.Arcade.Sprite>, deadAsteroids:Array<DeadEntityUpdate>) => {
   let updates = new Array<AsteroidUpdate>()
   asteroids.forEach(asteroid=>{
+    if(asteroid.data){
+      updates.push({
+        x: asteroid.x,
+        y: asteroid.y,
+        hp: asteroid.data.values.hp,
+        id: asteroid.data.values.id,
+        type: asteroid.data.values.type,
+        dead: asteroid.data.values.dead
+      })
+    }
+  })
+  deadAsteroids.forEach(roid=>{
+    console.log('asteroid gc')
     updates.push({
-      x: asteroid.x,
-      y: asteroid.y,
-      hp: asteroid.data.values.hp,
-      id: asteroid.data.values.id,
-      type: asteroid.data.values.type,
+      x: -1,
+      y: -1,
+      hp: -1,
+      id: roid.id,
+      dead: true
+    })
+  })
+  return updates
+}
+
+const getResourceUpdates = (resources:Map<string, Physics.Arcade.Sprite>, deadResources: Array<DeadEntityUpdate>) => {
+  let updates = new Array<ResourceUpdate>()
+  resources.forEach(resource=>{
+      if(resource.data){
+        updates.push({
+          x: resource.x,
+          y: resource.y,
+          weight: resource.data.values.weight,
+          id: resource.data.values.id,
+          type: resource.data.values.type,
+          dead: false
+        })
+      }
+  })
+  //These have been removed from the normal update loop to be sent out one last time so clients can GC them
+  deadResources.forEach(resource=>{
+    console.log('resource gc')
+    updates.push({
+        x: -1,
+        y: -1,
+        weight: -1,
+        id: resource.id,
+        dead: true
     })
   })
   return updates

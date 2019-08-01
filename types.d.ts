@@ -131,6 +131,7 @@ interface JumpVector {
 interface ServerSystemUpdate {
     ships: Array<ShipUpdate>
     asteroids: Array<AsteroidUpdate>
+    resources: Array<ResourceUpdate>
 }
 
 interface AsteroidUpdate {
@@ -138,7 +139,21 @@ interface AsteroidUpdate {
     y: number
     hp: number
     id:string
-    type: 'Iron'|'Silver'|'Platinum',
+    type?: 'Iron'|'Silver'|'Platinum'
+    dead: boolean
+}
+
+interface ResourceUpdate {
+    x: number
+    y:number
+    type?: 'Iron'|'Silver'|'Platinum'
+    id: string
+    weight: number
+    dead: boolean
+}
+
+interface DeadEntityUpdate {
+    id: string
 }
 
 interface ShipUpdate {

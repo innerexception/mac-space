@@ -1,6 +1,6 @@
 import { GameObjects, Physics, Scene, } from "phaser";
 
-export default class ShipSprite extends Physics.Arcade.Sprite {
+export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     projectiles: GameObjects.Group
     landingSequence: boolean

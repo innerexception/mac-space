@@ -1,7 +1,6 @@
 import { Scene, GameObjects, Physics, } from "phaser";
-import ResourceChunk from '../../client/components/util/display/ResourceChunk'
 import Projectile from '../../client/components/util/display/Projectile'
-import ShipSprite from './ServerShipSprite'
+import ServerShipSprite from './ServerShipSprite'
 import WebsocketClient from "./WebsocketClient";
 import * as Ships from '../../client/data/Ships'
 import { v4 } from 'uuid'
@@ -10,11 +9,12 @@ import { PlayerEvents } from "../../enum";
 export default class ServerStarSystem extends Scene {
 
     ships: Map<string,Ship>
-    shipArray: Array<ShipSprite>
     planets: Array<GameObjects.Sprite>
     asteroids: Map<string, Physics.Arcade.Sprite>
-    resources: GameObjects.Group
-    projectiles: GameObjects.Group
+    deadAsteroids: Array<DeadEntityUpdate>
+    resources: Map<string, Physics.Arcade.Sprite>
+    deadResources: Array<DeadEntityUpdate>
+    projectiles: Physics.Arcade.Group
     name: string
     server: WebsocketClient
     jumpVector: JumpVector
@@ -27,8 +27,10 @@ export default class ServerStarSystem extends Scene {
         this.server = server
         this.planets = []
         this.asteroids = new Map()
+        this.deadAsteroids = []
         this.ships = new Map()
-        this.shipArray = []
+        this.resources = new Map()
+        this.deadResources = []
     }
 
     preload = () =>
@@ -42,21 +44,15 @@ export default class ServerStarSystem extends Scene {
     create = () =>
     {
         this.cameras.main.setBounds(0, 0, 3200, 3200).setName('main');
+        this.physics.world.setBounds(0,0,3200,3200)
         this.physics.world.setBoundsCollision();
 
         this.projectiles = this.physics.add.group({ classType: Projectile  })
         this.projectiles.runChildUpdate = true
-
-        this.resources = this.physics.add.group({ classType: ResourceChunk  })
-        this.resources.runChildUpdate = true
-        this.physics.add.collider(this.resources, this.shipArray, this.playerGotResource);
         
         this.addAsteroids()
         this.addPlanets()
         
-        let temp = []
-        this.asteroids.forEach(roid=>temp.push(roid))
-        this.physics.add.collider(this.projectiles, temp, this.playerShotAsteroid);
     }
     
     update = (time, delta) =>
@@ -132,6 +128,10 @@ export default class ServerStarSystem extends Scene {
                 roidRay.push(sprite)
             })              
         })
+        
+        let temp = []
+        asteroids.forEach(roid=>temp.push(roid))
+        this.physics.add.overlap(this.projectiles, temp, this.playerShotAsteroid);
         this.asteroids = asteroids
     }
 
@@ -145,44 +145,74 @@ export default class ServerStarSystem extends Scene {
             .setRotation(Phaser.Math.FloatBetween(3,0.1))
     }
 
-    spawnShip = (ship:ShipDataOnly, spawnPoint:PlayerSpawnPoint) => {
-        let thisShip = {...Ships[ship.name], ...ship}
-        thisShip.sprite = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, ship.asset, this.projectiles, thisShip)
-        
-        //Can spawn from a planet or some edge if jumping in
-        //thisShip.sprite.setVelocity(spawnPoint.xVelocity*ship.maxSpeed, spawnPoint.yVelocity*-ship.maxSpeed)
-        thisShip.sprite.rotation = spawnPoint.rotation
-        this.ships.set(ship.id, thisShip)
-        this.shipArray.push(thisShip.sprite)
+    spawnShip = (config:ShipDataOnly, spawnPoint:PlayerSpawnPoint) => {
+        let ship = {...Ships[config.name], ...config}
+        ship.sprite = new ServerShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, ship.asset, this.projectiles, ship)
+        ship.sprite.rotation = spawnPoint.rotation
+        if(spawnPoint.xVelocity){
+            //TODO: set starting edge coords based on previous system coords, right now defaults to top left corner
+            ship.sprite.setVelocity(config.jumpVector.x*500, config.jumpVector.y*-500)
+        }
+        this.ships.set(ship.id, ship)
+        ship.sprite.setCollideWorldBounds(true)
+        let rez = []
+        this.resources.forEach(res=>rez.push(res))
+        this.physics.add.overlap(rez, ship.sprite, this.playerGotResource);
     }
 
-    playerLeft = (player:Player) => {
-        //TODO send player left system message with player id and exit vector
-    }
-
-    playerGotResource = (ship:ShipSprite, resource:ResourceChunk) =>
+    playerGotResource = (resource:Physics.Arcade.Sprite, ship:ServerShipSprite) =>
     {
-        if(ship.shipData.cargoSpace >= resource.weight){
-            console.log('you hit it')
-            resource.destroy();
+        console.log('you hit it:')
+        if(ship.shipData.cargoSpace >= resource.data.values.weight){
             //TODO: pick up resource and add to cargo
-            ship.shipData.cargoSpace -= resource.weight
-            ship.shipData.cargo.push(resource.inventoryData)
+            ship.shipData.cargoSpace -= resource.data.values.weight
+            ship.shipData.cargo.push({
+                weight: resource.data.values.weight,
+                name: resource.data.values.type,
+                asset: resource.data.values.type
+            })
+            console.log('you get it: '+ship.shipData.cargo)
+            this.destroyResource(resource)
         }
     }
 
-    playerShotAsteroid = (asteroid:any, projectile:any) =>
+    destroyResource = (resource:Physics.Arcade.Sprite) => {
+        this.deadResources.push({ id: resource.data.values.id })
+        this.resources.delete(resource.data.values.id)
+        resource.destroy()
+    }
+
+    playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:any) =>
     {
         if(asteroid.data.values.hp > 0){
             projectile.destroy();
             asteroid.data.values.hp-=1
+            console.log('damaged asteroid: '+asteroid.data.values.hp)
+            if(asteroid.data.values.hp <= 0){
+                this.spawnResource(asteroid)
+                this.destroyAsteroid(asteroid)
+            }
         }
-        else{
-            //asteroid.destroy() don't do this, we will re-use these later maybe
-            //TODO: spawn resource chunks
-            let res = this.resources.get() as ResourceChunk
-            if(res) res.spawn(asteroid)
-        }
+    }
+
+    destroyAsteroid = (asteroid:Physics.Arcade.Sprite) =>{ 
+        this.deadAsteroids.push({ id: asteroid.data.values.id })
+        this.asteroids.delete(asteroid.data.values.id)
+        asteroid.destroy()
+    }
+
+    spawnResource = (asteroid) => {
+        let id = v4()
+        let rez = this.physics.add.sprite(asteroid.x,asteroid.y, 'planet')
+            .setData('weight', 1)
+            .setData('id', asteroid.data.values.id)
+            .setData('type', 'planet')
+            .setScale(0.1)
+            .setRotation(Phaser.Math.FloatBetween(3,0.1))
+        this.resources.set(id, rez)
+        let ships = []
+        this.ships.forEach(ship=>ships.push(ship.sprite))
+        this.physics.add.overlap(rez, ships, this.playerGotResource)
     }
 
     playerBoardedShip = (player:Physics.Arcade.Sprite, targetShip:Physics.Arcade.Sprite) => {
@@ -194,4 +224,3 @@ export default class ServerStarSystem extends Scene {
         //TODO: potentially send ship destroyed message
     }
 }
-

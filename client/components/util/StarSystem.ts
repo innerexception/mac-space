@@ -5,7 +5,6 @@ import ShipSprite from "./display/ShipSprite";
 import * as Ships from '../../data/Ships'
 import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
-import ResourceChunk from "./display/ResourceChunk";
 
 export default class StarSystem extends Scene {
 
@@ -13,12 +12,11 @@ export default class StarSystem extends Scene {
     player: Player
     activeShip: Ship
     ships: Map<string,Ship>
-    shipArray: Array<ShipSprite>
     planets: Array<GameObjects.Sprite>
     asteroids: Map<string, Physics.Arcade.Sprite>
     explosions: GameObjects.Group
-    resources: GameObjects.Group
-    projectiles: GameObjects.Group
+    resources: Map<string, Physics.Arcade.Sprite>
+    projectiles: Physics.Arcade.Group
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
     currentSystem: SystemState
     selectedSystem: SystemState
@@ -36,7 +34,7 @@ export default class StarSystem extends Scene {
         this.ships = new Map()
         this.asteroids = new Map()
         this.planets = []
-        this.shipArray = []
+        this.resources = new Map()
     }
 
     onReduxUpdate = () => {
@@ -59,42 +57,65 @@ export default class StarSystem extends Scene {
             const state = payload.event as ServerSystemUpdate
             let initRoids = this.asteroids.size === 0
             state.asteroids.forEach(update=> {
-                //TODO: possible memory leak from dead asteroids in the Map, if we start spawning new ones.
                 let asteroid = this.asteroids.get(update.id)
                 if(asteroid){
-                    this.tweens.add({
-                        targets: asteroid,
-                        x: update.x,
-                        y: update.y,
-                        duration: 100
-                    })
-                    if(asteroid.data){
-                        asteroid.data.values.hp = update.hp
-                    }
-                    if(update.hp <= 0 && asteroid.data) {
+                    if(update.dead){
                         this.destroyAsteroid(asteroid)
+                    }
+                    else {
+                        this.tweens.add({
+                            targets: asteroid,
+                            x: update.x,
+                            y: update.y,
+                            duration: 100
+                        })
+                        asteroid.data.values.hp = update.hp
                     }
                 }
                 else {
                     console.log('spawning new asteroid at '+update.x+','+update.y)
-                    this.asteroids.set(update.id, this.spawnAsteroid(update))
+                    this.spawnAsteroid(update)
                 }
             })
             if(initRoids){
                 let roids = []
                 this.asteroids.forEach(aster=>roids.push(aster))
-                this.physics.add.collider(this.projectiles, roids, this.playerShotAsteroid);
+                this.physics.add.overlap(this.projectiles, roids, this.playerShotAsteroid)
                 console.log('asteroid physics init completed.')
             }
             
             state.ships.forEach(update=> {
                 let ship = this.ships.get(update.shipData.id)
                 if(ship){
-                    ship.sprite.applyUpdate(update)
+                    if(update.shipData.hull <= 0){
+                        this.destroyShip(ship)
+                    }
+                    else {
+                        ship.sprite.applyUpdate(update)
+                    }
                 }
                 else {
                     console.log('spawning new ship at '+update.shipData.x+','+update.shipData.y)
                     this.spawnShip(update.shipData, { x: this.planets[0].x, y: this.planets[0].y, rotation: 0 })
+                }
+            })
+
+            state.resources.forEach(update => {
+                let resource = this.resources.get(update.id)
+                if(resource){
+                    if(update.dead){
+                        this.destroyResource(resource)
+                    }
+                    this.tweens.add({
+                        targets: resource,
+                        x: update.x,
+                        y: update.y,
+                        duration: 100
+                    })
+                }
+                else {
+                    console.log('spawned resource at '+update.x+','+update.y)
+                    this.spawnResource(update)
                 }
             })
         }
@@ -112,6 +133,7 @@ export default class StarSystem extends Scene {
     {
         this.player = store.getState().currentUser
         this.cameras.main.setBounds(0, 0, 3200, 3200).setName('main');
+        this.physics.world.setBounds(0,0,3200,3200)
         this.physics.world.setBoundsCollision();
         //  The miniCam is 400px wide, so can display the whole world at a zoom of 0.2
         this.minimap = this.cameras.add(0, 0, 100, 100).setZoom(0.1).setName('mini');
@@ -132,10 +154,6 @@ export default class StarSystem extends Scene {
 
         this.projectiles = this.physics.add.group({ classType: Projectile  })
         this.projectiles.runChildUpdate = true
-        
-        this.resources = this.physics.add.group({ classType: ResourceChunk  })
-        this.resources.runChildUpdate = true
-        this.physics.add.collider(this.resources, this.shipArray, this.playerGotResource);
         
         this.createStarfield()
         this.addPlanets()
@@ -180,13 +198,12 @@ export default class StarSystem extends Scene {
                 this.activeShip.sprite.thrustOff()
             }
         }
-        
         //  Position the center of the camera on the player
         //  we want the center of the camera on the player, not the left-hand side of it
         this.cameras.main.scrollX = this.activeShip.sprite.x - 200;
         this.cameras.main.scrollY = this.activeShip.sprite.y - 200;
-        this.minimap.scrollX = Phaser.Math.Clamp(this.activeShip.sprite.x, 0, 3000);
-        this.minimap.scrollY = Phaser.Math.Clamp(this.activeShip.sprite.y, 0, 3000);
+        this.minimap.scrollX = this.activeShip.sprite.x;
+        this.minimap.scrollY = this.activeShip.sprite.y;
     }
     
     spawnShip = (config:ShipDataOnly, spawnPoint:PlayerSpawnPoint) => {
@@ -198,7 +215,23 @@ export default class StarSystem extends Scene {
             ship.sprite.setVelocity(config.jumpVector.x*500, config.jumpVector.y*-500)
         }
         this.ships.set(ship.id, ship)
-        this.shipArray.push(ship.sprite)
+        ship.sprite.setCollideWorldBounds(true)
+        let rez = []
+        this.resources.forEach(res=>rez.push(res))
+        this.physics.add.overlap(rez, ship.sprite, ()=>console.log('w the actul fkk'))
+    }
+
+    spawnResource = (update:ResourceUpdate) => {
+        let rez = this.physics.add.sprite(update.x,update.y, update.type)
+                .setData('weight', update.weight)
+                .setData('id', update.id)
+                .setData('type', update.type)
+                .setScale(0.1)
+                .setRotation(Phaser.Math.FloatBetween(3,0.1))
+        this.resources.set(update.id, rez)
+        let ships = []
+        this.ships.forEach(ship=>ships.push(ship))
+        this.physics.add.overlap(ships, rez, this.playerGotResource)
     }
 
     addPlanets = () => {
@@ -236,42 +269,50 @@ export default class StarSystem extends Scene {
     }
 
     spawnAsteroid = (update:AsteroidUpdate) => {
-        return this.physics.add.sprite(update.x,update.y, update.type)
+        let rez = this.physics.add.sprite(update.x,update.y, update.type)
                 .setData('hp', 3)
                 .setData('id', update.id)
                 .setData('type', update.type)
                 .setScale(Phaser.Math.FloatBetween(0.8,0.1))
                 .setRotation(Phaser.Math.FloatBetween(3,0.1))
+        let ships = []
+        this.asteroids.set(update.id, rez)
+        this.ships.forEach(ship=>ships.push(ship.sprite))
+        this.physics.add.overlap(ships, rez, this.playerGotResource)
     }
 
-    playerGotResource = (player:ShipSprite, resource:ResourceChunk) =>
+    playerGotResource = (player:ShipSprite, resource:Physics.Arcade.Sprite) =>
     {
-        resource.destroy();
-        //TODO: you'll get ur cargo if the server agrees
+        console.log('destroyed resource')
+        //you'll get ur cargo if the server agrees
     }
 
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:Projectile) =>
     {
         projectile.destroy();
-        asteroid.data.values.hp-=1
-
+        if(asteroid.data.values.hp > 0){
+            asteroid.data.values.hp-=1
+        }
         if(asteroid.data.values.hp <= 0){
-            let res = this.resources.get() as ResourceChunk
-            if(res) res.spawn(asteroid)
             this.destroyAsteroid(asteroid)
         }
     }
 
     destroyAsteroid = (asteroid:Physics.Arcade.Sprite) => {
         this.explosions.get(asteroid.x, asteroid.y, 'boom').play('explode')
+        // this.asteroids.delete(asteroid.data.values.id)
+        this.asteroids.delete(asteroid.data.values.id)
         asteroid.destroy()
-        //TODO: spawn resources
-        //this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
     }
 
-    playerTouchedResource = (resource:Physics.Arcade.Sprite, player:Physics.Arcade.Sprite) =>
-    {
+    destroyShip = (ship:Ship) => {
+        this.explosions.get(ship.sprite.x, ship.sprite.y, 'boom').play('explode')
+        this.ships.delete(ship.id)
+        ship.sprite.destroy()
+    }
+
+    destroyResource = (resource:Physics.Arcade.Sprite) => {
+        this.resources.delete(resource.data.values.id)
         resource.destroy()
-        player.data.values.resources++
     }
 }
