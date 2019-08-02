@@ -162,13 +162,13 @@ interface ShipData {
     asset: string
     cargo: Array<InventoryData>
     firePrimary: boolean
+    systemName: string
     landingTargetId?: string
     targetSystemName?: string
     x?: number
     y?: number
     rotation?: number
     velocity?: Tuple
-    jumpVector?: JumpVector
 }
 
 interface InventoryData {

@@ -42,6 +42,25 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         
     }
 
+    takeOff = () => {
+        this.setScale(0,0)
+        this.scene.tweens.add({
+            targets: this,
+            duration: 1500,
+            scaleX: 0.3,
+            scaleY: 0.3
+        })
+    }
+
+    landing = () => {
+        this.scene.tweens.add({
+            targets: this,
+            duration: 1500,
+            scaleX: 0,
+            scaleY: 0
+        })
+    }
+
     sendSpawnUpdate = () => {
         this.addShipUpdate(this, PlayerEvents.PLAYER_SPAWNED)
     }
@@ -58,40 +77,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
-        let systemAngle = Phaser.Math.Angle.Between(this.x, this.y, targetSystem.x, targetSystem.y)
-        const rotation = systemAngle+(Math.PI/2)
-        let systemVector = { x: Math.sin(rotation), y: Math.cos(rotation), rotation}
-        let targetScene = this.scene.scene.get(targetSystem.name)
-        if(!targetScene)
-            this.scene.scene.add(
-                targetSystem.name, 
-                new System({ key: targetSystem.name, active: false, visible:false, state: targetSystem }, systemVector), 
-                false
-            )
-        this.scene.physics.world.setBoundsCollision(false, false, false, false)
-        this.scene.tweens.add({
-            targets: this,
-            rotation: systemAngle+(Math.PI/2),
-            duration: 1500,
-            onComplete: ()=>{
-                this.jumpSequence = true
-                this.scene.tweens.add({
-                    targets: this,
-                    x: targetSystem.x,
-                    y: targetSystem.y,
-                    duration: 2000,
-                    onComplete: ()=> {
-                        if(this.isPlayerControlled){
-                            this.scene.cameras.main.flash(500)
-                            this.scene.scene.switch(targetSystem.name)
-                            this.setPosition(1600, 400)
-                            this.jumpSequence = false
-                            this.scene.physics.world.setBoundsCollision()
-                        }
-                    }
-                })
-            }
-        })
+        this.shipData.targetSystemName = targetSystem.name
+        this.addShipUpdate(this, PlayerEvents.START_JUMP)
     }
 
     firePrimary = () => {
@@ -160,8 +147,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         if(doTween){
             this.scene.add.tween({
                 targets: this,
-                x: Math.round(update.x),
-                y: Math.round(update.y),
+                x: update.x,
+                y: update.y,
                 rotation: update.rotation, //TODO: clamp to shortest rotation distance
                 duration: 50
             })
@@ -181,7 +168,6 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             type: event,
             shipData: {
                 ...ship.shipData, 
-                jumpVector: null, 
                 fighters: [] ,
                 x: ship.x,
                 y: ship.y,

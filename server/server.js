@@ -95,7 +95,7 @@ wsServer.on('request', function(request) {
             session.serverSocketId = socketId
             break
           case ServerMessages.PLAYER_EVENT:
-            publishToServer(obj.event)
+            publishToServer(obj.event, obj.system)
             break
           case ServerMessages.SERVER_UPDATE:
             publishToPlayers(obj.event, obj.system)
@@ -124,8 +124,8 @@ const publishToPlayers = (event, system) => {
   }
 }
 
-const publishToServer = (playerEvent) => {
-  var message = getPlayerEventMessage(playerEvent)
+const publishToServer = (playerEvent, system) => {
+  var message = getPlayerEventMessage(playerEvent, system)
   // broadcast player's message to the headless phaser server
   var json = JSON.stringify({ type:'message', data: message });
   sockets[session.serverSocketId].sendUTF(json);
@@ -134,10 +134,11 @@ const publishToServer = (playerEvent) => {
 //An event a player claims to have done: 
 //rotate, fire, thrust, land, jump, or any non-physics transaction
 //Server needs to ACK these with the sequence timestamp
-const getPlayerEventMessage = (event) => {
+const getPlayerEventMessage = (event, system) => {
   return JSON.stringify({
     type: ServerMessages.PLAYER_EVENT,
-    event
+    event,
+    system
   })
 }
 

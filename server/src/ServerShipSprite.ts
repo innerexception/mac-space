@@ -1,4 +1,5 @@
 import { GameObjects, Physics, Scene, } from "phaser";
+import ServerStarSystem from "./ServerStarSystem";
 
 export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
@@ -37,7 +38,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     ease: Phaser.Math.Easing.Cubic.Out,
                     duration,
                     onComplete: ()=>{
-                        this.landingSequence = null
+                        this.stopLandingSequence()
                     }
                 })
             }
@@ -50,6 +51,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
+        let distance = Phaser.Math.Distance.Between(this.x, this.y, targetSystem.x, targetSystem.y)
         let systemAngle = Phaser.Math.Angle.Between(this.x, this.y, targetSystem.x, targetSystem.y)
         const rotation = systemAngle+(Math.PI/2)
         let systemVector = { x: Math.sin(rotation), y: Math.cos(rotation), rotation}
@@ -58,14 +60,24 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             rotation: systemAngle+(Math.PI/2),
             duration: 1500,
             onComplete: ()=>{
-                this.jumpSequence = true
+                const duration = (distance/(this.shipData.maxSpeed))*100
+                this.setCollideWorldBounds(false)
                 this.scene.tweens.add({
                     targets: this,
                     x: targetSystem.x,
                     y: targetSystem.y,
-                    duration: 2000,
+                    duration: duration,
                     onComplete: ()=> {
-                        //TODO: send player left message and send player entered message with system entry vector
+                        const target = this.scene.scene.get(targetSystem.name) as ServerStarSystem
+                        let newShip = target.spawnShip(this.shipData, {
+                            x:10, y:10, rotation, 
+                            xVelocity: systemVector.x*this.shipData.maxSpeed, 
+                            yVelocity: systemVector.y*this.shipData.maxSpeed
+                        });
+                        newShip.shipData.targetSystemName = targetSystem.name;
+                        (this.scene as ServerStarSystem).jumpingShips.push(newShip);
+                        (this.scene as ServerStarSystem).ships.delete(this.shipData.id)
+                        this.destroy()
                     }
                 })
             }

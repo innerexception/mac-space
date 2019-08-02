@@ -1,5 +1,5 @@
 import { Scene, Cameras, GameObjects, Physics, } from "phaser";
-import { Arcturus, Rigel } from "../../data/StarSystems";
+import { Arcturus, Rigel, StarSystems } from "../../data/StarSystems";
 import Projectile from "./display/Projectile";
 import ShipSprite from "./display/ShipSprite";
 import * as Ships from '../../data/Ships'
@@ -21,13 +21,13 @@ export default class StarSystem extends Scene {
     currentSystem: SystemState
     selectedSystem: SystemState
     name: string
-    jumpVector: JumpVector
+    jumpedIn: boolean
     state:SystemState
     server: WebsocketClient
 
-    constructor(config, jumpVector?:JumpVector){
+    constructor(config, jumpedIn?:boolean){
         super(config)
-        this.jumpVector = jumpVector
+        this.jumpedIn = jumpedIn
         this.state = config.initialState
         this.name = config.key
         this.server = config.server
@@ -87,6 +87,19 @@ export default class StarSystem extends Scene {
             state.ships.forEach(update=> {
                 let ship = this.ships.get(update.shipData.id)
                 if(ship){
+                    if(update.shipData.targetSystemName){
+                        //We jumped somewhere else, change the scene over
+                        const system = StarSystems.find(system=>system.name === update.shipData.targetSystemName)
+                        if(ship.isPlayerControlled){
+                            this.scene.add(system.name, new StarSystem({key:system.name, server:this.server, initialState: system}, true), false)
+                            this.scene.start(system.name)
+                        }
+                        else{
+                            //Somebody else left...
+                            this.ships.delete(ship.shipData.id)
+                            ship.destroy()
+                        }
+                    }
                     if(update.shipData.hull <= 0){
                         this.destroyShip(ship)
                     }
@@ -158,11 +171,21 @@ export default class StarSystem extends Scene {
         this.createStarfield()
         this.addPlanets()
 
-        //  Add player ship
         let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
         this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server);
         this.ships.set(this.activeShip.shipData.id, this.activeShip)
-        this.activeShip.sendSpawnUpdate()
+        activeShipData.systemName = this.name
+
+        if(this.jumpedIn){
+            console.log('jumped in...')
+            this.cameras.main.flash(500)
+        }
+        else{
+            //  Add player ship notification
+            this.activeShip.sendSpawnUpdate()
+            this.activeShip.takeOff()
+            //run take-off tween
+        }
         
         this.input.keyboard.on('keydown-L', (event) => {
             //TODO cycle available sites
@@ -210,7 +233,7 @@ export default class StarSystem extends Scene {
         ship.rotation = spawnPoint.rotation
         if(spawnPoint.xVelocity){
             //TODO: set starting edge coords based on previous system coords, right now defaults to top left corner
-            ship.setVelocity(config.jumpVector.x*500, config.jumpVector.y*-500)
+            ship.setVelocity(spawnPoint.xVelocity*500, spawnPoint.yVelocity*-500)
         }
         this.ships.set(shipData.id, ship)
         ship.setCollideWorldBounds(true)

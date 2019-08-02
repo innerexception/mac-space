@@ -23,5 +23,6 @@ export const Shuttle:ShipData = {
     guns: [],
     asset: 'ship',
     firePrimary: false,
-    cargo: []
+    cargo: [],
+    systemName: ''
 }

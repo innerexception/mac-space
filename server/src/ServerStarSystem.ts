@@ -10,6 +10,7 @@ import { StarSystems } from "../../client/data/StarSystems";
 export default class ServerStarSystem extends Scene {
 
     ships: Map<string,ServerShipSprite>
+    jumpingShips: Array<ServerShipSprite>
     planets: Array<GameObjects.Sprite>
     asteroids: Map<string, Physics.Arcade.Sprite>
     deadAsteroids: Array<DeadEntityUpdate>
@@ -18,7 +19,6 @@ export default class ServerStarSystem extends Scene {
     projectiles: Physics.Arcade.Group
     name: string
     server: WebsocketClient
-    jumpVector: JumpVector
     state:SystemState
 
     constructor(config, state:SystemState, server:WebsocketClient){
@@ -30,6 +30,7 @@ export default class ServerStarSystem extends Scene {
         this.asteroids = new Map()
         this.deadAsteroids = []
         this.ships = new Map()
+        this.jumpingShips = []
         this.resources = new Map()
         this.deadResources = []
     }
@@ -166,13 +167,14 @@ export default class ServerStarSystem extends Scene {
         sprite.rotation = spawnPoint.rotation
         if(spawnPoint.xVelocity){
             //TODO: set starting edge coords based on previous system coords, right now defaults to top left corner
-            sprite.setVelocity(config.jumpVector.x*500, config.jumpVector.y*-500)
+            sprite.setVelocity(spawnPoint.xVelocity, -spawnPoint.yVelocity)
         }
         this.ships.set(shipData.id, sprite)
         sprite.setCollideWorldBounds(true)
         let rez = []
         this.resources.forEach(res=>rez.push(res))
         this.physics.add.overlap(rez, sprite, this.playerGotResource);
+        return sprite
     }
 
     playerGotResource = (resource:Physics.Arcade.Sprite, ship:ServerShipSprite) =>
