@@ -5,6 +5,7 @@ import WebsocketClient from "./WebsocketClient";
 import * as Ships from '../../client/data/Ships'
 import { v4 } from 'uuid'
 import { PlayerEvents } from "../../enum";
+import { StarSystems } from "../../client/data/StarSystems";
 
 export default class ServerStarSystem extends Scene {
 
@@ -79,6 +80,17 @@ export default class ServerStarSystem extends Scene {
                     break
                 case PlayerEvents.THRUST_OFF: 
                     ship.thrustOff()
+                    break
+                case PlayerEvents.START_LANDING:
+                    const target = this.planets[0] //TODO: update.shipData.landingTargetId
+                    ship.startLandingSequence(target)
+                    break
+                case PlayerEvents.STOP_LANDING:
+                    ship.stopLandingSequence()
+                    break
+                case PlayerEvents.START_JUMP:
+                    const system = StarSystems.find(system=>system.name===update.shipData.targetSystemName)
+                    ship.startJumpSequence(system)
                     break
             }
         }

@@ -14,7 +14,10 @@ declare enum PlayerEvents {
     THRUST= 't',
     FIRE_PRIMARY= 'fp',
     SERVER_STATE= 'ss',
-    PLAYER_SPAWNED= 'ps'
+    PLAYER_SPAWNED= 'ps',
+    START_LANDING='sl',
+    STOP_LANDING='stl',
+    START_JUMP='sj'
 }
 
 declare enum ServerMessages {
@@ -157,12 +160,14 @@ interface ShipData {
     hardPoints: number
     guns: Array<Gun>
     asset: string
-    firePrimary: boolean
     cargo: Array<InventoryData>
+    firePrimary: boolean
+    landingTargetId?: string
+    targetSystemName?: string
     x?: number
     y?: number
     rotation?: number
-    acceleration?: Tuple
+    velocity?: Tuple
     jumpVector?: JumpVector
 }
 

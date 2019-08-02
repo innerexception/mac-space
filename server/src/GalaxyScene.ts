@@ -79,7 +79,7 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>) => {
         x: ship.x,
         y: ship.y,
         rotation: ship.rotation,
-        acceleration : (ship.body as any).acceleration,
+        velocity : ship.body.velocity,
         jumpVector: null,
         fighters: []
       }

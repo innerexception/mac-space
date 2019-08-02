@@ -28,7 +28,10 @@ export enum PlayerEvents {
     THRUST= 't',
     FIRE_PRIMARY= 'fp',
     SERVER_STATE= 'ss',
-    PLAYER_SPAWNED= 'ps'
+    PLAYER_SPAWNED= 'ps',
+    START_LANDING='sl',
+    STOP_LANDING='stl',
+    START_JUMP='sj'
 }
 
 export enum ServerMessages {

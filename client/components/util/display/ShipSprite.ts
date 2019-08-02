@@ -9,9 +9,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     thruster: GameObjects.Particles.ParticleEmitter
     projectiles: GameObjects.Group
-    landingSequence: boolean
     jumpSequence: boolean
-    landingTarget: GameObjects.Sprite
     isPlayerControlled: boolean
     shipData: ShipData
     lastAckSequence: number
@@ -50,17 +48,12 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     startLandingSequence = (target:GameObjects.Sprite) => {
         //landing sequence
-        let planetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
-        this.setMaxVelocity(this.shipData.maxSpeed/2)
-        this.scene.tweens.add({
-            targets: this,
-            rotation: planetAngle+(Math.PI/2),
-            duration: 1500,
-            onComplete: ()=>{
-                this.landingSequence = true
-                this.landingTarget = target
-            }
-        })
+        this.shipData.landingTargetId = 'teehee'
+        this.addShipUpdate(this, PlayerEvents.START_LANDING)
+    }
+
+    stopLandingSequence = () => {
+        //done on server...
     }
 
     startJumpSequence = (targetSystem:SystemState) => {
@@ -115,20 +108,22 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     }
 
     rotateLeft = () => {
+        if(this.shipData.landingTargetId) this.addShipUpdate(this, PlayerEvents.STOP_LANDING)
         this.rotation -= this.shipData.turn
         this.addShipUpdate(this, PlayerEvents.ROTATE_L)
     }
     rotateRight = () => {
+        if(this.shipData.landingTargetId) this.addShipUpdate(this, PlayerEvents.STOP_LANDING)
         this.rotation += this.shipData.turn
         this.addShipUpdate(this, PlayerEvents.ROTATE_R)
     }
 
     thrust = () => {
+        if(this.shipData.landingTargetId) this.addShipUpdate(this, PlayerEvents.STOP_LANDING)
         let vector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
         this.setAcceleration(vector.x*this.shipData.maxSpeed, vector.y*-this.shipData.maxSpeed); //negative b/c y is inverted in crazyland
         this.thruster.emitParticle(16);
         this.addShipUpdate(this, PlayerEvents.THRUST)
-        
     }
 
     thrustOff = () => {
@@ -140,31 +135,6 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     //Custom sprite needs this magical named method
     preUpdate = (time, delta) =>
     {
-        if(this.landingSequence){
-            let distance = Phaser.Math.Distance.Between(this.x, this.y, this.landingTarget.x, this.landingTarget.y)
-            let planetAngle = Phaser.Math.Angle.Between(this.x, this.y, this.landingTarget.x, this.landingTarget.y)
-            this.rotation = planetAngle+(Math.PI/2)
-            let planetVector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
-            
-            if(distance > 250){
-                this.setAcceleration(planetVector.x*(this.shipData.maxSpeed/2), planetVector.y*-(this.shipData.maxSpeed/2))
-            }
-            else if(distance <=250){
-                this.scene.tweens.add({
-                    targets: this,
-                    x: this.landingTarget.x,
-                    y: this.landingTarget.y,
-                    duration: 2000,
-                    onComplete: ()=>{
-                        this.setVelocity(0,0)
-                        this.setMaxVelocity(this.shipData.maxSpeed)
-                        if(this.isPlayerControlled) onTogglePlanetMenu(true)
-                    }
-                })
-                this.landingSequence = false
-            }
-        }
-        
         //Align thruster nozzle
         let vector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
         this.thruster.setPosition(this.x + vector.x, this.y +vector.y);
@@ -190,8 +160,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         if(doTween){
             this.scene.add.tween({
                 targets: this,
-                x: update.x,
-                y: update.y,
+                x: Math.round(update.x),
+                y: Math.round(update.y),
                 rotation: update.rotation, //TODO: clamp to shortest rotation distance
                 duration: 50
             })
@@ -200,7 +170,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             this.setPosition(update.x, update.y)
             this.rotation = update.rotation
         }
-        this.setAcceleration(update.acceleration.x, update.acceleration.y)
+        this.setVelocity(update.velocity.x, update.velocity.y)
         if(update.firePrimary && !this.isPlayerControlled) this.firePrimary()
     }
 
@@ -216,7 +186,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
                 x: ship.x,
                 y: ship.y,
                 rotation: ship.rotation,
-                acceleration: (ship.body as any).acceleration,
+                velocity: ship.body.velocity,
                 firePrimary: event === PlayerEvents.FIRE_PRIMARY
             }
         }

@@ -181,22 +181,20 @@ export default class StarSystem extends Scene {
     
     update = () =>
     {
-        if(!this.activeShip.landingSequence){
-            if (this.cursors.left.isDown)
-            {
-                this.activeShip.rotateLeft()
-            }
-            else if (this.cursors.right.isDown)
-            {
-                this.activeShip.rotateRight()
-            }
-            if (this.cursors.up.isDown)
-            {
-                this.activeShip.thrust()
-            }
-            else if((this.activeShip.body as any).acceleration.x !== 0 || (this.activeShip.body as any).acceleration.y !== 0) {
-                this.activeShip.thrustOff()
-            }
+        if (this.cursors.left.isDown)
+        {
+            this.activeShip.rotateLeft()
+        }
+        else if (this.cursors.right.isDown)
+        {
+            this.activeShip.rotateRight()
+        }
+        if (this.cursors.up.isDown)
+        {
+            this.activeShip.thrust()
+        }
+        else if((this.activeShip.body as any).acceleration.x !== 0 || (this.activeShip.body as any).acceleration.y !== 0) {
+            this.activeShip.thrustOff()
         }
         //  Position the center of the camera on the player
         //  we want the center of the camera on the player, not the left-hand side of it
@@ -278,10 +276,7 @@ export default class StarSystem extends Scene {
                 .setData('state', state)
                 .setScale(Phaser.Math.FloatBetween(0.8,0.1))
                 .setRotation(Phaser.Math.FloatBetween(3,0.1))
-        let ships = []
         this.asteroids.set(update.id, rez)
-        this.ships.forEach(ship=>ships.push(ship))
-        this.physics.add.overlap(ships, rez, this.playerGotResource)
     }
 
     playerGotResource = (player:ShipSprite, resource:Physics.Arcade.Sprite) =>

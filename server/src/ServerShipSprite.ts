@@ -3,9 +3,8 @@ import { GameObjects, Physics, Scene, } from "phaser";
 export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     projectiles: GameObjects.Group
-    landingSequence: boolean
+    landingSequence: Phaser.Tweens.Tween
     jumpSequence: boolean
-    landingTarget: GameObjects.Sprite
     shipData: ShipData
 
     constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, ship:ShipData){
@@ -22,17 +21,31 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     startLandingSequence = (target:GameObjects.Sprite) => {
         //landing sequence
+        let distance = Phaser.Math.Distance.Between(this.x, this.y, target.x, target.y)
         let planetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
-        this.setMaxVelocity(this.shipData.maxSpeed/2)
         this.scene.tweens.add({
             targets: this,
             rotation: planetAngle+(Math.PI/2),
             duration: 1500,
             onComplete: ()=>{
-                this.landingSequence = true
-                this.landingTarget = target
+                const duration = (distance/(this.shipData.maxSpeed/2))*1000
+                this.setVelocity(0,0)
+                this.landingSequence = this.scene.tweens.add({
+                    targets: this,
+                    x: target.x,
+                    y: target.y,
+                    ease: Phaser.Math.Easing.Cubic.Out,
+                    duration,
+                    onComplete: ()=>{
+                        this.landingSequence = null
+                    }
+                })
             }
         })
+    }
+
+    stopLandingSequence = () => {
+        if(this.landingSequence) this.landingSequence.stop()
     }
 
     startJumpSequence = (targetSystem:SystemState) => {
@@ -72,12 +85,15 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     }
 
     rotateLeft = () => {
+        if(this.landingSequence) this.landingSequence.stop()
         this.rotation -= this.shipData.turn
     }
     rotateRight = () => {
+        if(this.landingSequence) this.landingSequence.stop()
         this.rotation += this.shipData.turn
     }
     thrust = () => {
+        if(this.landingSequence) this.landingSequence.stop()
         let vector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
         this.setAcceleration(vector.x*this.shipData.maxSpeed, vector.y*-this.shipData.maxSpeed); //negative b/c y is inverted in crazyland
     }
@@ -87,31 +103,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     //Custom sprite needs this magical named method
     preUpdate = (time, delta) =>
-    {
-        if(this.landingSequence){
-            let distance = Phaser.Math.Distance.Between(this.x, this.y, this.landingTarget.x, this.landingTarget.y)
-            let planetAngle = Phaser.Math.Angle.Between(this.x, this.y, this.landingTarget.x, this.landingTarget.y)
-            this.rotation = planetAngle+(Math.PI/2)
-            let planetVector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
-            
-            if(distance > 250){
-                this.setAcceleration(planetVector.x*(this.shipData.maxSpeed/2), planetVector.y*-(this.shipData.maxSpeed/2))
-            }
-            else if(distance <=250){
-                this.scene.tweens.add({
-                    targets: this,
-                    x: this.landingTarget.x,
-                    y: this.landingTarget.y,
-                    duration: 2000,
-                    onComplete: ()=>{
-                        this.setVelocity(0,0)
-                        this.setMaxVelocity(this.shipData.maxSpeed)
-                    }
-                })
-                this.landingSequence = false
-            }
-        }
-    }
+    { }
 
     applyUpdate = (update:ShipUpdate) => {
         //not used on server side
