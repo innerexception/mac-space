@@ -10,8 +10,8 @@ export default class StarSystem extends Scene {
 
     minimap: Cameras.Scene2D.BaseCamera
     player: Player
-    activeShip: Ship
-    ships: Map<string,Ship>
+    activeShip: ShipSprite
+    ships: Map<string,ShipSprite>
     planets: Array<GameObjects.Sprite>
     asteroids: Map<string, Physics.Arcade.Sprite>
     explosions: GameObjects.Group
@@ -69,7 +69,7 @@ export default class StarSystem extends Scene {
                             y: update.y,
                             duration: 100
                         })
-                        asteroid.data.values.hp = update.hp
+                        asteroid.getData('state').hp = update.hp
                     }
                 }
                 else {
@@ -91,7 +91,7 @@ export default class StarSystem extends Scene {
                         this.destroyShip(ship)
                     }
                     else {
-                        ship.sprite.applyUpdate(update)
+                        ship.applyUpdate(update)
                     }
                 }
                 else {
@@ -159,20 +159,20 @@ export default class StarSystem extends Scene {
         this.addPlanets()
 
         //  Add player ship
-        this.activeShip = this.player.ships.find(ship=>ship.id===this.player.activeShipId)
-        this.activeShip.sprite = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, this.activeShip.asset, this.projectiles, true, this.activeShip, this.server);
-        this.ships.set(this.activeShip.id, this.activeShip)
-        this.activeShip.sprite.sendSpawnUpdate()
+        let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
+        this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server);
+        this.ships.set(this.activeShip.shipData.id, this.activeShip)
+        this.activeShip.sendSpawnUpdate()
         
         this.input.keyboard.on('keydown-L', (event) => {
             //TODO cycle available sites
-            this.activeShip.sprite.startLandingSequence(this.planets[0])
+            this.activeShip.startLandingSequence(this.planets[0])
         });
         this.input.keyboard.on('keydown-J', (event) => {
-            this.activeShip.sprite.startJumpSequence(this.selectedSystem)
+            this.activeShip.startJumpSequence(this.selectedSystem)
         })
         this.input.keyboard.on('keydown-SPACE', (event) => {
-            this.activeShip.sprite.firePrimary()
+            this.activeShip.firePrimary()
         });
         this.cursors = this.input.keyboard.createCursorKeys();
         
@@ -181,51 +181,50 @@ export default class StarSystem extends Scene {
     
     update = () =>
     {
-        if(!this.activeShip.sprite.landingSequence){
+        if(!this.activeShip.landingSequence){
             if (this.cursors.left.isDown)
             {
-                this.activeShip.sprite.rotateLeft()
+                this.activeShip.rotateLeft()
             }
             else if (this.cursors.right.isDown)
             {
-                this.activeShip.sprite.rotateRight()
+                this.activeShip.rotateRight()
             }
             if (this.cursors.up.isDown)
             {
-                this.activeShip.sprite.thrust()
+                this.activeShip.thrust()
             }
-            else if((this.activeShip.sprite.body as any).acceleration.x !== 0 || (this.activeShip.sprite.body as any).acceleration.y !== 0) {
-                this.activeShip.sprite.thrustOff()
+            else if((this.activeShip.body as any).acceleration.x !== 0 || (this.activeShip.body as any).acceleration.y !== 0) {
+                this.activeShip.thrustOff()
             }
         }
         //  Position the center of the camera on the player
         //  we want the center of the camera on the player, not the left-hand side of it
-        this.cameras.main.scrollX = this.activeShip.sprite.x - 200;
-        this.cameras.main.scrollY = this.activeShip.sprite.y - 200;
-        this.minimap.scrollX = this.activeShip.sprite.x;
-        this.minimap.scrollY = this.activeShip.sprite.y;
+        this.cameras.main.scrollX = this.activeShip.x - 200;
+        this.cameras.main.scrollY = this.activeShip.y - 200;
+        this.minimap.scrollX = this.activeShip.x;
+        this.minimap.scrollY = this.activeShip.y;
     }
     
-    spawnShip = (config:ShipDataOnly, spawnPoint:PlayerSpawnPoint) => {
-        let ship = {...Ships[config.name], ...config}
-        ship.sprite = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, ship.asset, this.projectiles, false, ship, this.server)
-        ship.sprite.rotation = spawnPoint.rotation
+    spawnShip = (config:ShipData, spawnPoint:PlayerSpawnPoint) => {
+        let shipData = {...Ships[config.name], ...config}
+        let ship = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, shipData.asset, this.projectiles, false, shipData, this.server)
+        ship.rotation = spawnPoint.rotation
         if(spawnPoint.xVelocity){
             //TODO: set starting edge coords based on previous system coords, right now defaults to top left corner
-            ship.sprite.setVelocity(config.jumpVector.x*500, config.jumpVector.y*-500)
+            ship.setVelocity(config.jumpVector.x*500, config.jumpVector.y*-500)
         }
-        this.ships.set(ship.id, ship)
-        ship.sprite.setCollideWorldBounds(true)
-        let rez = []
-        this.resources.forEach(res=>rez.push(res))
-        this.physics.add.overlap(rez, ship.sprite, ()=>console.log('w the actul fkk'))
+        this.ships.set(shipData.id, ship)
+        ship.setCollideWorldBounds(true)
     }
 
-    spawnResource = (update:ResourceUpdate) => {
+    spawnResource = (update:ResourceData) => {
         let rez = this.physics.add.sprite(update.x,update.y, update.type)
-                .setData('weight', update.weight)
-                .setData('id', update.id)
-                .setData('type', update.type)
+                .setData('state', {
+                    id: update.id,
+                    weight: 1,
+                    type: update.type
+                } as ResourceData)
                 .setScale(0.1)
                 .setRotation(Phaser.Math.FloatBetween(3,0.1))
         this.resources.set(update.id, rez)
@@ -268,16 +267,20 @@ export default class StarSystem extends Scene {
         }, this);
     }
 
-    spawnAsteroid = (update:AsteroidUpdate) => {
+    spawnAsteroid = (update:AsteroidData) => {
+        let state = {
+            type: update.type,
+            hp: 3,
+            id: update.id
+        } as AsteroidData
+
         let rez = this.physics.add.sprite(update.x,update.y, update.type)
-                .setData('hp', 3)
-                .setData('id', update.id)
-                .setData('type', update.type)
+                .setData('state', state)
                 .setScale(Phaser.Math.FloatBetween(0.8,0.1))
                 .setRotation(Phaser.Math.FloatBetween(3,0.1))
         let ships = []
         this.asteroids.set(update.id, rez)
-        this.ships.forEach(ship=>ships.push(ship.sprite))
+        this.ships.forEach(ship=>ships.push(ship))
         this.physics.add.overlap(ships, rez, this.playerGotResource)
     }
 
@@ -290,29 +293,23 @@ export default class StarSystem extends Scene {
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:Projectile) =>
     {
         projectile.destroy();
-        if(asteroid.data.values.hp > 0){
-            asteroid.data.values.hp-=1
-        }
-        if(asteroid.data.values.hp <= 0){
-            this.destroyAsteroid(asteroid)
-        }
     }
 
     destroyAsteroid = (asteroid:Physics.Arcade.Sprite) => {
         this.explosions.get(asteroid.x, asteroid.y, 'boom').play('explode')
-        // this.asteroids.delete(asteroid.data.values.id)
-        this.asteroids.delete(asteroid.data.values.id)
+        // this.asteroids.delete(asteroid.getData('state').id)
+        this.asteroids.delete(asteroid.getData('state').id)
         asteroid.destroy()
     }
 
-    destroyShip = (ship:Ship) => {
-        this.explosions.get(ship.sprite.x, ship.sprite.y, 'boom').play('explode')
-        this.ships.delete(ship.id)
-        ship.sprite.destroy()
+    destroyShip = (ship:ShipSprite) => {
+        this.explosions.get(ship.x, ship.y, 'boom').play('explode')
+        this.ships.delete(ship.shipData.id)
+        ship.destroy()
     }
 
     destroyResource = (resource:Physics.Arcade.Sprite) => {
-        this.resources.delete(resource.data.values.id)
+        this.resources.delete(resource.getData('state').id)
         resource.destroy()
     }
 }

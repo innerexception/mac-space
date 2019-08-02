@@ -6,9 +6,9 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     landingSequence: boolean
     jumpSequence: boolean
     landingTarget: GameObjects.Sprite
-    shipData: Ship
+    shipData: ShipData
 
-    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, ship:Ship){
+    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, ship:ShipData){
         super(scene, x, y, texture)
         this.scene.add.existing(this)
         this.scene.physics.world.enable(this);

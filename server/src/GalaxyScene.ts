@@ -4,6 +4,7 @@ import StarSystem from './ServerStarSystem'
 import ServerStarSystem from "./ServerStarSystem";
 import WebsocketClient from "./WebsocketClient";
 import { ServerMessages, PlayerEvents } from "../../enum";
+import ServerShipSprite from "./ServerShipSprite";
 
 export default class GalaxyScene extends Scene {
 
@@ -67,38 +68,38 @@ export default class GalaxyScene extends Scene {
     }
 }
 
-const getShipUpdates = (ships:Map<string,Ship>) => {
+const getShipUpdates = (ships:Map<string,ServerShipSprite>) => {
   let updates = new Array<ShipUpdate>()
   ships.forEach(ship=>{
     updates.push({
       type: PlayerEvents.SERVER_STATE,
       sequence: Date.now(),
       shipData: {
-        ...ship,
-        x: ship.sprite.x,
-        y: ship.sprite.y,
-        rotation: ship.sprite.rotation,
-        acceleration : (ship.sprite.body as any).acceleration,
+        ...ship.shipData,
+        x: ship.x,
+        y: ship.y,
+        rotation: ship.rotation,
+        acceleration : (ship.body as any).acceleration,
         jumpVector: null,
         fighters: []
       }
     })
-    ship.firePrimary = false
+    ship.shipData.firePrimary = false
   })
   return updates
 }
 
 const getAsteroidUpdates = (asteroids:Map<string, Physics.Arcade.Sprite>, deadAsteroids:Array<DeadEntityUpdate>) => {
-  let updates = new Array<AsteroidUpdate>()
+  let updates = new Array<AsteroidData>()
   asteroids.forEach(asteroid=>{
     if(asteroid.data){
       updates.push({
         x: asteroid.x,
         y: asteroid.y,
-        hp: asteroid.data.values.hp,
-        id: asteroid.data.values.id,
-        type: asteroid.data.values.type,
-        dead: asteroid.data.values.dead
+        hp: asteroid.getData('state').hp,
+        id: asteroid.getData('state').id,
+        type: asteroid.getData('state').type,
+        dead: asteroid.getData('state').dead
       })
     }
   })
@@ -116,15 +117,15 @@ const getAsteroidUpdates = (asteroids:Map<string, Physics.Arcade.Sprite>, deadAs
 }
 
 const getResourceUpdates = (resources:Map<string, Physics.Arcade.Sprite>, deadResources: Array<DeadEntityUpdate>) => {
-  let updates = new Array<ResourceUpdate>()
+  let updates = new Array<ResourceData>()
   resources.forEach(resource=>{
       if(resource.data){
         updates.push({
           x: resource.x,
           y: resource.y,
-          weight: resource.data.values.weight,
-          id: resource.data.values.id,
-          type: resource.data.values.type,
+          weight: resource.getData('state').weight,
+          id: resource.getData('state').id,
+          type: resource.getData('state').type,
           dead: false
         })
       }

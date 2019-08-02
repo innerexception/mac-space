@@ -34,7 +34,7 @@ interface Player {
     name:string
     id:string
     activeShipId: string
-    ships: Array<Ship>
+    ships: Array<ShipData>
     reputation: Array<Faction>
     notoriety: number
 }
@@ -66,35 +66,6 @@ interface ShipSprite extends Phaser.Physics.Arcade.Sprite {
     sendSpawnUpdate()
 }
 
-interface Ship {
-    name: string
-    id:string
-    shields: number
-    armor: number
-    hull: number
-    sprite: ShipSprite
-    fuel: number
-    maxFuel: number
-    energy: number
-    maxEnergy: number
-    heat: number
-    maxHeat: number
-    fighters: Array<Ship>
-    turn: number
-    accel: number
-    speed: number
-    maxSpeed: number
-    cargoSpace: number
-    maxCargoSpace: number
-    gunMounts: number
-    turrentMounts: number
-    hardPoints: number
-    guns: Array<Gun>
-    asset: string
-    firePrimary: boolean
-    cargo: Array<InventoryData>
-}
-
 interface Gun {
     name: string
     type: GunType
@@ -116,7 +87,7 @@ interface SystemState {
     y: number
     stellarObjects: Array<StellarObjectConfig>
     asteroidConfig: Array<AsteroidConfig>
-    ships: Array<Ship>,
+    ships: Array<ShipData>,
     assetList: Array<Asset>
 }
 
@@ -130,11 +101,11 @@ interface JumpVector {
 
 interface ServerSystemUpdate {
     ships: Array<ShipUpdate>
-    asteroids: Array<AsteroidUpdate>
-    resources: Array<ResourceUpdate>
+    asteroids: Array<AsteroidData>
+    resources: Array<ResourceData>
 }
 
-interface AsteroidUpdate {
+interface AsteroidData {
     x: number
     y: number
     hp: number
@@ -143,7 +114,7 @@ interface AsteroidUpdate {
     dead: boolean
 }
 
-interface ResourceUpdate {
+interface ResourceData {
     x: number
     y:number
     type?: 'Iron'|'Silver'|'Platinum'
@@ -159,14 +130,10 @@ interface DeadEntityUpdate {
 interface ShipUpdate {
     type: PlayerEvents
     sequence: number
-    shipData: ShipDataOnly
+    shipData: ShipData
 }
 
-interface ShipDataOnly {
-    x: number
-    y: number
-    rotation: number
-    acceleration: Tuple
+interface ShipData {
     name: string
     id:string
     shields: number
@@ -178,7 +145,7 @@ interface ShipDataOnly {
     maxEnergy: number
     heat: number
     maxHeat: number
-    fighters: Array<ShipDataOnly>
+    fighters: Array<ShipData>
     turn: number
     accel: number
     speed: number
@@ -190,9 +157,13 @@ interface ShipDataOnly {
     hardPoints: number
     guns: Array<Gun>
     asset: string
-    jumpVector: JumpVector
     firePrimary: boolean
     cargo: Array<InventoryData>
+    x?: number
+    y?: number
+    rotation?: number
+    acceleration?: Tuple
+    jumpVector?: JumpVector
 }
 
 interface InventoryData {
@@ -204,7 +175,7 @@ interface InventoryData {
 interface ServerMessage {
     type: ServerMessages
     system: string
-    event: ShipUpdate | AsteroidUpdate | ServerSystemUpdate
+    event: ShipUpdate | AsteroidData | ServerSystemUpdate
 }
 
 interface StellarObjectConfig {

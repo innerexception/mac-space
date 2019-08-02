@@ -10,7 +10,7 @@ interface Props {
 }
 
 interface State {
-    activeShip: Ship
+    activeShip: ShipData
     phaserInstance: Phaser.Game | null
 }
 

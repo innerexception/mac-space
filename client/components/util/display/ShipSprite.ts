@@ -13,12 +13,12 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     jumpSequence: boolean
     landingTarget: GameObjects.Sprite
     isPlayerControlled: boolean
-    shipData: Ship
+    shipData: ShipData
     lastAckSequence: number
     bufferedInputs: Array<ShipUpdate>
     server:WebsocketClient
 
-    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, isPlayerControlled:boolean, ship:Ship, server:WebsocketClient){
+    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, isPlayerControlled:boolean, ship:ShipData, server:WebsocketClient){
         super(scene, x, y, texture)
         this.server=server
         this.bufferedInputs = []
@@ -45,7 +45,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     }
 
     sendSpawnUpdate = () => {
-        this.addShipUpdate(this.shipData, PlayerEvents.PLAYER_SPAWNED)
+        this.addShipUpdate(this, PlayerEvents.PLAYER_SPAWNED)
     }
 
     startLandingSequence = (target:GameObjects.Sprite) => {
@@ -106,7 +106,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         if(projectile){
             projectile.fire(this)
             if(this.isPlayerControlled)
-                this.addShipUpdate(this.shipData, PlayerEvents.FIRE_PRIMARY)
+                this.addShipUpdate(this, PlayerEvents.FIRE_PRIMARY)
         }
     }
 
@@ -116,25 +116,25 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     rotateLeft = () => {
         this.rotation -= this.shipData.turn
-        this.addShipUpdate(this.shipData, PlayerEvents.ROTATE_L)
+        this.addShipUpdate(this, PlayerEvents.ROTATE_L)
     }
     rotateRight = () => {
         this.rotation += this.shipData.turn
-        this.addShipUpdate(this.shipData, PlayerEvents.ROTATE_R)
+        this.addShipUpdate(this, PlayerEvents.ROTATE_R)
     }
 
     thrust = () => {
         let vector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
         this.setAcceleration(vector.x*this.shipData.maxSpeed, vector.y*-this.shipData.maxSpeed); //negative b/c y is inverted in crazyland
         this.thruster.emitParticle(16);
-        this.addShipUpdate(this.shipData, PlayerEvents.THRUST)
+        this.addShipUpdate(this, PlayerEvents.THRUST)
         
     }
 
     thrustOff = () => {
         this.thruster.stop()
         this.setAcceleration(0,0)
-        this.addShipUpdate(this.shipData, PlayerEvents.THRUST_OFF)
+        this.addShipUpdate(this, PlayerEvents.THRUST_OFF)
     }
 
     //Custom sprite needs this magical named method
@@ -186,7 +186,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         this.applyState(update.shipData, true)
     }
 
-    applyState = (update:ShipDataOnly, doTween?:boolean) => {
+    applyState = (update:ShipData, doTween?:boolean) => {
         if(doTween){
             this.scene.add.tween({
                 targets: this,
@@ -204,20 +204,19 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         if(update.firePrimary && !this.isPlayerControlled) this.firePrimary()
     }
 
-    addShipUpdate = (ship:Ship, event:PlayerEvents) => {
+    addShipUpdate = (ship:ShipSprite, event:PlayerEvents) => {
         let update = {
-            id: ship.id,
+            id: ship.shipData.id,
             sequence: Date.now(),
             type: event,
             shipData: {
-                ...ship, 
-                sprite: null, 
+                ...ship.shipData, 
                 jumpVector: null, 
                 fighters: [] ,
-                x: ship.sprite.x,
-                y: ship.sprite.y,
-                rotation: ship.sprite.rotation,
-                acceleration: (ship.sprite.body as any).acceleration,
+                x: ship.x,
+                y: ship.y,
+                rotation: ship.rotation,
+                acceleration: (ship.body as any).acceleration,
                 firePrimary: event === PlayerEvents.FIRE_PRIMARY
             }
         }

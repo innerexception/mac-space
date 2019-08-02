@@ -8,7 +8,7 @@ import { PlayerEvents } from "../../enum";
 
 export default class ServerStarSystem extends Scene {
 
-    ships: Map<string,Ship>
+    ships: Map<string,ServerShipSprite>
     planets: Array<GameObjects.Sprite>
     asteroids: Map<string, Physics.Arcade.Sprite>
     deadAsteroids: Array<DeadEntityUpdate>
@@ -66,19 +66,19 @@ export default class ServerStarSystem extends Scene {
         if(ship){
             switch(update.type){
                 case PlayerEvents.FIRE_PRIMARY: 
-                    ship.sprite.firePrimary()
+                    ship.firePrimary()
                     break
                 case PlayerEvents.ROTATE_L: 
-                    ship.sprite.rotateLeft()
+                    ship.rotateLeft()
                     break
                 case PlayerEvents.ROTATE_R: 
-                    ship.sprite.rotateRight()
+                    ship.rotateRight()
                     break
                 case PlayerEvents.THRUST: 
-                    ship.sprite.thrust()
+                    ship.thrust()
                     break
                 case PlayerEvents.THRUST_OFF: 
-                    ship.sprite.thrustOff()
+                    ship.thrustOff()
                     break
             }
         }
@@ -137,39 +137,42 @@ export default class ServerStarSystem extends Scene {
 
     spawnAsteroid = (id:string, type:string) => {
         //Position will be set shortly
+        let state = {
+            type,
+            hp: 3,
+            id
+        } as AsteroidData
         return this.physics.add.sprite(0,0,type)
-            .setData('hp', 3)
-            .setData('id', id)
-            .setData('type', type)
+            .setData('state', state)
             .setScale(Phaser.Math.FloatBetween(0.8,0.1))
             .setRotation(Phaser.Math.FloatBetween(3,0.1))
     }
 
-    spawnShip = (config:ShipDataOnly, spawnPoint:PlayerSpawnPoint) => {
-        let ship = {...Ships[config.name], ...config}
-        ship.sprite = new ServerShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, ship.asset, this.projectiles, ship)
-        ship.sprite.rotation = spawnPoint.rotation
+    spawnShip = (config:ShipData, spawnPoint:PlayerSpawnPoint) => {
+        let shipData = {...Ships[config.name], ...config} as ShipData
+        let sprite = new ServerShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, shipData.asset, this.projectiles, shipData)
+        sprite.rotation = spawnPoint.rotation
         if(spawnPoint.xVelocity){
             //TODO: set starting edge coords based on previous system coords, right now defaults to top left corner
-            ship.sprite.setVelocity(config.jumpVector.x*500, config.jumpVector.y*-500)
+            sprite.setVelocity(config.jumpVector.x*500, config.jumpVector.y*-500)
         }
-        this.ships.set(ship.id, ship)
-        ship.sprite.setCollideWorldBounds(true)
+        this.ships.set(shipData.id, sprite)
+        sprite.setCollideWorldBounds(true)
         let rez = []
         this.resources.forEach(res=>rez.push(res))
-        this.physics.add.overlap(rez, ship.sprite, this.playerGotResource);
+        this.physics.add.overlap(rez, sprite, this.playerGotResource);
     }
 
     playerGotResource = (resource:Physics.Arcade.Sprite, ship:ServerShipSprite) =>
     {
         console.log('you hit it:')
-        if(ship.shipData.cargoSpace >= resource.data.values.weight){
+        if(ship.shipData.cargoSpace >= resource.getData('state').weight){
             //TODO: pick up resource and add to cargo
-            ship.shipData.cargoSpace -= resource.data.values.weight
+            ship.shipData.cargoSpace -= resource.getData('state').weight
             ship.shipData.cargo.push({
-                weight: resource.data.values.weight,
-                name: resource.data.values.type,
-                asset: resource.data.values.type
+                weight: resource.getData('state').weight,
+                name: resource.getData('state').type,
+                asset: resource.getData('state').type
             })
             console.log('you get it: '+ship.shipData.cargo)
             this.destroyResource(resource)
@@ -177,18 +180,18 @@ export default class ServerStarSystem extends Scene {
     }
 
     destroyResource = (resource:Physics.Arcade.Sprite) => {
-        this.deadResources.push({ id: resource.data.values.id })
-        this.resources.delete(resource.data.values.id)
+        this.deadResources.push({ id: resource.getData('state').id })
+        this.resources.delete(resource.getData('state').id)
         resource.destroy()
     }
 
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:any) =>
     {
-        if(asteroid.data.values.hp > 0){
+        if(asteroid.getData('state').hp > 0){
             projectile.destroy();
-            asteroid.data.values.hp-=1
-            console.log('damaged asteroid: '+asteroid.data.values.hp)
-            if(asteroid.data.values.hp <= 0){
+            asteroid.getData('state').hp-=1
+            console.log('damaged asteroid: '+asteroid.getData('state').hp)
+            if(asteroid.getData('state').hp <= 0){
                 this.spawnResource(asteroid)
                 this.destroyAsteroid(asteroid)
             }
@@ -196,22 +199,24 @@ export default class ServerStarSystem extends Scene {
     }
 
     destroyAsteroid = (asteroid:Physics.Arcade.Sprite) =>{ 
-        this.deadAsteroids.push({ id: asteroid.data.values.id })
-        this.asteroids.delete(asteroid.data.values.id)
+        this.deadAsteroids.push({ id: asteroid.getData('state').id })
+        this.asteroids.delete(asteroid.getData('state').id)
         asteroid.destroy()
     }
 
-    spawnResource = (asteroid) => {
+    spawnResource = (resource) => {
         let id = v4()
-        let rez = this.physics.add.sprite(asteroid.x,asteroid.y, 'planet')
-            .setData('weight', 1)
-            .setData('id', asteroid.data.values.id)
-            .setData('type', 'planet')
+        let rez = this.physics.add.sprite(resource.x,resource.y, 'planet')
+            .setData('state', {
+                id,
+                weight: 1,
+                type: 'Iron'
+            } as ResourceData)
             .setScale(0.1)
             .setRotation(Phaser.Math.FloatBetween(3,0.1))
         this.resources.set(id, rez)
         let ships = []
-        this.ships.forEach(ship=>ships.push(ship.sprite))
+        this.ships.forEach(ship=>ships.push(ship))
         this.physics.add.overlap(rez, ships, this.playerGotResource)
     }
 
