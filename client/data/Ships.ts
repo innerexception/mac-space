@@ -1,10 +1,9 @@
-export const Shuttle:Ship = {
+export const Shuttle:ShipData = {
     name: 'Shuttle',
     id:'',
     shields: 10,
     armor: 0,
     hull: 10,
-    sprite: null,
     fuel: 3,
     maxFuel: 3,
     energy: 5,
@@ -23,5 +22,7 @@ export const Shuttle:Ship = {
     hardPoints: 0,
     guns: [],
     asset: 'ship',
-    firePrimary: false
+    firePrimary: false,
+    cargo: [],
+    systemName: ''
 }

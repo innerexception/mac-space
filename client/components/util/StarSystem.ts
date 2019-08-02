@@ -1,5 +1,5 @@
 import { Scene, Cameras, GameObjects, Physics, } from "phaser";
-import { Arcturus, Rigel } from "../../data/StarSystems";
+import { Arcturus, Rigel, StarSystems } from "../../data/StarSystems";
 import Projectile from "./display/Projectile";
 import ShipSprite from "./display/ShipSprite";
 import * as Ships from '../../data/Ships'
@@ -10,29 +10,31 @@ export default class StarSystem extends Scene {
 
     minimap: Cameras.Scene2D.BaseCamera
     player: Player
-    activeShip: Ship
-    ships: Map<string,Ship>
+    activeShip: ShipSprite
+    ships: Map<string,ShipSprite>
     planets: Array<GameObjects.Sprite>
     asteroids: Map<string, Physics.Arcade.Sprite>
     explosions: GameObjects.Group
-    projectiles: GameObjects.Group
+    resources: Map<string, Physics.Arcade.Sprite>
+    projectiles: Physics.Arcade.Group
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
     currentSystem: SystemState
     selectedSystem: SystemState
     name: string
-    jumpVector: JumpVector
+    jumpedIn: boolean
     state:SystemState
     server: WebsocketClient
 
-    constructor(config, jumpVector?:JumpVector){
+    constructor(config, jumpedIn?:boolean){
         super(config)
-        this.jumpVector = jumpVector
+        this.jumpedIn = jumpedIn
         this.state = config.initialState
         this.name = config.key
         this.server = config.server
         this.ships = new Map()
         this.asteroids = new Map()
         this.planets = []
+        this.resources = new Map()
     }
 
     onReduxUpdate = () => {
@@ -57,39 +59,76 @@ export default class StarSystem extends Scene {
             state.asteroids.forEach(update=> {
                 let asteroid = this.asteroids.get(update.id)
                 if(asteroid){
-                    this.tweens.add({
-                        targets: asteroid,
-                        x: update.x,
-                        y: update.y,
-                        duration: 100
-                    })
-                    if(asteroid.data){
-                        asteroid.data.values.hp = update.hp
-                    }
-                    if(update.hp <= 0 && asteroid.data) {
+                    if(update.dead){
                         this.destroyAsteroid(asteroid)
+                    }
+                    else {
+                        this.tweens.add({
+                            targets: asteroid,
+                            x: update.x,
+                            y: update.y,
+                            duration: 100
+                        })
+                        asteroid.getData('state').hp = update.hp
                     }
                 }
                 else {
                     console.log('spawning new asteroid at '+update.x+','+update.y)
-                    this.asteroids.set(update.id, this.spawnAsteroid(update))
+                    this.spawnAsteroid(update)
                 }
             })
             if(initRoids){
                 let roids = []
                 this.asteroids.forEach(aster=>roids.push(aster))
-                this.physics.add.collider(this.projectiles, roids, this.playerShotAsteroid);
+                this.physics.add.overlap(this.projectiles, roids, this.playerShotAsteroid)
                 console.log('asteroid physics init completed.')
             }
             
             state.ships.forEach(update=> {
                 let ship = this.ships.get(update.shipData.id)
                 if(ship){
-                    ship.sprite.applyUpdate(update)
+                    if(update.shipData.targetSystemName){
+                        //We jumped somewhere else, change the scene over
+                        const system = StarSystems.find(system=>system.name === update.shipData.targetSystemName)
+                        if(ship.isPlayerControlled){
+                            this.scene.add(system.name, new StarSystem({key:system.name, server:this.server, initialState: system}, true), false)
+                            this.scene.start(system.name)
+                        }
+                        else{
+                            //Somebody else left...
+                            this.ships.delete(ship.shipData.id)
+                            ship.destroy()
+                        }
+                    }
+                    if(update.shipData.hull <= 0){
+                        this.destroyShip(ship)
+                    }
+                    else {
+                        ship.applyUpdate(update)
+                    }
                 }
                 else {
                     console.log('spawning new ship at '+update.shipData.x+','+update.shipData.y)
                     this.spawnShip(update.shipData, { x: this.planets[0].x, y: this.planets[0].y, rotation: 0 })
+                }
+            })
+
+            state.resources.forEach(update => {
+                let resource = this.resources.get(update.id)
+                if(resource){
+                    if(update.dead){
+                        this.destroyResource(resource)
+                    }
+                    this.tweens.add({
+                        targets: resource,
+                        x: update.x,
+                        y: update.y,
+                        duration: 100
+                    })
+                }
+                else {
+                    console.log('spawned resource at '+update.x+','+update.y)
+                    this.spawnResource(update)
                 }
             })
         }
@@ -107,6 +146,7 @@ export default class StarSystem extends Scene {
     {
         this.player = store.getState().currentUser
         this.cameras.main.setBounds(0, 0, 3200, 3200).setName('main');
+        this.physics.world.setBounds(0,0,3200,3200)
         this.physics.world.setBoundsCollision();
         //  The miniCam is 400px wide, so can display the whole world at a zoom of 0.2
         this.minimap = this.cameras.add(0, 0, 100, 100).setZoom(0.1).setName('mini');
@@ -131,21 +171,31 @@ export default class StarSystem extends Scene {
         this.createStarfield()
         this.addPlanets()
 
-        //  Add player ship
-        this.activeShip = this.player.ships.find(ship=>ship.id===this.player.activeShipId)
-        this.activeShip.sprite = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, this.activeShip.asset, this.projectiles, true, this.activeShip, this.server);
-        this.ships.set(this.activeShip.id, this.activeShip)
-        this.activeShip.sprite.sendSpawnUpdate()
+        let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
+        this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server);
+        this.ships.set(this.activeShip.shipData.id, this.activeShip)
+        activeShipData.systemName = this.name
+
+        if(this.jumpedIn){
+            console.log('jumped in...')
+            this.cameras.main.flash(500)
+        }
+        else{
+            //  Add player ship notification
+            this.activeShip.sendSpawnUpdate()
+            this.activeShip.takeOff()
+            //run take-off tween
+        }
         
         this.input.keyboard.on('keydown-L', (event) => {
             //TODO cycle available sites
-            this.activeShip.sprite.startLandingSequence(this.planets[0])
+            this.activeShip.startLandingSequence(this.planets[0])
         });
         this.input.keyboard.on('keydown-J', (event) => {
-            this.activeShip.sprite.startJumpSequence(this.selectedSystem)
+            this.activeShip.startJumpSequence(this.selectedSystem)
         })
         this.input.keyboard.on('keydown-SPACE', (event) => {
-            this.activeShip.sprite.firePrimary()
+            this.activeShip.firePrimary()
         });
         this.cursors = this.input.keyboard.createCursorKeys();
         
@@ -154,41 +204,54 @@ export default class StarSystem extends Scene {
     
     update = () =>
     {
-        if(!this.activeShip.sprite.landingSequence){
-            if (this.cursors.left.isDown)
-            {
-                this.activeShip.sprite.rotateLeft()
-            }
-            else if (this.cursors.right.isDown)
-            {
-                this.activeShip.sprite.rotateRight()
-            }
-            if (this.cursors.up.isDown)
-            {
-                this.activeShip.sprite.thrust()
-            }
-            else if((this.activeShip.sprite.body as any).acceleration.x !== 0 || (this.activeShip.sprite.body as any).acceleration.y !== 0) {
-                this.activeShip.sprite.thrustOff()
-            }
+        if (this.cursors.left.isDown)
+        {
+            this.activeShip.rotateLeft()
         }
-        
+        else if (this.cursors.right.isDown)
+        {
+            this.activeShip.rotateRight()
+        }
+        if (this.cursors.up.isDown)
+        {
+            this.activeShip.thrust()
+        }
+        else if((this.activeShip.body as any).acceleration.x !== 0 || (this.activeShip.body as any).acceleration.y !== 0) {
+            this.activeShip.thrustOff()
+        }
         //  Position the center of the camera on the player
         //  we want the center of the camera on the player, not the left-hand side of it
-        this.cameras.main.scrollX = this.activeShip.sprite.x - 200;
-        this.cameras.main.scrollY = this.activeShip.sprite.y - 200;
-        this.minimap.scrollX = Phaser.Math.Clamp(this.activeShip.sprite.x, 0, 3000);
-        this.minimap.scrollY = Phaser.Math.Clamp(this.activeShip.sprite.y, 0, 3000);
+        this.cameras.main.scrollX = this.activeShip.x - 200;
+        this.cameras.main.scrollY = this.activeShip.y - 200;
+        this.minimap.scrollX = this.activeShip.x;
+        this.minimap.scrollY = this.activeShip.y;
     }
     
-    spawnShip = (config:ShipDataOnly, spawnPoint:PlayerSpawnPoint) => {
-        let ship = {...Ships[config.name], ...config}
-        ship.sprite = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, ship.asset, this.projectiles, false, ship, this.server)
-        ship.sprite.rotation = spawnPoint.rotation
+    spawnShip = (config:ShipData, spawnPoint:PlayerSpawnPoint) => {
+        let shipData = {...Ships[config.name], ...config}
+        let ship = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, shipData.asset, this.projectiles, false, shipData, this.server)
+        ship.rotation = spawnPoint.rotation
         if(spawnPoint.xVelocity){
             //TODO: set starting edge coords based on previous system coords, right now defaults to top left corner
-            ship.sprite.setVelocity(config.jumpVector.x*500, config.jumpVector.y*-500)
+            ship.setVelocity(spawnPoint.xVelocity*500, spawnPoint.yVelocity*-500)
         }
-        this.ships.set(ship.id, ship)
+        this.ships.set(shipData.id, ship)
+        ship.setCollideWorldBounds(true)
+    }
+
+    spawnResource = (update:ResourceData) => {
+        let rez = this.physics.add.sprite(update.x,update.y, update.type)
+                .setData('state', {
+                    id: update.id,
+                    weight: 1,
+                    type: update.type
+                } as ResourceData)
+                .setScale(0.1)
+                .setRotation(Phaser.Math.FloatBetween(3,0.1))
+        this.resources.set(update.id, rez)
+        let ships = []
+        this.ships.forEach(ship=>ships.push(ship))
+        this.physics.add.overlap(ships, rez, this.playerGotResource)
     }
 
     addPlanets = () => {
@@ -225,42 +288,46 @@ export default class StarSystem extends Scene {
         }, this);
     }
 
-    spawnAsteroid = (update:AsteroidUpdate) => {
-        return this.physics.add.sprite(update.x,update.y, update.type)
-                .setData('hp', 3)
-                .setData('id', update.id)
-                .setData('type', update.type)
+    spawnAsteroid = (update:AsteroidData) => {
+        let state = {
+            type: update.type,
+            hp: 3,
+            id: update.id
+        } as AsteroidData
+
+        let rez = this.physics.add.sprite(update.x,update.y, update.type)
+                .setData('state', state)
                 .setScale(Phaser.Math.FloatBetween(0.8,0.1))
                 .setRotation(Phaser.Math.FloatBetween(3,0.1))
+        this.asteroids.set(update.id, rez)
     }
 
-    playerGotResource = (player:Physics.Arcade.Sprite, resource:GameObjects.Sprite) =>
+    playerGotResource = (player:ShipSprite, resource:Physics.Arcade.Sprite) =>
     {
-        resource.destroy();
-        //TODO
-        //onAddCargo(resource.data.values.type, resource.data.values.weight)
+        console.log('destroyed resource')
+        //you'll get ur cargo if the server agrees
     }
 
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:Projectile) =>
     {
         projectile.destroy();
-        asteroid.data.values.hp-=1
-
-        if(asteroid.data.values.hp <= 0){
-            this.destroyAsteroid(asteroid)
-        }
     }
 
     destroyAsteroid = (asteroid:Physics.Arcade.Sprite) => {
         this.explosions.get(asteroid.x, asteroid.y, 'boom').play('explode')
+        // this.asteroids.delete(asteroid.getData('state').id)
+        this.asteroids.delete(asteroid.getData('state').id)
         asteroid.destroy()
-        //TODO: spawn resources
-        //this.resources.get(asteroid.x, asteroid.y, asteroid.data.values.assetKey)
     }
 
-    playerTouchedResource = (resource:Physics.Arcade.Sprite, player:Physics.Arcade.Sprite) =>
-    {
+    destroyShip = (ship:ShipSprite) => {
+        this.explosions.get(ship.x, ship.y, 'boom').play('explode')
+        this.ships.delete(ship.shipData.id)
+        ship.destroy()
+    }
+
+    destroyResource = (resource:Physics.Arcade.Sprite) => {
+        this.resources.delete(resource.getData('state').id)
         resource.destroy()
-        player.data.values.resources++
     }
 }

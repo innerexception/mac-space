@@ -7,7 +7,7 @@ export default class Projectile extends GameObjects.Image {
     ySpeed: number
 
     constructor(scene, x, y){
-        super(scene, x, y, 'lazor')
+        super(scene, x, y, 'proton')
     }
 
     fire = (shooter:Physics.Arcade.Sprite, target?:Physics.Arcade.Sprite) => {
@@ -29,7 +29,7 @@ export default class Projectile extends GameObjects.Image {
         this.x += this.xSpeed * delta;
         this.y += this.ySpeed * delta;
         this.timeAlive += delta;
-        if (this.timeAlive > 1800)
+        if (this.timeAlive > 300)
         {
             this.setActive(false);
             this.setVisible(false);
