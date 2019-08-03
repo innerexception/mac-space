@@ -25,6 +25,13 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         let distance = Phaser.Math.Distance.Between(this.x, this.y, target.x, target.y)
         let planetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
         this.scene.tweens.add({
+            targets:this.body.velocity,
+            x: 0,
+            y: 0,
+            ease: Phaser.Math.Easing.Cubic.Out,
+            duration: 1500
+        })
+        this.scene.tweens.add({
             targets: this,
             rotation: planetAngle+(Math.PI/2),
             duration: 1500,
@@ -35,10 +42,11 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     targets: this,
                     x: target.x,
                     y: target.y,
-                    ease: Phaser.Math.Easing.Cubic.Out,
+                    ease: Phaser.Math.Easing.Cubic.InOut,
                     duration,
                     onComplete: ()=>{
                         this.stopLandingSequence()
+                        this.shipData.landedAt = { x: target.x, y: target.y }
                     }
                 })
             }
@@ -47,6 +55,11 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     stopLandingSequence = () => {
         if(this.landingSequence) this.landingSequence.stop()
+    }
+
+    takeOff = () => {
+        console.log('take off')
+        this.shipData.takeOff = true
     }
 
     startJumpSequence = (targetSystem:SystemState) => {
@@ -60,7 +73,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             rotation: systemAngle+(Math.PI/2),
             duration: 1500,
             onComplete: ()=>{
-                const duration = (distance/(this.shipData.maxSpeed))*100
+                const duration = (distance/(this.shipData.maxSpeed))*50
                 this.setCollideWorldBounds(false)
                 this.scene.tweens.add({
                     targets: this,
@@ -70,11 +83,12 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     onComplete: ()=> {
                         const target = this.scene.scene.get(targetSystem.name) as ServerStarSystem
                         let newShip = target.spawnShip(this.shipData, {
-                            x:10, y:10, rotation, 
+                            x:100, y:100, rotation, 
                             xVelocity: systemVector.x*this.shipData.maxSpeed, 
                             yVelocity: systemVector.y*this.shipData.maxSpeed
                         });
                         newShip.shipData.targetSystemName = targetSystem.name;
+                        newShip.shipData.systemName = targetSystem.name;
                         (this.scene as ServerStarSystem).jumpingShips.push(newShip);
                         (this.scene as ServerStarSystem).ships.delete(this.shipData.id)
                         this.destroy()

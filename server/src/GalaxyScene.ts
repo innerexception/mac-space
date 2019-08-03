@@ -86,9 +86,11 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
       }
     })
     ship.shipData.firePrimary = false
+    ship.shipData.landedAt = null
+    ship.shipData.takeOff = false
   })
   jumpingShips.forEach(ship=>{
-    console.log('send jump for: '+ship.shipData.targetSystemName)
+    console.log('send jump for: '+ship.shipData.targetSystemName + ' new system: '+ship.shipData.systemName)
     updates.push({
       type: PlayerEvents.SERVER_STATE,
       sequence: Date.now(),

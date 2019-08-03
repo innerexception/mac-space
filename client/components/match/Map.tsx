@@ -1,44 +1,51 @@
 import * as React from 'react'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
-import { compute } from '../util/Fov';
+import { onToggleMapMenu, onPlayerEvent } from '../uiManager/Thunks';
+import { StarSystems } from '../../data/StarSystems';
+import { PlayerEvents } from '../../../enum';
 
 interface Props {
-
+    activeShip: ShipData
 }
 
 interface State {
-
+    selectedSystemName: string
 }
 
 export default class Map extends React.Component<Props, State> {
 
     state = {
-        
+        selectedSystemName: this.props.activeShip.systemName
     }
 
-    componentDidMount = () => {
-        window.addEventListener('keydown', (e)=>this.handleKeyDown(e.keyCode))
+    onChooseDestination = () => {
+        onPlayerEvent({...this.props.activeShip, targetSystemName: this.state.selectedSystemName}, PlayerEvents.SELECT_SYSTEM)
+        onToggleMapMenu(false)
     }
 
-    getNotification = (notification:string) => {
+    getMap = () => {
             return (
                 <div style={{...styles.disabled, display: 'flex'}}>
                     <div style={AppStyles.notification}>
-                        <h3>{notification}</h3>
+                        <h3>Milky Way</h3>
+                        <div style={{width:'60vw', height:'60vh', background:'black', position:'relative'}}>
+                            {StarSystems.map(system=>
+                                <div style={{position:'absolute', top: system.y/100, left: system.x/100}} 
+                                     onClick={()=>this.setState({selectedSystemName: system.name})}>
+                                    <div style={{height:'0.5em', width:'0.5em', background:'white', borderRadius:'50%'}}/> 
+                                    <h5>{system.name}</h5>    
+                                </div>
+                            )}
+                        </div>
+                        {Button(true, this.onChooseDestination, 'Ok')}
                     </div>
                 </div>
             )
     }
 
-    handleKeyDown = (keyCode:number) =>{
-        
-    }
-
     render(){
-        return (
-            <div></div>
-        )
+        return (this.getMap())
     }
 }
 

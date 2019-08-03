@@ -93,10 +93,13 @@ export default class ServerStarSystem extends Scene {
                     const system = StarSystems.find(system=>system.name===update.shipData.targetSystemName)
                     ship.startJumpSequence(system)
                     break
+                case PlayerEvents.TAKE_OFF:
+                    ship.takeOff()
+                    break
             }
         }
         else if(update.type === PlayerEvents.PLAYER_SPAWNED){
-            console.log('ship spawned at '+update.shipData.x+','+update.shipData.y)
+            console.log('ship spawned at '+update.shipData.x+','+update.shipData.y+ ' with id: '+update.shipData.id)
             this.spawnShip(update.shipData, {x: update.shipData.x, y: update.shipData.y, rotation: update.shipData.rotation })
         }
     }

@@ -5,6 +5,7 @@ import ShipSprite from "./display/ShipSprite";
 import * as Ships from '../../data/Ships'
 import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
+import { onToggleMapMenu, onConnectionError, onConnected } from "../uiManager/Thunks";
 
 export default class StarSystem extends Scene {
 
@@ -24,6 +25,7 @@ export default class StarSystem extends Scene {
     jumpedIn: boolean
     state:SystemState
     server: WebsocketClient
+    unsubscribeRedux: Function
 
     constructor(config, jumpedIn?:boolean){
         super(config)
@@ -35,19 +37,31 @@ export default class StarSystem extends Scene {
         this.asteroids = new Map()
         this.planets = []
         this.resources = new Map()
+        this.unsubscribeRedux = store.subscribe(this.onReduxUpdate)
     }
 
     onReduxUpdate = () => {
-        //TODO: rebuild ship sprites if needed (you bought a new ship or upgrade, etc)
-        this.player = store.getState().currentUser
-        // store.subscribe(this.onReduxUpdate)
+        //TODO: this is a zombie even after scne has been destroyed...
+        if(this.activeShip.body){
+            this.player = store.getState().currentUser
+            this.activeShip.shipData = this.player.ships.find(ship=>ship.id === this.player.activeShipId)
+            
+            let event = store.getState().playerEvent
+            if(event){
+                this.activeShip.shipData.systemName = this.name
+                this.activeShip.addShipUpdate(this.activeShip, event)
+            }
+        }
+        else console.log('orphaned redux callback')
     }
 
     onConnected = () => {
+        onConnected()
         console.log('star system '+this.name+' connected!')
     }
 
     onConnectionError = () => {
+        onConnectionError()
         console.log('star system '+this.name+' FAILED to connect.')
     }
 
@@ -73,7 +87,6 @@ export default class StarSystem extends Scene {
                     }
                 }
                 else {
-                    console.log('spawning new asteroid at '+update.x+','+update.y)
                     this.spawnAsteroid(update)
                 }
             })
@@ -93,10 +106,13 @@ export default class StarSystem extends Scene {
                         if(ship.isPlayerControlled){
                             this.scene.add(system.name, new StarSystem({key:system.name, server:this.server, initialState: system}, true), false)
                             this.scene.start(system.name)
+                            this.unsubscribeRedux()
+                            this.scene.remove()
                         }
                         else{
                             //Somebody else left...
                             this.ships.delete(ship.shipData.id)
+                            console.log('destryed ship with id: '+ship.shipData.id)
                             ship.destroy()
                         }
                     }
@@ -171,16 +187,18 @@ export default class StarSystem extends Scene {
         this.createStarfield()
         this.addPlanets()
 
-        let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
-        this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server);
-        this.ships.set(this.activeShip.shipData.id, this.activeShip)
-        activeShipData.systemName = this.name
-
         if(this.jumpedIn){
             console.log('jumped in...')
             this.cameras.main.flash(500)
+            //we need to wait until the server gives us a ship to focus on
+            this.time.addEvent({ delay: 100, callback: this.checkForActiveShip, loop: true });
         }
         else{
+            //This is our starting sector so we spawn ourselves
+            let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
+            this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server);
+            this.ships.set(this.activeShip.shipData.id, this.activeShip)
+            activeShipData.systemName = this.name
             //  Add player ship notification
             this.activeShip.sendSpawnUpdate()
             this.activeShip.takeOff()
@@ -197,38 +215,52 @@ export default class StarSystem extends Scene {
         this.input.keyboard.on('keydown-SPACE', (event) => {
             this.activeShip.firePrimary()
         });
+        this.input.keyboard.on('keydown-M', (event) => {
+            onToggleMapMenu(true)
+        });
         this.cursors = this.input.keyboard.createCursorKeys();
         
         this.server.setListeners(this.onServerUpdate, this.onConnected, this.onConnectionError)
     }
     
+    checkForActiveShip = () => {
+        let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
+        this.activeShip = this.ships.get(activeShipData.id)
+        this.activeShip.shipData.systemName = this.name
+        this.activeShip.isPlayerControlled = true
+        if(this.activeShip) this.time.removeAllEvents()
+    }
+
     update = () =>
     {
-        if (this.cursors.left.isDown)
-        {
-            this.activeShip.rotateLeft()
+        if(this.activeShip){
+            if (this.cursors.left.isDown)
+            {
+                this.activeShip.rotateLeft()
+            }
+            else if (this.cursors.right.isDown)
+            {
+                this.activeShip.rotateRight()
+            }
+            if (this.cursors.up.isDown)
+            {
+                this.activeShip.thrust()
+            }
+            else if((this.activeShip.body as any).acceleration.x !== 0 || (this.activeShip.body as any).acceleration.y !== 0) {
+                this.activeShip.thrustOff()
+            }
+            //  Position the center of the camera on the player
+            //  we want the center of the camera on the player, not the left-hand side of it
+            this.cameras.main.scrollX = this.activeShip.x - 200;
+            this.cameras.main.scrollY = this.activeShip.y - 200;
+            this.minimap.scrollX = this.activeShip.x;
+            this.minimap.scrollY = this.activeShip.y;
         }
-        else if (this.cursors.right.isDown)
-        {
-            this.activeShip.rotateRight()
-        }
-        if (this.cursors.up.isDown)
-        {
-            this.activeShip.thrust()
-        }
-        else if((this.activeShip.body as any).acceleration.x !== 0 || (this.activeShip.body as any).acceleration.y !== 0) {
-            this.activeShip.thrustOff()
-        }
-        //  Position the center of the camera on the player
-        //  we want the center of the camera on the player, not the left-hand side of it
-        this.cameras.main.scrollX = this.activeShip.x - 200;
-        this.cameras.main.scrollY = this.activeShip.y - 200;
-        this.minimap.scrollX = this.activeShip.x;
-        this.minimap.scrollY = this.activeShip.y;
     }
     
     spawnShip = (config:ShipData, spawnPoint:PlayerSpawnPoint) => {
         let shipData = {...Ships[config.name], ...config}
+        shipData.systemName = this.name
         let ship = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, shipData.asset, this.projectiles, false, shipData, this.server)
         ship.rotation = spawnPoint.rotation
         if(spawnPoint.xVelocity){
@@ -236,7 +268,7 @@ export default class StarSystem extends Scene {
             ship.setVelocity(spawnPoint.xVelocity*500, spawnPoint.yVelocity*-500)
         }
         this.ships.set(shipData.id, ship)
-        ship.setCollideWorldBounds(true)
+        // ship.setCollideWorldBounds(true)
     }
 
     spawnResource = (update:ResourceData) => {
@@ -323,6 +355,7 @@ export default class StarSystem extends Scene {
     destroyShip = (ship:ShipSprite) => {
         this.explosions.get(ship.x, ship.y, 'boom').play('explode')
         this.ships.delete(ship.shipData.id)
+        console.log('destryed ship with id: '+ship.shipData.id)
         ship.destroy()
     }
 

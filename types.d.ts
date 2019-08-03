@@ -17,7 +17,9 @@ declare enum PlayerEvents {
     PLAYER_SPAWNED= 'ps',
     START_LANDING='sl',
     STOP_LANDING='stl',
-    START_JUMP='sj'
+    START_JUMP='sj',
+    TAKE_OFF='take_off',
+    SELECT_SYSTEM='sys'
 }
 
 declare enum ServerMessages {
@@ -64,6 +66,7 @@ interface ShipSprite extends Phaser.Physics.Arcade.Sprite {
     rotateLeft()
     thrust()
     thrustOff()
+    shipData: ShipData
     landingSequence: boolean
     applyUpdate(update:ShipUpdate)
     sendSpawnUpdate()
@@ -164,6 +167,8 @@ interface ShipData {
     firePrimary: boolean
     systemName: string
     landingTargetId?: string
+    landedAt?: Tuple
+    takeOff?: boolean
     targetSystemName?: string
     x?: number
     y?: number
@@ -216,4 +221,5 @@ interface RState {
     activeSession: Session
     showMap: boolean
     showPlanetMenu: boolean
+    playerEvent: PlayerEvents
 }

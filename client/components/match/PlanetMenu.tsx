@@ -1,10 +1,11 @@
 import * as React from 'react'
-import { onTogglePlanetMenu } from '../uiManager/Thunks'
+import { onTogglePlanetMenu, onPlayerEvent } from '../uiManager/Thunks'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
+import { PlayerEvents } from '../../../enum';
 
 interface Props {
-
+    activeShip: ShipData
 }
 
 interface State {
@@ -21,12 +22,16 @@ export default class PlanetMenu extends React.Component<Props, State> {
         window.addEventListener('keydown', (e)=>this.handleKeyDown(e.keyCode))
     }
 
+    onTakeOff = () => {
+        onPlayerEvent({...this.props.activeShip}, PlayerEvents.TAKE_OFF)
+    }
+
     getNotification = (notification:string) => {
             return (
                 <div style={{...styles.disabled, display: 'flex'}}>
                     <div style={AppStyles.notification}>
                         <h3>{notification}</h3>
-                        {Button(true, ()=>onTogglePlanetMenu(false), 'Ok')}
+                        {Button(true, this.onTakeOff, 'Ok')}
                     </div>
                 </div>
             )

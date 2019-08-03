@@ -43,22 +43,24 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     }
 
     takeOff = () => {
-        this.setScale(0,0)
+        this.setScale(0)
         this.scene.tweens.add({
             targets: this,
             duration: 1500,
-            scaleX: 0.3,
-            scaleY: 0.3
+            scale: 0.3
         })
+        if(this.isPlayerControlled)
+            onTogglePlanetMenu(false)
     }
 
     landing = () => {
         this.scene.tweens.add({
             targets: this,
             duration: 1500,
-            scaleX: 0,
-            scaleY: 0
+            scale: 0
         })
+        if(this.isPlayerControlled)
+            onTogglePlanetMenu(true)
     }
 
     sendSpawnUpdate = () => {
@@ -159,6 +161,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         }
         this.setVelocity(update.velocity.x, update.velocity.y)
         if(update.firePrimary && !this.isPlayerControlled) this.firePrimary()
+        if(update.landedAt) this.landing()
+        if(update.takeOff) this.takeOff()
     }
 
     addShipUpdate = (ship:ShipSprite, event:PlayerEvents) => {

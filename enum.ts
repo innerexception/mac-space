@@ -18,7 +18,9 @@ export const ReducerActions= {
     CONNECTED: 'c',
     SET_USER: 'su',
     PLAYER_REPLACE: 'prp',
-    OPEN_PLANET: 'op'
+    OPEN_PLANET: 'op',
+    OPEN_MAP: 'om',
+    PLAYER_EVENT: 'pev'
 }
 
 export enum PlayerEvents { 
@@ -31,7 +33,9 @@ export enum PlayerEvents {
     PLAYER_SPAWNED= 'ps',
     START_LANDING='sl',
     STOP_LANDING='stl',
-    START_JUMP='sj'
+    START_JUMP='sj',
+    TAKE_OFF='take_off',
+    SELECT_SYSTEM='sys'
 }
 
 export enum ServerMessages {

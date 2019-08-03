@@ -15,6 +15,22 @@ export const onTogglePlanetMenu = (state:boolean) => {
     })
 }
 
+export const onToggleMapMenu = (state:boolean) => {
+    dispatch({
+        type: ReducerActions.OPEN_MAP,
+        state
+    })
+}
+
+export const onPlayerEvent = (ship:ShipData, event:PlayerEvents) => {
+    dispatch({
+        type: ReducerActions.PLAYER_EVENT,
+        ship,
+        event
+    })
+}
+
+
 export const onWSMessage = (data:any) => {
     if (!data ) {
         dispatch({
