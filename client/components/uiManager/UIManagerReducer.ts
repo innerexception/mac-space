@@ -1,4 +1,4 @@
-import { ReducerActions } from '../../../enum'
+import { ReducerActions, PlayerEvents } from '../../../enum'
 
 const appReducer = (state = getInitialState(), action:any):RState => {
     switch (action.type) {
@@ -25,6 +25,16 @@ const appReducer = (state = getInitialState(), action:any):RState => {
                 return ship
             })
             return { ...state, currentUser: {...state.currentUser}, playerEvent: action.event }
+        case ReducerActions.SELL_COMMODITY:
+            return { ...state, sellCommodity: { ...action }, playerEvent: PlayerEvents.SELL_COMMODITY }
+        case ReducerActions.BUY_COMMODITY:
+            return { ...state, buyCommodity: { ...action }, playerEvent: PlayerEvents.BUY_COMMODITY }
+        case ReducerActions.PHASER_SCENE_CHANGE:
+            state.currentUser.ships = state.currentUser.ships.map(ship=>{
+                if(ship.id === action.activeShip.id) return action.activeShip
+                return ship
+            })
+            return { ...state, currentUser: {...state.currentUser}, playerEvent: null }
         default:
             return state
     }
@@ -44,6 +54,8 @@ const getInitialState = ():RState => {
         currentUser: null,
         showMap: false,
         showPlanetMenu: false,
-        playerEvent: null
+        playerEvent: null,
+        buyCommodity: null,
+        sellCommodity: null
     }
 }

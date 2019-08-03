@@ -6,7 +6,7 @@ import * as Ships from '../../data/Ships'
 import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
 import { onToggleMapMenu, onConnectionError, onConnected } from "../uiManager/Thunks";
-import { PlayerEvents } from "../../../enum";
+import { PlayerEvents, ReducerActions } from "../../../enum";
 
 export default class StarSystem extends Scene {
 
@@ -22,6 +22,7 @@ export default class StarSystem extends Scene {
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
     currentSystem: SystemState
     selectedSystem: SystemState
+    selectedPlanetIndex: number
     name: string
     jumpedIn: boolean
     state:SystemState
@@ -38,6 +39,7 @@ export default class StarSystem extends Scene {
         this.asteroids = new Map()
         this.planets = []
         this.resources = new Map()
+        this.selectedPlanetIndex = 0
         this.unsubscribeRedux = store.subscribe(this.onReduxUpdate)
     }
 
@@ -47,11 +49,11 @@ export default class StarSystem extends Scene {
             this.player = store.getState().currentUser
             this.activeShip.shipData = this.player.ships.find(ship=>ship.id === this.player.activeShipId)
             
-            let event = store.getState().playerEvent
-            if(event){
+            let playerEvent = store.getState().playerEvent
+            if(playerEvent){
                 this.activeShip.shipData.systemName = this.name //TODO figure out why we need this here...
-                if(event !== PlayerEvents.SELECT_SYSTEM) this.activeShip.addShipUpdate(this.activeShip, event)
-                this.selectedSystem = StarSystems.find(sys=>sys.name === this.activeShip.shipData.targetSystemName)
+                if(playerEvent !== PlayerEvents.SELECT_SYSTEM) this.activeShip.addShipUpdate(this.activeShip, playerEvent)
+                this.selectedSystem = StarSystems.find(sys=>sys.name === this.activeShip.shipData.transientData.targetSystemName)
             }
         }
         else console.log('orphaned redux callback warning')
@@ -102,9 +104,9 @@ export default class StarSystem extends Scene {
             state.ships.forEach(update=> {
                 let ship = this.ships.get(update.shipData.id)
                 if(ship){
-                    if(update.shipData.targetSystemName){
+                    if(update.shipData.transientData.targetSystemName){
                         //We jumped somewhere else, change the scene over
-                        const system = StarSystems.find(system=>system.name === update.shipData.targetSystemName)
+                        const system = StarSystems.find(system=>system.name === update.shipData.transientData.targetSystemName)
                         if(ship.isPlayerControlled){
                             this.scene.add(system.name, new StarSystem({key:system.name, server:this.server, initialState: system}, true), false)
                             this.scene.start(system.name)
@@ -172,7 +174,6 @@ export default class StarSystem extends Scene {
         this.minimap.scrollX = 1600;
         this.minimap.scrollY = 400;
         
-        this.selectedSystem = Arcturus
         this.currentSystem = Rigel
 
         this.anims.create({
@@ -208,11 +209,12 @@ export default class StarSystem extends Scene {
         }
         
         this.input.keyboard.on('keydown-L', (event) => {
-            //TODO cycle available sites
-            this.activeShip.startLandingSequence(this.planets[0])
+            this.selectedPlanetIndex = (this.selectedPlanetIndex + 1) % this.planets.length
+            this.activeShip.startLandingSequence(this.planets[this.selectedPlanetIndex])
         });
         this.input.keyboard.on('keydown-J', (event) => {
-            this.activeShip.startJumpSequence(this.selectedSystem)
+            if(this.selectedSystem) this.activeShip.startJumpSequence(this.selectedSystem)
+            else console.log('no system selected...')
         })
         this.input.keyboard.on('keydown-SPACE', (event) => {
             this.activeShip.firePrimary()
@@ -231,6 +233,7 @@ export default class StarSystem extends Scene {
         if(this.activeShip){
             this.activeShip.shipData.systemName = this.name
             this.activeShip.isPlayerControlled = true
+            store.dispatch({ type: ReducerActions.PHASER_SCENE_CHANGE, activeShip: this.activeShip.shipData })
             this.time.removeAllEvents()
         }
     }
@@ -272,7 +275,6 @@ export default class StarSystem extends Scene {
             ship.setVelocity(spawnPoint.xVelocity*500, spawnPoint.yVelocity*-500)
         }
         this.ships.set(shipData.id, ship)
-        // ship.setCollideWorldBounds(true)
     }
 
     spawnResource = (update:ResourceData) => {
@@ -293,7 +295,7 @@ export default class StarSystem extends Scene {
     addPlanets = () => {
         let planets = []
         this.state.stellarObjects.forEach(obj=>{
-            planets.push(this.add.sprite(obj.x, obj.y, obj.asset))
+            planets.push(this.add.sprite(obj.x, obj.y, obj.asset).setData('state', {...obj}))
         })
         this.planets = planets
     }
@@ -301,9 +303,7 @@ export default class StarSystem extends Scene {
     createStarfield ()
     {
         //  Starfield background
-    
         //  Note the scrollFactor values which give them their 'parallax' effect
-    
         var group = this.add.group();
     
         group.createMultiple([
@@ -316,11 +316,8 @@ export default class StarSystem extends Scene {
         Phaser.Actions.RandomRectangle(group.getChildren(), rect);
     
         group.children.iterate((child, index) => {
-    
-            var sf = Math.max(0.3, Math.random());
+            // var sf = Math.max(0.3, Math.random());
             this.minimap.ignore(child);
-            
-            
         }, this);
     }
 

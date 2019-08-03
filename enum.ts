@@ -20,7 +20,10 @@ export const ReducerActions= {
     PLAYER_REPLACE: 'prp',
     OPEN_PLANET: 'op',
     OPEN_MAP: 'om',
-    PLAYER_EVENT: 'pev'
+    PLAYER_EVENT: 'pev',
+    BUY_COMMODITY: 'bcc',
+    SELL_COMMODITY: 'scc',
+    PHASER_SCENE_CHANGE:'phsr'
 }
 
 export enum PlayerEvents { 
@@ -35,7 +38,9 @@ export enum PlayerEvents {
     STOP_LANDING='stl',
     START_JUMP='sj',
     TAKE_OFF='take_off',
-    SELECT_SYSTEM='sys'
+    SELECT_SYSTEM='sys',
+    SELL_COMMODITY='scc',
+    BUY_COMMODITY='bcc'
 }
 
 export enum ServerMessages {

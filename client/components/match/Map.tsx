@@ -1,7 +1,7 @@
 import * as React from 'react'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
-import { onToggleMapMenu, onPlayerEvent } from '../uiManager/Thunks';
+import { onToggleMapMenu, onShipEvent } from '../uiManager/Thunks';
 import { StarSystems } from '../../data/StarSystems';
 import { PlayerEvents } from '../../../enum';
 
@@ -20,7 +20,8 @@ export default class Map extends React.Component<Props, State> {
     }
 
     onChooseDestination = () => {
-        onPlayerEvent({...this.props.activeShip, targetSystemName: this.state.selectedSystemName}, PlayerEvents.SELECT_SYSTEM)
+        this.props.activeShip.transientData.targetSystemName = this.state.selectedSystemName
+        onShipEvent({...this.props.activeShip }, PlayerEvents.SELECT_SYSTEM)
         onToggleMapMenu(false)
     }
 

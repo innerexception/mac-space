@@ -22,11 +22,27 @@ export const onToggleMapMenu = (state:boolean) => {
     })
 }
 
-export const onPlayerEvent = (ship:ShipData, event:PlayerEvents) => {
+export const onShipEvent = (ship:ShipData, event:PlayerEvents) => {
     dispatch({
         type: ReducerActions.PLAYER_EVENT,
         ship,
         event
+    })
+}
+
+export const onBuyEvent = (commodity:Commodity, amount:number) => {
+    dispatch({
+        type: ReducerActions.BUY_COMMODITY,
+        commodity,
+        amount
+    })
+}
+
+export const onSellEvent = (commodity:Commodity, amount:number) => {
+    dispatch({
+        type: ReducerActions.SELL_COMMODITY,
+        commodity,
+        amount
     })
 }
 

@@ -22,7 +22,7 @@ export const Shuttle:ShipData = {
     hardPoints: 0,
     guns: [],
     asset: 'ship',
-    firePrimary: false,
     cargo: [],
-    systemName: ''
+    systemName: '',
+    transientData: {}
 }

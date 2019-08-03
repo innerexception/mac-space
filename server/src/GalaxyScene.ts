@@ -82,23 +82,27 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
         y: ship.y,
         rotation: ship.rotation,
         velocity : ship.body.velocity,
-        fighters: []
+        fighters: [],
+        transientData: {...ship.shipData.transientData}
       }
     })
-    ship.shipData.firePrimary = false
-    ship.shipData.landedAt = null
-    ship.shipData.takeOff = false
+    //Transient data is for 1 time updates, they are cleared after being sent once
+    ship.shipData.transientData.firePrimary = false
+    ship.shipData.transientData.takeOff = false
+    ship.shipData.transientData.buyCommodity = null
+    ship.shipData.transientData.sellCommodity = null
   })
   jumpingShips.forEach(ship=>{
-    console.log('send jump for: '+ship.shipData.targetSystemName + ' new system: '+ship.shipData.systemName)
+    //These have been removed from the scene and no new updates will be sent
     updates.push({
       type: PlayerEvents.SERVER_STATE,
       sequence: Date.now(),
       shipData: {
-        ...ship.shipData
+        ...ship.shipData,
+        transientData: {...ship.shipData.transientData}
       }
     })
-    ship.shipData.targetSystemName = null
+    ship.shipData.transientData.targetSystemName = null
   })
   return updates
 }

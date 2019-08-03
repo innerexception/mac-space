@@ -83,18 +83,24 @@ export default class ServerStarSystem extends Scene {
                     ship.thrustOff()
                     break
                 case PlayerEvents.START_LANDING:
-                    const target = this.planets[0] //TODO: update.shipData.landingTargetId
+                    const target = this.planets.find(planet=>planet.getData('state').name === update.shipData.transientData.landingTargetName)
                     ship.startLandingSequence(target)
                     break
                 case PlayerEvents.STOP_LANDING:
                     ship.stopLandingSequence()
                     break
                 case PlayerEvents.START_JUMP:
-                    const system = StarSystems.find(system=>system.name===update.shipData.targetSystemName)
+                    const system = StarSystems.find(system=>system.name===update.shipData.transientData.targetSystemName)
                     ship.startJumpSequence(system)
                     break
                 case PlayerEvents.TAKE_OFF:
                     ship.takeOff()
+                    break
+                case PlayerEvents.BUY_COMMODITY:
+                    ship.buyCommodity(update.shipData.transientData.buyCommodity)
+                    break
+                case PlayerEvents.SELL_COMMODITY:
+                    ship.sellCommodity(update.shipData.transientData.sellCommodity)
                     break
             }
         }
@@ -107,7 +113,7 @@ export default class ServerStarSystem extends Scene {
     addPlanets = () => {
         let planets = []
         this.state.stellarObjects.forEach(obj=>{
-            planets.push(this.add.sprite(obj.x, obj.y, obj.asset))
+            planets.push(this.add.sprite(obj.x, obj.y, obj.asset).setData('state', {...obj}))
         })
         this.planets = planets
     }

@@ -51,16 +51,20 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         })
         if(this.isPlayerControlled)
             onTogglePlanetMenu(false)
+            
+        this.shipData.landedAt = null
     }
 
     landing = () => {
         this.scene.tweens.add({
             targets: this,
             duration: 1500,
-            scale: 0
+            scale: 0,
+            onComplete: ()=>{
+                if(this.isPlayerControlled)
+                    onTogglePlanetMenu(true)
+            }
         })
-        if(this.isPlayerControlled)
-            onTogglePlanetMenu(true)
     }
 
     sendSpawnUpdate = () => {
@@ -69,7 +73,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     startLandingSequence = (target:GameObjects.Sprite) => {
         //landing sequence
-        this.shipData.landingTargetId = 'teehee'
+        this.shipData.transientData.landingTargetName = target.getData('state').name
         this.addShipUpdate(this, PlayerEvents.START_LANDING)
     }
 
@@ -79,7 +83,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
-        this.shipData.targetSystemName = targetSystem.name
+        this.shipData.transientData.targetSystemName = targetSystem.name
         this.addShipUpdate(this, PlayerEvents.START_JUMP)
     }
 
@@ -87,8 +91,10 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         const projectile = this.projectiles.get().setActive(true).setVisible(true)
         if(projectile){
             projectile.fire(this)
-            if(this.isPlayerControlled)
+            if(this.isPlayerControlled){
+                this.shipData.transientData.firePrimary = true
                 this.addShipUpdate(this, PlayerEvents.FIRE_PRIMARY)
+            }
         }
     }
 
@@ -97,18 +103,18 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     }
 
     rotateLeft = () => {
-        if(this.shipData.landingTargetId) this.addShipUpdate(this, PlayerEvents.STOP_LANDING)
+        if(this.shipData.transientData.landingTargetName) this.addShipUpdate(this, PlayerEvents.STOP_LANDING)
         this.rotation -= this.shipData.turn
         this.addShipUpdate(this, PlayerEvents.ROTATE_L)
     }
     rotateRight = () => {
-        if(this.shipData.landingTargetId) this.addShipUpdate(this, PlayerEvents.STOP_LANDING)
+        if(this.shipData.transientData.landingTargetName) this.addShipUpdate(this, PlayerEvents.STOP_LANDING)
         this.rotation += this.shipData.turn
         this.addShipUpdate(this, PlayerEvents.ROTATE_R)
     }
 
     thrust = () => {
-        if(this.shipData.landingTargetId) this.addShipUpdate(this, PlayerEvents.STOP_LANDING)
+        if(this.shipData.transientData.landingTargetName) this.addShipUpdate(this, PlayerEvents.STOP_LANDING)
         let vector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
         this.setAcceleration(vector.x*this.shipData.maxSpeed, vector.y*-this.shipData.maxSpeed); //negative b/c y is inverted in crazyland
         this.thruster.emitParticle(16);
@@ -121,7 +127,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         this.addShipUpdate(this, PlayerEvents.THRUST_OFF)
     }
 
-    //Custom sprite needs this magical named method
+    //Custom sprite needs this magical named method instead of update()
     preUpdate = (time, delta) =>
     {
         //Align thruster nozzle
@@ -160,9 +166,12 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             this.rotation = update.rotation
         }
         this.setVelocity(update.velocity.x, update.velocity.y)
-        if(update.firePrimary && !this.isPlayerControlled) this.firePrimary()
-        if(update.landedAt) this.landing()
-        if(update.takeOff) this.takeOff()
+        if(update.transientData.firePrimary && !this.isPlayerControlled) this.firePrimary()
+        if(update.landedAt && !this.shipData.landedAt){
+            this.shipData.landedAt = update.landedAt
+            this.landing()
+        }
+        if(update.transientData.takeOff) this.takeOff()
     }
 
     addShipUpdate = (ship:ShipSprite, event:PlayerEvents) => {
@@ -177,7 +186,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
                 y: ship.y,
                 rotation: ship.rotation,
                 velocity: ship.body.velocity,
-                firePrimary: event === PlayerEvents.FIRE_PRIMARY
+                transientData: {...ship.shipData.transientData}
             }
         }
         this.server.publishMessage({

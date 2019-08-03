@@ -46,7 +46,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     duration,
                     onComplete: ()=>{
                         this.stopLandingSequence()
-                        this.shipData.landedAt = { x: target.x, y: target.y }
+                        this.shipData.landedAt = target.getData('state')
                     }
                 })
             }
@@ -55,11 +55,13 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     stopLandingSequence = () => {
         if(this.landingSequence) this.landingSequence.stop()
+        this.shipData.transientData.landingTargetName = ''
     }
 
     takeOff = () => {
         console.log('take off')
-        this.shipData.takeOff = true
+        this.shipData.transientData.takeOff = true
+        this.shipData.landedAt = null
     }
 
     startJumpSequence = (targetSystem:SystemState) => {
@@ -87,7 +89,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                             xVelocity: systemVector.x*this.shipData.maxSpeed, 
                             yVelocity: systemVector.y*this.shipData.maxSpeed
                         });
-                        newShip.shipData.targetSystemName = targetSystem.name;
+                        newShip.shipData.transientData.targetSystemName = targetSystem.name;
                         newShip.shipData.systemName = targetSystem.name;
                         (this.scene as ServerStarSystem).jumpingShips.push(newShip);
                         (this.scene as ServerStarSystem).ships.delete(this.shipData.id)
@@ -102,12 +104,20 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         const projectile = this.projectiles.get().setActive(true).setVisible(true)
         if(projectile){
             projectile.fire(this)
-            this.shipData.firePrimary = true
+            this.shipData.transientData.firePrimary = true
         }
     }
 
     fireSecondary = () => {
 
+    }
+
+    buyCommodity = (buyOrder:CommodityOrder) => {
+        //nutsack
+    }
+
+    sellCommodity = (sellOrder:CommodityOrder) => {
+        //nutsack
     }
 
     rotateLeft = () => {
