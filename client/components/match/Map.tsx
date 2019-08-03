@@ -31,9 +31,9 @@ export default class Map extends React.Component<Props, State> {
                         <h3>Milky Way</h3>
                         <div style={{width:'60vw', height:'60vh', background:'black', position:'relative'}}>
                             {StarSystems.map(system=>
-                                <div style={{position:'absolute', top: system.y/100, left: system.x/100}} 
+                                <div style={{position:'absolute', top: system.y/100, left: system.x/100, cursor:'pointer'}} 
                                      onClick={()=>this.setState({selectedSystemName: system.name})}>
-                                    <div style={{height:'0.5em', width:'0.5em', background:'white', borderRadius:'50%'}}/> 
+                                    <div style={{height:'0.5em', width:'0.5em', background:this.state.selectedSystemName === system.name ? 'blue' : 'white', borderRadius:'50%'}}/> 
                                     <h5>{system.name}</h5>    
                                 </div>
                             )}
@@ -51,7 +51,6 @@ export default class Map extends React.Component<Props, State> {
 
 const styles = {
     disabled: {
-        pointerEvents: 'none' as 'none',
         alignItems:'center', justifyContent:'center', 
         position:'absolute' as 'absolute', top:0, left:0, width:'100%', height:'100%'
     },

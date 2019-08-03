@@ -6,6 +6,7 @@ import * as Ships from '../../data/Ships'
 import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
 import { onToggleMapMenu, onConnectionError, onConnected } from "../uiManager/Thunks";
+import { PlayerEvents } from "../../../enum";
 
 export default class StarSystem extends Scene {
 
@@ -48,11 +49,12 @@ export default class StarSystem extends Scene {
             
             let event = store.getState().playerEvent
             if(event){
-                this.activeShip.shipData.systemName = this.name
-                this.activeShip.addShipUpdate(this.activeShip, event)
+                this.activeShip.shipData.systemName = this.name //TODO figure out why we need this here...
+                if(event !== PlayerEvents.SELECT_SYSTEM) this.activeShip.addShipUpdate(this.activeShip, event)
+                this.selectedSystem = StarSystems.find(sys=>sys.name === this.activeShip.shipData.targetSystemName)
             }
         }
-        else console.log('orphaned redux callback')
+        else console.log('orphaned redux callback warning')
     }
 
     onConnected = () => {
@@ -226,9 +228,11 @@ export default class StarSystem extends Scene {
     checkForActiveShip = () => {
         let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
         this.activeShip = this.ships.get(activeShipData.id)
-        this.activeShip.shipData.systemName = this.name
-        this.activeShip.isPlayerControlled = true
-        if(this.activeShip) this.time.removeAllEvents()
+        if(this.activeShip){
+            this.activeShip.shipData.systemName = this.name
+            this.activeShip.isPlayerControlled = true
+            this.time.removeAllEvents()
+        }
     }
 
     update = () =>
