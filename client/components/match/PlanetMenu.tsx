@@ -1,10 +1,11 @@
 import * as React from 'react'
-import { onTogglePlanetMenu } from '../uiManager/Thunks'
+import { onShipEvent, onBuyEvent, onSellEvent } from '../uiManager/Thunks'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
+import { PlayerEvents } from '../../../enum';
 
 interface Props {
-
+    activeShip: ShipData
 }
 
 interface State {
@@ -21,15 +22,41 @@ export default class PlanetMenu extends React.Component<Props, State> {
         window.addEventListener('keydown', (e)=>this.handleKeyDown(e.keyCode))
     }
 
-    getNotification = (notification:string) => {
-            return (
-                <div style={{...styles.disabled, display: 'flex'}}>
-                    <div style={AppStyles.notification}>
-                        <h3>{notification}</h3>
-                        {Button(true, ()=>onTogglePlanetMenu(false), 'Ok')}
+    onTakeOff = () => {
+        onShipEvent({...this.props.activeShip}, PlayerEvents.TAKE_OFF)
+    }
+
+    onBuyCommodity = (commodity:Commodity, amount: number) => {
+        onBuyEvent(commodity, amount)
+    }
+
+    onSellCommodity = (commodity:Commodity, amount: number) => {
+        onSellEvent(commodity, amount)
+    }
+
+    getPlanetMainMenu = () => {
+        let planet = this.props.activeShip.landedAt
+        let ship = this.props.activeShip
+        return (
+            <div style={{...styles.disabled, display: 'flex'}}>
+                <div style={AppStyles.notification}>
+                    <h3>{planet.name}</h3>
+                    <div>
+                        {planet.commodities && planet.commodities.map(commodity => 
+                            <div style={{display:"flex"}}>
+                                <h5>{commodity.name}</h5>
+                                <div>{commodity.price}</div>
+                                {LightButton(ship.cargoSpace > 0, ()=>this.onBuyCommodity(commodity, 1), 'Buy 1')}
+                                {LightButton(ship.cargoSpace > 0, ()=>this.onBuyCommodity(commodity, ship.cargoSpace), 'Buy All')}
+                                {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onSellCommodity(commodity, 1), 'Sell 1')}
+                                {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onSellCommodity(commodity, ship.cargo.filter(item=>item.name === commodity.name).length), 'Sell All')}
+                            </div>
+                        )}
                     </div>
+                    {Button(true, this.onTakeOff, 'Ok')}
                 </div>
-            )
+            </div>
+        )
     }
 
     handleKeyDown = (keyCode:number) =>{
@@ -37,13 +64,13 @@ export default class PlanetMenu extends React.Component<Props, State> {
     }
 
     render(){
-        return (this.getNotification('yo planet'))
+        return (this.getPlanetMainMenu())
     }
 }
 
+
 const styles = {
     disabled: {
-        pointerEvents: 'none' as 'none',
         alignItems:'center', justifyContent:'center', 
         position:'absolute' as 'absolute', top:0, left:0, width:'100%', height:'100%'
     },

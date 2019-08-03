@@ -15,6 +15,38 @@ export const onTogglePlanetMenu = (state:boolean) => {
     })
 }
 
+export const onToggleMapMenu = (state:boolean) => {
+    dispatch({
+        type: ReducerActions.OPEN_MAP,
+        state
+    })
+}
+
+export const onShipEvent = (ship:ShipData, event:PlayerEvents) => {
+    dispatch({
+        type: ReducerActions.PLAYER_EVENT,
+        ship,
+        event
+    })
+}
+
+export const onBuyEvent = (commodity:Commodity, amount:number) => {
+    dispatch({
+        type: ReducerActions.BUY_COMMODITY,
+        commodity,
+        amount
+    })
+}
+
+export const onSellEvent = (commodity:Commodity, amount:number) => {
+    dispatch({
+        type: ReducerActions.SELL_COMMODITY,
+        commodity,
+        amount
+    })
+}
+
+
 export const onWSMessage = (data:any) => {
     if (!data ) {
         dispatch({

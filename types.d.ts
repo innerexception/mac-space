@@ -17,7 +17,11 @@ declare enum PlayerEvents {
     PLAYER_SPAWNED= 'ps',
     START_LANDING='sl',
     STOP_LANDING='stl',
-    START_JUMP='sj'
+    START_JUMP='sj',
+    TAKE_OFF='take_off',
+    SELECT_SYSTEM='sys',
+    SELL_COMMODITY='scc',
+    BUY_COMMODITY='bcc'
 }
 
 declare enum ServerMessages {
@@ -64,6 +68,7 @@ interface ShipSprite extends Phaser.Physics.Arcade.Sprite {
     rotateLeft()
     thrust()
     thrustOff()
+    shipData: ShipData
     landingSequence: boolean
     applyUpdate(update:ShipUpdate)
     sendSpawnUpdate()
@@ -161,14 +166,25 @@ interface ShipData {
     guns: Array<Gun>
     asset: string
     cargo: Array<InventoryData>
-    firePrimary: boolean
     systemName: string
-    landingTargetId?: string
-    targetSystemName?: string
+    landedAt?: StellarObjectConfig
     x?: number
     y?: number
     rotation?: number
     velocity?: Tuple
+    transientData: {
+        firePrimary?: boolean
+        landingTargetName?: string
+        takeOff?: boolean
+        targetSystemName?: string
+        buyCommodity?: CommodityOrder
+        sellCommodity?: CommodityOrder
+    }
+}
+
+interface CommodityOrder {
+    commodity:Commodity
+    amount:number
 }
 
 interface InventoryData {
@@ -184,10 +200,17 @@ interface ServerMessage {
 }
 
 interface StellarObjectConfig {
-    x: number,
-    y: number,
-    asset: string,
+    x: number
+    y: number
+    asset: string
     landable?: boolean
+    name: string
+    commodities?: Array<Commodity>
+}
+
+interface Commodity {
+    name: string
+    price: number
 }
 
 interface AsteroidConfig {
@@ -216,4 +239,7 @@ interface RState {
     activeSession: Session
     showMap: boolean
     showPlanetMenu: boolean
+    playerEvent: PlayerEvents
+    sellCommodity: { commodity:Commodity, amount:number }
+    buyCommodity: { commodity:Commodity, amount:number }
 }

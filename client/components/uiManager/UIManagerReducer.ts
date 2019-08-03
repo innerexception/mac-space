@@ -1,4 +1,4 @@
-import { ReducerActions } from '../../../enum'
+import { ReducerActions, PlayerEvents } from '../../../enum'
 
 const appReducer = (state = getInitialState(), action:any):RState => {
     switch (action.type) {
@@ -8,9 +8,6 @@ const appReducer = (state = getInitialState(), action:any):RState => {
             return { ...state, isConnected: false}
         case ReducerActions.MATCH_UPDATE: 
             return { ...state, activeSession: action.session }
-        case ReducerActions.PLAYER_ENTERED:
-            state.activeSession.players.push(action.currentUser)
-            return { ...state, activeSession: {...state.activeSession}}
         case ReducerActions.PLAYER_LEFT:
             state.activeSession.players.filter((player:any) => player.id !== action.currentUser.id)
             return { ...state, activeSession: {...state.activeSession}}
@@ -19,7 +16,25 @@ const appReducer = (state = getInitialState(), action:any):RState => {
         case ReducerActions.MATCH_CLEANUP: 
             return { ...state, activeSession: null, currentUser:null}
         case ReducerActions.OPEN_PLANET: 
-            return { ...state, showPlanetMenu: action.state }
+            return { ...state, showPlanetMenu: action.state, playerEvent:null }
+        case ReducerActions.OPEN_MAP:
+            return { ...state, showMap: action.state, playerEvent: null }
+        case ReducerActions.PLAYER_EVENT: 
+            state.currentUser.ships = state.currentUser.ships.map(ship=>{
+                if(ship.id === action.ship.id) return action.ship
+                return ship
+            })
+            return { ...state, currentUser: {...state.currentUser}, playerEvent: action.event }
+        case ReducerActions.SELL_COMMODITY:
+            return { ...state, sellCommodity: { ...action }, playerEvent: PlayerEvents.SELL_COMMODITY }
+        case ReducerActions.BUY_COMMODITY:
+            return { ...state, buyCommodity: { ...action }, playerEvent: PlayerEvents.BUY_COMMODITY }
+        case ReducerActions.PHASER_SCENE_CHANGE:
+            state.currentUser.ships = state.currentUser.ships.map(ship=>{
+                if(ship.id === action.activeShip.id) return action.activeShip
+                return ship
+            })
+            return { ...state, currentUser: {...state.currentUser}, playerEvent: null }
         default:
             return state
     }
@@ -38,6 +53,9 @@ const getInitialState = ():RState => {
         isConnected: false,
         currentUser: null,
         showMap: false,
-        showPlanetMenu: false
+        showPlanetMenu: false,
+        playerEvent: null,
+        buyCommodity: null,
+        sellCommodity: null
     }
 }
