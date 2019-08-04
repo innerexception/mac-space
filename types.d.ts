@@ -26,9 +26,10 @@ declare enum PlayerEvents {
 
 declare enum ServerMessages {
     HEADLESS_CONNECT= 'hct',
-    PLAYER_EVENT_ACK= 'pea',
+    PLAYER_DATA= 'pea',
     PLAYER_EVENT= 'pe',
-    SERVER_UPDATE= 'su'
+    SERVER_UPDATE= 'su',
+    PLAYER_LOGIN='plo'
 }
 
 interface Tuple {
@@ -196,7 +197,12 @@ interface InventoryData {
 interface ServerMessage {
     type: ServerMessages
     system: string
-    event: ShipUpdate | AsteroidData | ServerSystemUpdate
+    event: ShipUpdate | AsteroidData | ServerSystemUpdate | Player | PlayerLogin
+}
+
+interface PlayerLogin {
+    loginName:string
+    loginPassword:string
 }
 
 interface StellarObjectConfig {
@@ -242,4 +248,7 @@ interface RState {
     playerEvent: PlayerEvents
     sellCommodity: { commodity:Commodity, amount:number }
     buyCommodity: { commodity:Commodity, amount:number }
+    loginName:string
+    loginPassword:string
+    loginError:boolean
 }

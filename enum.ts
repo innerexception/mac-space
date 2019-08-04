@@ -23,7 +23,9 @@ export const ReducerActions= {
     PLAYER_EVENT: 'pev',
     BUY_COMMODITY: 'bcc',
     SELL_COMMODITY: 'scc',
-    PHASER_SCENE_CHANGE:'phsr'
+    PHASER_SCENE_CHANGE:'phsr',
+    SET_LOGIN:'srl',
+    LOGIN_FAILED: 'lff'
 }
 
 export enum PlayerEvents { 
@@ -45,7 +47,8 @@ export enum PlayerEvents {
 
 export enum ServerMessages {
     HEADLESS_CONNECT= 'hct',
-    PLAYER_EVENT_ACK= 'pea',
+    PLAYER_DATA= 'pea',
     PLAYER_EVENT= 'pe',
-    SERVER_UPDATE= 'su'
+    SERVER_UPDATE= 'su',
+    PLAYER_LOGIN='plo'
 }

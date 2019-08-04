@@ -47,18 +47,6 @@ export const onSellEvent = (commodity:Commodity, amount:number) => {
 }
 
 
-export const onWSMessage = (data:any) => {
-    if (!data ) {
-        dispatch({
-            type:'noop'
-        })
-    }
-    else{
-        const payload = JSON.parse(data.data)
-        dispatch({...payload})
-    }
-}
-
 export const onConnected= () => {
     dispatch({
         type: ReducerActions.CONNECTED
@@ -71,17 +59,8 @@ export const onConnectionError= () => {
     })
 }
 
-export const onLogin = (currentUser:Player, sessionId:string) => {
-    dispatch({ type: ReducerActions.SET_USER, currentUser })
-    // server.publishMessage({type: ReducerActions.PLAYER_AVAILABLE, currentUser, sessionId})
-}
-
-export const onMatchStart = (currentUser:Player, session:Session) => {
-    const newSession = {
-        ...session,
-    }
-
-    // sendSessionUpdate(newSession)
+export const onLogin = (name:string, password:string) => {
+    dispatch({ type: ReducerActions.SET_LOGIN, name, password })
 }
 
 export const onCleanSession = () => {

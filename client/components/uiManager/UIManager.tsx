@@ -9,21 +9,19 @@ interface Props {
     isConnected: boolean
     showMap: boolean
     showPlanetMenu: boolean
+    loginName: string
+    loginPassword: string
+    loginError: boolean
 }
 
 export default class UIManager extends React.Component<Props> {
 
     getComponent = () => {
-        if(!this.props.currentUser){
+        if(!this.props.loginPassword){
             return <Login {...this.props}/>
         }
-        else {
-            if(this.props.currentUser.name === 'admin'){
-                //return <Editor {...this.props}/>
-            }
-            if(this.props.activeSession){
-                return <Match {...this.props}/>
-            }
+        else if(this.props.loginName && this.props.loginPassword){
+            return <Match {...this.props}/>
         }
     }
 
