@@ -4,19 +4,8 @@ export default class WebsocketClient {
 
     websocket: ReconnectingWebSocket
 
-    constructor(onWSMessage?, onConnected?, onConnectionError?){
-      this.launch(ApiUrl, onWSMessage, onConnected, onConnectionError)
-    }
-
     setListeners(onWSMessage, onConnected, onConnectionError){
-        this.websocket.onopen = onConnected
-        this.websocket.onerror = onConnectionError
-        this.websocket.onmessage = (e:any) => {
-            if(e){
-              var data = JSON.parse(e.data);
-              onWSMessage(data);
-            }
-        }
+        this.launch(ApiUrl, onWSMessage, onConnected, onConnectionError)
     }
 
     launch = (url:string, onWSMessage, onConnected, onConnectionError) => {

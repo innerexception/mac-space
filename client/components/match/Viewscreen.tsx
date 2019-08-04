@@ -6,18 +6,17 @@ import WebsocketClient from '../../WebsocketClient'
 const server = new WebsocketClient()
 
 interface Props {
-    me: Player
+    loginName: string
+    loginPassword: string
 }
 
 interface State {
-    activeShip: ShipData
     phaserInstance: Phaser.Game | null
 }
 
 export default class Viewscreen extends React.Component<Props, State> {
 
     state = {
-        activeShip: this.props.me.ships.find(ship=>ship.id===this.props.me.activeShipId),
         phaserInstance: null,
         containerRef: React.createRef<HTMLDivElement>()
     }
@@ -31,7 +30,13 @@ export default class Viewscreen extends React.Component<Props, State> {
             physics: {
                 default: 'arcade'
             },
-            scene: [new StarSystem({key:Rigel.name, server:server, initialState: Rigel})]
+            scene: [new StarSystem({
+                key:Rigel.name, 
+                server:server, 
+                initialState: Rigel, 
+                loginName: this.props.loginName, 
+                loginPassword: this.props.loginPassword
+            })]
         });
         window.addEventListener("resize", ()=>{
             let game = (this.state.phaserInstance as Phaser.Game)

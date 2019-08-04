@@ -5,6 +5,7 @@ const express = require('express');
 const app = express();
 const server = require('http').Server(app);
 const Datauri = require('datauri');
+const v4 = require('uuid')
 
 const datauri = new Datauri();
 const { JSDOM } = jsdom;
@@ -44,13 +45,6 @@ function setupAuthoritativePhaser() {
 setupAuthoritativePhaser();
 
 var WebSocketServer = require('websocket').server;
-var Constants = {
-  PLAYER_AVAILABLE: 'ma',
-  MATCH_UPDATE: 'mu',
-  PLAYER_REPLACE: 'prp',
-  PLAYER_MAP_REPLACE: 'pmp',
-  MATCH_TICK: 'mt'
-}
 
 /**
  * WebSocket server
@@ -61,6 +55,45 @@ var socketIds = []
 var session = {
   players: []
 }
+var newPlayerStartingData = (name) => {
+  let shuttle = {
+    name: 'Shuttle',
+    id:v4(),
+    shields: 10,
+    armor: 0,
+    hull: 10,
+    fuel: 3,
+    maxFuel: 3,
+    energy: 5,
+    maxEnergy: 5,
+    heat: 5,
+    maxHeat: 5,
+    fighters: [],
+    turn: 0.05,
+    accel: 100,
+    speed: 0,
+    maxSpeed: 200,
+    cargoSpace: 20,
+    maxCargoSpace: 20,
+    gunMounts: 1,
+    turrentMounts: 0,
+    hardPoints: 0,
+    guns: [],
+    asset: 'ship',
+    cargo: [],
+    systemName: '',
+    transientData: {}
+  }
+  return {
+       name,
+       id: v4(),
+       activeShipId: shuttle.id,
+       ships:[shuttle],
+       reputation:[],
+       notoriety: 0
+   }
+}
+
 
 var wsServer = new WebSocketServer({
   // WebSocket server is tied to a HTTP server. WebSocket request is just
@@ -100,6 +133,28 @@ wsServer.on('request', function(request) {
           case ServerMessages.SERVER_UPDATE:
             publishToPlayers(obj.event, obj.system)
             break
+          case ServerMessages.PLAYER_LOGIN: 
+            let player = session[obj.event.loginName]
+            if(player){
+              player.socketId = socketId
+              if(player.loginPassword === obj.event.loginPassword){
+                publishToPlayer(player, player.socketId)
+              }
+              else publishToPlayer(null, player.socketId)
+            } 
+            else {
+              player = { 
+                socketId, 
+                loginName: obj.event.loginName, 
+                loginPassword: obj.event.loginPassword, 
+                ...newPlayerStartingData(obj.event.loginName)
+              }
+              session[obj.event.loginName] = player
+              publishToPlayer({
+                ...player
+              }, player.socketId)
+              console.log('logged in new player.')
+            }
         }
     }
   });
@@ -109,6 +164,9 @@ wsServer.on('request', function(request) {
       console.log((new Date()) + "A Peer disconnected: "+code);
       socketIds = socketIds.filter(id=>id!==socketId)
       delete sockets[socketId]
+      session.players.forEach(player=>{
+        if(player.socketId===socketId) delete player.socketId
+      })
   });
 });
 
@@ -122,6 +180,12 @@ const publishToPlayers = (event, system) => {
       sockets[socketId].sendUTF(json);
     }
   }
+}
+
+const publishToPlayer = (event, socketId) => {
+    var message = getPlayerDataMessage(event)
+    var json = JSON.stringify({ type:'message', data: message });
+    sockets[socketId].sendUTF(json);
 }
 
 const publishToServer = (playerEvent, system) => {
@@ -142,11 +206,10 @@ const getPlayerEventMessage = (event, system) => {
   })
 }
 
-//Ack an event a player previously send with resulting state snapshot
-//PlayerEvent object has sequence timestamp so that the client can DROP older ACKs if they come in out of order
-const getPlayerEventAckMessage = (event) => {
+//Player data was updated
+const getPlayerDataMessage = (event) => {
   return JSON.stringify({
-    type: ServerMessages.PLAYER_EVENT_ACK,
+    type: ServerMessages.PLAYER_DATA,
     event
   })
 }

@@ -6,7 +6,7 @@ import * as Ships from '../../data/Ships'
 import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
 import { onToggleMapMenu, onConnectionError, onConnected } from "../uiManager/Thunks";
-import { PlayerEvents, ReducerActions } from "../../../enum";
+import { PlayerEvents, ReducerActions, ServerMessages } from "../../../enum";
 
 export default class StarSystem extends Scene {
 
@@ -28,6 +28,8 @@ export default class StarSystem extends Scene {
     state:SystemState
     server: WebsocketClient
     unsubscribeRedux: Function
+    loginName: string
+    loginPassword: string
 
     constructor(config, jumpedIn?:boolean){
         super(config)
@@ -41,27 +43,35 @@ export default class StarSystem extends Scene {
         this.resources = new Map()
         this.selectedPlanetIndex = 0
         this.unsubscribeRedux = store.subscribe(this.onReduxUpdate)
+        this.loginName = config.loginName
+        this.loginPassword = config.loginPassword
     }
 
     onReduxUpdate = () => {
-        //TODO: this is a zombie even after scne has been destroyed...
-        if(this.activeShip.body){
-            this.player = store.getState().currentUser
-            this.activeShip.shipData = this.player.ships.find(ship=>ship.id === this.player.activeShipId)
-            
-            let playerEvent = store.getState().playerEvent
-            if(playerEvent){
-                this.activeShip.shipData.systemName = this.name //TODO figure out why we need this here...
-                if(playerEvent !== PlayerEvents.SELECT_SYSTEM) this.activeShip.addShipUpdate(this.activeShip, playerEvent)
-                this.selectedSystem = StarSystems.find(sys=>sys.name === this.activeShip.shipData.transientData.targetSystemName)
+        if(this.player){
+            if(this.activeShip) {
+                this.activeShip.shipData = this.player.ships.find(ship=>ship.id === this.player.activeShipId)
+                let playerEvent = store.getState().playerEvent
+                if(playerEvent){
+                    this.activeShip.shipData.systemName = this.name //TODO figure out why we need this here...
+                    if(playerEvent !== PlayerEvents.SELECT_SYSTEM) this.activeShip.addShipUpdate(this.activeShip, playerEvent)
+                    this.selectedSystem = StarSystems.find(sys=>sys.name === this.activeShip.shipData.transientData.targetSystemName)
+                }
             }
         }
-        else console.log('orphaned redux callback warning')
     }
 
     onConnected = () => {
         onConnected()
         console.log('star system '+this.name+' connected!')
+        this.server.publishMessage({
+            type: ServerMessages.PLAYER_LOGIN,
+            system: '',
+            event: {
+                loginName: this.loginName,
+                loginPassword: this.loginPassword
+            }
+        })
     }
 
     onConnectionError = () => {
@@ -69,8 +79,7 @@ export default class StarSystem extends Scene {
         console.log('star system '+this.name+' FAILED to connect.')
     }
 
-    onServerUpdate = (data:any) => {
-        const payload = JSON.parse(data.data) as ServerMessage
+    onServerUpdate = (payload:ServerMessage) => {
         if(payload.system === this.name){
             const state = payload.event as ServerSystemUpdate
             let initRoids = this.asteroids.size === 0
@@ -190,23 +199,8 @@ export default class StarSystem extends Scene {
         this.createStarfield()
         this.addPlanets()
 
-        if(this.jumpedIn){
-            console.log('jumped in...')
-            this.cameras.main.flash(500)
-            //we need to wait until the server gives us a ship to focus on
-            this.time.addEvent({ delay: 100, callback: this.checkForActiveShip, loop: true });
-        }
-        else{
-            //This is our starting sector so we spawn ourselves
-            let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
-            this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server);
-            this.ships.set(this.activeShip.shipData.id, this.activeShip)
-            activeShipData.systemName = this.name
-            //  Add player ship notification
-            this.activeShip.sendSpawnUpdate()
-            this.activeShip.takeOff()
-            //run take-off tween
-        }
+        //we need to wait until the server gives us a ship to focus on
+        this.time.addEvent({ delay: 100, callback: this.checkForActiveShip, loop: true });
         
         this.input.keyboard.on('keydown-L', (event) => {
             this.selectedPlanetIndex = (this.selectedPlanetIndex + 1) % this.planets.length
@@ -224,17 +218,57 @@ export default class StarSystem extends Scene {
         });
         this.cursors = this.input.keyboard.createCursorKeys();
         
-        this.server.setListeners(this.onServerUpdate, this.onConnected, this.onConnectionError)
+        this.server.setListeners(this.onWSMessage, this.onConnected, this.onConnectionError)
     }
     
+    onWSMessage = (data:any) => {
+        const payload = JSON.parse(data.data) as ServerMessage
+        switch(payload.type){
+            case ServerMessages.SERVER_UPDATE: 
+                this.onServerUpdate(payload)
+                break
+            case ServerMessages.PLAYER_DATA:
+                this.onReplacePlayer(payload)
+                break
+        }
+    }
+
+    onReplacePlayer = (payload:ServerMessage) => {
+        this.player = (payload.event as Player)
+        if(this.player) store.dispatch({ type: ReducerActions.PLAYER_REPLACE, currentUser: this.player })
+        else store.dispatch({ type: ReducerActions.LOGIN_FAILED })
+    }
+
     checkForActiveShip = () => {
-        let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
-        this.activeShip = this.ships.get(activeShipData.id)
-        if(this.activeShip){
-            this.activeShip.shipData.systemName = this.name
-            this.activeShip.isPlayerControlled = true
-            store.dispatch({ type: ReducerActions.PHASER_SCENE_CHANGE, activeShip: this.activeShip.shipData })
-            this.time.removeAllEvents()
+        if(this.player){
+            let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
+            this.activeShip = this.ships.get(activeShipData.id)
+            if(this.activeShip){
+                this.activeShip.shipData.systemName = this.name
+                this.activeShip.isPlayerControlled = true
+                store.dispatch({ type: ReducerActions.PHASER_SCENE_CHANGE, activeShip: this.activeShip.shipData })
+                this.time.removeAllEvents()
+                if(this.jumpedIn){
+                    console.log('jumped in...')
+                    this.cameras.main.flash(500)
+                }
+                else{
+                    this.activeShip.takeOff()
+                    // //run take-off tween
+                }
+            }
+            else {
+                //We should spawn it
+                //This is our starting sector so we spawn ourselves
+                let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
+                this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server);
+                this.ships.set(this.activeShip.shipData.id, this.activeShip)
+                activeShipData.systemName = this.name
+                //  Add player ship notification
+                this.activeShip.sendSpawnUpdate()
+                this.activeShip.takeOff()
+                //run take-off tween
+            }
         }
     }
 

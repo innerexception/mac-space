@@ -11,7 +11,7 @@ const appReducer = (state = getInitialState(), action:any):RState => {
         case ReducerActions.PLAYER_LEFT:
             state.activeSession.players.filter((player:any) => player.id !== action.currentUser.id)
             return { ...state, activeSession: {...state.activeSession}}
-        case ReducerActions.SET_USER: 
+        case ReducerActions.PLAYER_REPLACE: 
             return { ...state, currentUser: action.currentUser }
         case ReducerActions.MATCH_CLEANUP: 
             return { ...state, activeSession: null, currentUser:null}
@@ -19,6 +19,10 @@ const appReducer = (state = getInitialState(), action:any):RState => {
             return { ...state, showPlanetMenu: action.state, playerEvent:null }
         case ReducerActions.OPEN_MAP:
             return { ...state, showMap: action.state, playerEvent: null }
+        case ReducerActions.SET_LOGIN:
+            return {...state, loginName: action.name, loginPassword: action.password }
+        case ReducerActions.LOGIN_FAILED:
+            return {...state, loginPassword:'', loginError:true}
         case ReducerActions.PLAYER_EVENT: 
             state.currentUser.ships = state.currentUser.ships.map(ship=>{
                 if(ship.id === action.ship.id) return action.ship
@@ -56,6 +60,9 @@ const getInitialState = ():RState => {
         showPlanetMenu: false,
         playerEvent: null,
         buyCommodity: null,
-        sellCommodity: null
+        sellCommodity: null,
+        loginName: '',
+        loginPassword: '',
+        loginError:false
     }
 }
