@@ -4,22 +4,22 @@ export default class WebsocketClient {
 
     websocket: ReconnectingWebSocket
 
-    setListeners(onWSMessage, onConnected, onConnectionError){
-        this.launch(ApiUrl, onWSMessage, onConnected, onConnectionError)
+    constructor(){
+        console.log('ws: connecting');
+        this.websocket = new ReconnectingWebSocket(ApiUrl)
     }
 
-    launch = (url:string, onWSMessage, onConnected, onConnectionError) => {
-        console.log('ws: connecting');
-        this.websocket = new ReconnectingWebSocket(url)
-        this.websocket.onopen = onConnected
-        this.websocket.onerror = onConnectionError
-        this.websocket.onmessage = (e:any) => {
-            if(e){
-              var data = JSON.parse(e.data);
-              onWSMessage(data);
-            }
-        }
-        this.websocket.connect(false);
+    setListeners = (onWSMessage, onConnected, onConnectionError) => {
+      const boot = !this.websocket.onmessage
+      this.websocket.onopen = onConnected
+      this.websocket.onerror = onConnectionError
+      this.websocket.onmessage = (e:any) => {
+          if(e){
+            var data = JSON.parse(e.data);
+            onWSMessage(data);
+          }
+      }
+      if(boot) this.websocket.connect(false);
     }
 
     disconnect = () => {
@@ -51,15 +51,15 @@ class ReconnectingWebSocket {
     this.url = url;
   }
   
-  onopen = (event:any) => {};
+  onopen = null
 
   onclose = (event:any) => {};
 
   onconnecting = (event?:any) => {};
 
-  onmessage = (event:any) => {};
+  onmessage = null
 
-  onerror = (event:any) => {};
+  onerror = null
 
   connect = (reconnectAttempt:boolean) => {
 

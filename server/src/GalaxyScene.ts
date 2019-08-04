@@ -1,7 +1,7 @@
 import { Scene, Physics } from "phaser";
 import { StarSystems } from '../../client/data/StarSystems'
 import ServerStarSystem from "./ServerStarSystem";
-import WebsocketClient from "./WebsocketClient";
+import WebsocketClient from "../../client/WebsocketClient";
 import { ServerMessages, PlayerEvents } from "../../enum";
 import ServerShipSprite from "./ServerShipSprite";
 
@@ -15,7 +15,8 @@ export default class GalaxyScene extends Scene {
     constructor(config, server:WebsocketClient){
       super(config)
       this.scenes = StarSystems.map(system=>system.name)
-      this.server = new WebsocketClient(this.onWSMessage, this.onConnected, this.onConnectionError)
+      this.server = new WebsocketClient()
+      this.server.setListeners(this.onWSMessage, this.onConnected, this.onConnectionError)
       this.frameLengthMs = 100
       this.playerUpdates = []
     }
@@ -23,7 +24,7 @@ export default class GalaxyScene extends Scene {
     create() {
         //TODO: load up all the systems in the galaxy. In future, we want 1 server per system probs
         StarSystems.forEach((system)=>{
-          this.scene.add(system.name, new ServerStarSystem({key:system.name}, system, this.server), true)
+          this.scene.add(system.name, new ServerStarSystem({key:system.name}, system), true)
         })
         this.time.addEvent({ delay: 50, callback: this.step, loop: true });
     }

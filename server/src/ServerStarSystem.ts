@@ -1,7 +1,7 @@
 import { Scene, GameObjects, Physics, } from "phaser";
 import Projectile from '../../client/components/util/display/Projectile'
 import ServerShipSprite from './ServerShipSprite'
-import WebsocketClient from "./WebsocketClient";
+import WebsocketClient from "../../client/WebsocketClient";
 import * as Ships from '../../client/data/Ships'
 import { v4 } from 'uuid'
 import { PlayerEvents } from "../../enum";
@@ -18,14 +18,12 @@ export default class ServerStarSystem extends Scene {
     deadResources: Array<DeadEntityUpdate>
     projectiles: Physics.Arcade.Group
     name: string
-    server: WebsocketClient
     state:SystemState
 
-    constructor(config, state:SystemState, server:WebsocketClient){
+    constructor(config, state:SystemState){
         super(config)
         this.state = state
         this.name = config.key
-        this.server = server
         this.planets = []
         this.asteroids = new Map()
         this.deadAsteroids = []
