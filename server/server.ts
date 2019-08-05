@@ -12,13 +12,6 @@ const v4 = require('uuid')
 const datauri = new Datauri();
 const { JSDOM } = jsdom;
 
-//Eventually should be served from S3 bucket
-app.use(express.static(__dirname + '/public'));
-
-app.get('/', function (req, res) {
-  res.sendFile(__dirname + '/index.html');
-});
-
 function setupAuthoritativePhaser() {
   JSDOM.fromFile(path.join(__dirname, 'index.html'), {
     // To run the scripts in the html file
