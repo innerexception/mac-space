@@ -1,4 +1,6 @@
-const ServerMessages = require('./src/ServerMessages.js')
+import { ServerMessages, PlayerEvents } from "../enum";
+import { Shuttle } from "../client/data/Ships";
+
 const path = require('path');
 const jsdom = require('jsdom');
 const express = require('express');
@@ -53,47 +55,22 @@ var WebSocketServer = require('websocket').server;
 var sockets = {}
 var socketIds = []
 var session = {
-  players: []
+  serverSocketId: ''
 }
+
 var newPlayerStartingData = (name) => {
-  let shuttle = {
-    name: 'Shuttle',
-    id:v4(),
-    shields: 10,
-    armor: 0,
-    hull: 10,
-    fuel: 3,
-    maxFuel: 3,
-    energy: 5,
-    maxEnergy: 5,
-    heat: 5,
-    maxHeat: 5,
-    fighters: [],
-    turn: 0.05,
-    accel: 100,
-    speed: 0,
-    maxSpeed: 200,
-    cargoSpace: 20,
-    maxCargoSpace: 20,
-    gunMounts: 1,
-    turrentMounts: 0,
-    hardPoints: 0,
-    guns: [],
-    asset: 'ship',
-    cargo: [],
-    systemName: '',
-    transientData: {}
-  }
+  let shuttle = {...Shuttle, id:v4()}
+  var id = v4()
+  shuttle.ownerId = id
   return {
        name,
-       id: v4(),
+       id,
        activeShipId: shuttle.id,
        ships:[shuttle],
        reputation:[],
        notoriety: 0
    }
 }
-
 
 var wsServer = new WebSocketServer({
   // WebSocket server is tied to a HTTP server. WebSocket request is just
@@ -133,12 +110,16 @@ wsServer.on('request', function(request) {
           case ServerMessages.SERVER_UPDATE:
             publishToPlayers(obj.event, obj.system)
             break
+          case ServerMessages.PLAYER_DATA:
+            publishToPlayer(obj.event, socketId)
+            break
           case ServerMessages.PLAYER_LOGIN: 
             let player = session[obj.event.loginName]
             if(player){
               player.socketId = socketId
               if(player.loginPassword === obj.event.loginPassword){
                 publishToPlayer(player, player.socketId)
+                publishToServer({type: PlayerEvents.PLAYER_LOGIN, event:player}, '')
               }
               else publishToPlayer(null, player.socketId)
             } 
@@ -153,6 +134,7 @@ wsServer.on('request', function(request) {
               publishToPlayer({
                 ...player
               }, player.socketId)
+              publishToServer({type: PlayerEvents.PLAYER_LOGIN, event:player}, '')
               console.log('logged in new player.')
             }
         }
@@ -164,9 +146,6 @@ wsServer.on('request', function(request) {
       console.log((new Date()) + "A Peer disconnected: "+code);
       socketIds = socketIds.filter(id=>id!==socketId)
       delete sockets[socketId]
-      session.players.forEach(player=>{
-        if(player.socketId===socketId) delete player.socketId
-      })
   });
 });
 
@@ -188,7 +167,7 @@ const publishToPlayer = (event, socketId) => {
     sockets[socketId].sendUTF(json);
 }
 
-const publishToServer = (playerEvent, system) => {
+const publishToServer = (playerEvent, system:string) => {
   var message = getPlayerEventMessage(playerEvent, system)
   // broadcast player's message to the headless phaser server
   var json = JSON.stringify({ type:'message', data: message });
@@ -198,7 +177,7 @@ const publishToServer = (playerEvent, system) => {
 //An event a player claims to have done: 
 //rotate, fire, thrust, land, jump, or any non-physics transaction
 //Server needs to ACK these with the sequence timestamp
-const getPlayerEventMessage = (event, system) => {
+const getPlayerEventMessage = (event, system:string) => {
   return JSON.stringify({
     type: ServerMessages.PLAYER_EVENT,
     event,

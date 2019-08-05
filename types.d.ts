@@ -20,8 +20,8 @@ declare enum PlayerEvents {
     START_JUMP='sj',
     TAKE_OFF='take_off',
     SELECT_SYSTEM='sys',
-    SELL_COMMODITY='scc',
-    BUY_COMMODITY='bcc'
+    COMMODITY_ORDER='cord',
+    PLAYER_LOGIN='plo'
 }
 
 declare enum ServerMessages {
@@ -145,6 +145,7 @@ interface ShipUpdate {
 interface ShipData {
     name: string
     id:string
+    ownerId: string
     shields: number
     armor: number
     hull: number
@@ -178,14 +179,14 @@ interface ShipData {
         landingTargetName?: string
         takeOff?: boolean
         targetSystemName?: string
-        buyCommodity?: CommodityOrder
-        sellCommodity?: CommodityOrder
+        commodityOrder?: CommodityOrder
     }
 }
 
 interface CommodityOrder {
     commodity:Commodity
     amount:number
+    buy: boolean
 }
 
 interface InventoryData {
@@ -197,7 +198,7 @@ interface InventoryData {
 interface ServerMessage {
     type: ServerMessages
     system: string
-    event: ShipUpdate | AsteroidData | ServerSystemUpdate | Player | PlayerLogin
+    event: ShipUpdate | AsteroidData | ServerSystemUpdate | Player | PlayerLogin | CommodityOrder
 }
 
 interface PlayerLogin {
@@ -246,8 +247,7 @@ interface RState {
     showMap: boolean
     showPlanetMenu: boolean
     playerEvent: PlayerEvents
-    sellCommodity: { commodity:Commodity, amount:number }
-    buyCommodity: { commodity:Commodity, amount:number }
+    commodityOrder: CommodityOrder
     loginName:string
     loginPassword:string
     loginError:boolean

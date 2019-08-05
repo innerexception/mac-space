@@ -9,16 +9,16 @@ export default class GalaxyScene extends Scene {
 
     server: WebsocketClient
     scenes: Array<string>
+    players: Map<string, Player>
     playerUpdates: Array<ShipUpdate>
-    frameLengthMs: number
 
-    constructor(config, server:WebsocketClient){
+    constructor(config){
       super(config)
       this.scenes = StarSystems.map(system=>system.name)
       this.server = new WebsocketClient()
       this.server.setListeners(this.onWSMessage, this.onConnected, this.onConnectionError)
-      this.frameLengthMs = 100
       this.playerUpdates = []
+      this.players = new Map()
     }
 
     create() {
@@ -59,7 +59,17 @@ export default class GalaxyScene extends Scene {
 
     onWSMessage = (data) => {
         const payload = JSON.parse(data.data) as ServerMessage
-        this.onRecievePlayerUpdate(payload.event as ShipUpdate)
+        let type = (payload.event as ShipUpdate).type
+        //Store players at the galactic level...
+        if(type === PlayerEvents.PLAYER_LOGIN){
+          //store player in memory
+          let player = payload.event as Player
+          this.players.set(player.id, player)
+          console.log('stored new player in memory: '+player.id)
+        }
+        else
+          this.onRecievePlayerUpdate(payload.event as ShipUpdate)
+          
     }
 
     onConnected = () => {
@@ -90,8 +100,7 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
     //Transient data is for 1 time updates, they are cleared after being sent once
     ship.shipData.transientData.firePrimary = false
     ship.shipData.transientData.takeOff = false
-    ship.shipData.transientData.buyCommodity = null
-    ship.shipData.transientData.sellCommodity = null
+    ship.shipData.transientData.commodityOrder = null
   })
   jumpingShips.forEach(ship=>{
     //These have been removed from the scene and no new updates will be sent

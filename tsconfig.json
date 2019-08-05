@@ -19,7 +19,7 @@
     },
     "include": [
         "./client/**/*",
-        "**/*.d.ts"
+        "**/*.d.ts", "server/server.ts"
     ],
     "exclude": [
         "node_modules",

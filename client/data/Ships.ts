@@ -1,6 +1,7 @@
 export const Shuttle:ShipData = {
     name: 'Shuttle',
     id:'',
+    ownerId: '',
     shields: 10,
     armor: 0,
     hull: 10,

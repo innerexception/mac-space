@@ -1,7 +1,6 @@
 import { Scene, GameObjects, Physics, } from "phaser";
 import Projectile from '../../client/components/util/display/Projectile'
 import ServerShipSprite from './ServerShipSprite'
-import WebsocketClient from "../../client/WebsocketClient";
 import * as Ships from '../../client/data/Ships'
 import { v4 } from 'uuid'
 import { PlayerEvents } from "../../enum";
@@ -94,11 +93,8 @@ export default class ServerStarSystem extends Scene {
                 case PlayerEvents.TAKE_OFF:
                     ship.takeOff()
                     break
-                case PlayerEvents.BUY_COMMODITY:
-                    ship.buyCommodity(update.shipData.transientData.buyCommodity)
-                    break
-                case PlayerEvents.SELL_COMMODITY:
-                    ship.sellCommodity(update.shipData.transientData.sellCommodity)
+                case PlayerEvents.COMMODITY_ORDER:
+                    ship.processOrder(update.shipData.transientData.commodityOrder)
                     break
             }
         }
@@ -186,7 +182,6 @@ export default class ServerStarSystem extends Scene {
 
     playerGotResource = (resource:Physics.Arcade.Sprite, ship:ServerShipSprite) =>
     {
-        console.log('you hit it:')
         if(ship.shipData.cargoSpace >= resource.getData('state').weight){
             //TODO: pick up resource and add to cargo
             ship.shipData.cargoSpace -= resource.getData('state').weight
