@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Match from '../match/Match'
+import Match from '../mainViewer/ViewscreenFrame'
 import Login from '../Login'
 import AppStyles from '../../AppStyles'
 
