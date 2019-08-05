@@ -98,7 +98,7 @@ wsServer.on('request', function(request) {
             session.serverSocketId = socketId
             break
           case ServerMessages.PLAYER_EVENT:
-            publishToServer(obj.event, obj.system)
+            publishToServer(getPlayerEventMessage(obj.event, obj.system))
             break
           case ServerMessages.SERVER_UPDATE:
             publishToPlayers(obj.event, obj.system)
@@ -112,12 +112,12 @@ wsServer.on('request', function(request) {
               player.socketId = socketId
               if(player.loginPassword === obj.event.loginPassword){
                 publishToPlayer(player, player.socketId)
-                publishToServer({type: PlayerEvents.PLAYER_LOGIN, event:player}, '')
+                publishToServer(getPlayerLoginMessage(player))
               }
               else publishToPlayer(null, player.socketId)
-            } 
+            }
             else {
-              player = { 
+              player = {
                 socketId, 
                 loginName: obj.event.loginName, 
                 loginPassword: obj.event.loginPassword, 
@@ -127,7 +127,7 @@ wsServer.on('request', function(request) {
               publishToPlayer({
                 ...player
               }, player.socketId)
-              publishToServer({type: PlayerEvents.PLAYER_LOGIN, event:player}, '')
+              publishToServer(getPlayerLoginMessage(player))
               console.log('logged in new player.')
             }
         }
@@ -160,8 +160,7 @@ const publishToPlayer = (event, socketId) => {
     sockets[socketId].sendUTF(json);
 }
 
-const publishToServer = (playerEvent, system:string) => {
-  var message = getPlayerEventMessage(playerEvent, system)
+const publishToServer = (message) => {
   // broadcast player's message to the headless phaser server
   var json = JSON.stringify({ type:'message', data: message });
   sockets[session.serverSocketId].sendUTF(json);
@@ -182,6 +181,14 @@ const getPlayerEventMessage = (event, system:string) => {
 const getPlayerDataMessage = (event) => {
   return JSON.stringify({
     type: ServerMessages.PLAYER_DATA,
+    event
+  })
+}
+
+//Player data was updated
+const getPlayerLoginMessage = (event) => {
+  return JSON.stringify({
+    type: ServerMessages.PLAYER_LOGIN,
     event
   })
 }

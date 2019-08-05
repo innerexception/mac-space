@@ -59,9 +59,9 @@ export default class GalaxyScene extends Scene {
 
     onWSMessage = (data) => {
         const payload = JSON.parse(data.data) as ServerMessage
-        let type = (payload.event as ShipUpdate).type
+        let type = payload.type
         //Store players at the galactic level...
-        if(type === PlayerEvents.PLAYER_LOGIN){
+        if(type === ServerMessages.PLAYER_LOGIN){
           //store player in memory
           let player = payload.event as Player
           this.players.set(player.id, player)

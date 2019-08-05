@@ -1,8 +1,7 @@
 import * as React from 'react'
 import * as Phaser from 'phaser'
-import StarSystem from '../util/StarSystem'
-import { Rigel } from '../../data/StarSystems';
 import WebsocketClient from '../../WebsocketClient'
+import BootScene from '../util/BootScene';
 const server = new WebsocketClient()
 
 interface Props {
@@ -30,11 +29,10 @@ export default class Viewscreen extends React.Component<Props, State> {
             physics: {
                 default: 'arcade'
             },
-            scene: [new StarSystem({
-                key:Rigel.name, 
-                server:server, 
-                initialState: Rigel, 
-                loginName: this.props.loginName, 
+            scene: [new BootScene({
+                key:'boot',
+                server:server,
+                loginName: this.props.loginName,
                 loginPassword: this.props.loginPassword
             })]
         });

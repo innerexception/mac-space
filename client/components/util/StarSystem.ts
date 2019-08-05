@@ -263,7 +263,7 @@ export default class StarSystem extends Scene {
                 this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server);
                 this.ships.set(this.activeShip.shipData.id, this.activeShip)
                 activeShipData.systemName = this.name
-                //  Add player ship notification
+                //Add player ship notification
                 this.activeShip.sendSpawnUpdate()
                 this.activeShip.takeOff()
                 //run take-off tween

@@ -9,7 +9,7 @@ module.exports = {
         filename: 'bootHeadless.js',
         publicPath: './',
     },
-    devtool: false,
+    devtool: 'source-map',
     resolve: {extensions: ['.js', '.jsx', '.ts', '.tsx']},
     plugins: [
         new webpack.WatchIgnorePlugin([
