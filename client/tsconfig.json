@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "./server/public/",
+        "outDir": "./build/",
         "sourceMap": true,
         "noImplicitAny": false,
         "moduleResolution": "node",
@@ -18,8 +18,8 @@
         ]
     },
     "include": [
-        "./client/**/*",
-        "**/*.d.ts", "server/server.ts", "enum.ts"
+        "./**/*",
+        "../**/*.d.ts"
     ],
     "exclude": [
         "node_modules",

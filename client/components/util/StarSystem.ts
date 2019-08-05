@@ -177,7 +177,6 @@ export default class StarSystem extends Scene {
         this.cameras.main.setBounds(0, 0, 3200, 3200).setName('main');
         this.physics.world.setBounds(0,0,3200,3200)
         this.physics.world.setBoundsCollision();
-        //  The miniCam is 400px wide, so can display the whole world at a zoom of 0.2
         this.minimap = this.cameras.add(0, 0, 100, 100).setZoom(0.1).setName('mini');
         this.minimap.setBackgroundColor(0x002244);
         this.minimap.scrollX = 1600;

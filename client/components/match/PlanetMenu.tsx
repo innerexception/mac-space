@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { onShipEvent, onBuyEvent, onSellEvent } from '../uiManager/Thunks'
+import { onShipEvent, onCommodityOrder } from '../uiManager/Thunks'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
 import { PlayerEvents } from '../../../enum';
@@ -9,55 +9,73 @@ interface Props {
 }
 
 interface State {
-
+    planet:StellarObjectConfig
+    activeView: string
 }
 
 export default class PlanetMenu extends React.Component<Props, State> {
 
     state = {
-        
+        planet: this.props.activeShip.landedAt,
+        activeView: 'main'
     }
 
     componentDidMount = () => {
-        window.addEventListener('keydown', (e)=>this.handleKeyDown(e.keyCode))
+        // window.addEventListener('keydown', (e)=>this.handleKeyDown(e.keyCode))
     }
 
     onTakeOff = () => {
         onShipEvent({...this.props.activeShip}, PlayerEvents.TAKE_OFF)
     }
 
-    onBuyCommodity = (commodity:Commodity, amount: number) => {
-        onBuyEvent(commodity, amount)
-    }
-
-    onSellCommodity = (commodity:Commodity, amount: number) => {
-        onSellEvent(commodity, amount)
+    onCommodityOrder = (commodity:Commodity, amount: number, buy: boolean) => {
+        onCommodityOrder(commodity, amount, buy)
     }
 
     getPlanetMainMenu = () => {
-        let planet = this.props.activeShip.landedAt
-        let ship = this.props.activeShip
         return (
             <div style={{...styles.disabled, display: 'flex'}}>
                 <div style={AppStyles.notification}>
-                    <h3>{planet.name}</h3>
+                    <h3>{this.state.planet.name}</h3>
                     <div>
-                        {planet.commodities && planet.commodities.map(commodity => 
-                            <div style={{display:"flex"}}>
-                                <h5>{commodity.name}</h5>
-                                <div>{commodity.price}</div>
-                                {LightButton(ship.cargoSpace > 0, ()=>this.onBuyCommodity(commodity, 1), 'Buy 1')}
-                                {LightButton(ship.cargoSpace > 0, ()=>this.onBuyCommodity(commodity, ship.cargoSpace), 'Buy All')}
-                                {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onSellCommodity(commodity, 1), 'Sell 1')}
-                                {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onSellCommodity(commodity, ship.cargo.filter(item=>item.name === commodity.name).length), 'Sell All')}
-                            </div>
-                        )}
+                        {this.getView(this.state.activeView)}
                     </div>
                     {Button(true, this.onTakeOff, 'Ok')}
                 </div>
             </div>
         )
     }
+
+    getView = (viewName:string) => {
+        switch(viewName){
+            case 'main': return this.mainView(this.state.planet)
+            case 'commodities': return this.commodityView(this.state.planet, this.props.activeShip)
+        }
+    }
+
+    mainView = (planet:StellarObjectConfig) => 
+        <div>
+            {planet.commodities && LightButton(true, ()=>this.setState({activeView: 'commodities'}), 'Trade')}
+            {/* {planet.shipyard && LightButton(true, ()=>this.setState({activeView:'shipyard'}), 'Shipyard')} 
+            {planet.outfitter && LightButton(true, ()=>this.setState({activeView:'outfitter'}), 'Outfitter')}   
+            {planet.bar && LightButton(true, ()=>this.setState({activeView:'bar'}), 'Bar')}        
+            {planet.missions && LightButton(true, ()=>this.setState({activeView:'missions'}), 'Job Board')}         */}
+        </div>
+    
+
+    commodityView = (planet:StellarObjectConfig, ship:ShipData) => 
+        <div>
+            {planet.commodities && planet.commodities.map(commodity => 
+                <div style={{display:"flex"}}>
+                    <h5>{commodity.name}</h5>
+                    <div>{commodity.price}</div>
+                    {LightButton(ship.cargoSpace > 0, ()=>this.onCommodityOrder(commodity, 1, true), 'Buy 1')}
+                    {LightButton(ship.cargoSpace > 0, ()=>this.onCommodityOrder(commodity, ship.cargoSpace, true), 'Buy All')}
+                    {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onCommodityOrder(commodity, 1, false), 'Sell 1')}
+                    {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onCommodityOrder(commodity, ship.cargo.filter(item=>item.name === commodity.name).length, false), 'Sell All')}
+                </div>
+            )}
+        </div>
 
     handleKeyDown = (keyCode:number) =>{
         

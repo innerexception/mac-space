@@ -30,22 +30,14 @@ export const onShipEvent = (ship:ShipData, event:PlayerEvents) => {
     })
 }
 
-export const onBuyEvent = (commodity:Commodity, amount:number) => {
+export const onCommodityOrder = (commodity:Commodity, amount:number, buy:boolean) => {
     dispatch({
-        type: ReducerActions.BUY_COMMODITY,
+        type: ReducerActions.COMMODITY_ORDER,
         commodity,
-        amount
+        amount,
+        buy
     })
 }
-
-export const onSellEvent = (commodity:Commodity, amount:number) => {
-    dispatch({
-        type: ReducerActions.SELL_COMMODITY,
-        commodity,
-        amount
-    })
-}
-
 
 export const onConnected= () => {
     dispatch({

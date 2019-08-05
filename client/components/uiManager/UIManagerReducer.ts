@@ -29,10 +29,8 @@ const appReducer = (state = getInitialState(), action:any):RState => {
                 return ship
             })
             return { ...state, currentUser: {...state.currentUser}, playerEvent: action.event }
-        case ReducerActions.SELL_COMMODITY:
-            return { ...state, sellCommodity: { ...action }, playerEvent: PlayerEvents.SELL_COMMODITY }
-        case ReducerActions.BUY_COMMODITY:
-            return { ...state, buyCommodity: { ...action }, playerEvent: PlayerEvents.BUY_COMMODITY }
+        case ReducerActions.COMMODITY_ORDER:
+            return { ...state, commodityOrder: { ...action }, playerEvent: PlayerEvents.COMMODITY_ORDER }
         case ReducerActions.PHASER_SCENE_CHANGE:
             state.currentUser.ships = state.currentUser.ships.map(ship=>{
                 if(ship.id === action.activeShip.id) return action.activeShip
@@ -59,8 +57,7 @@ const getInitialState = ():RState => {
         showMap: false,
         showPlanetMenu: false,
         playerEvent: null,
-        buyCommodity: null,
-        sellCommodity: null,
+        commodityOrder: null,
         loginName: '',
         loginPassword: '',
         loginError:false

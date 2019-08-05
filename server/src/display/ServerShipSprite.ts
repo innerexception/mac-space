@@ -1,5 +1,6 @@
 import { GameObjects, Physics, Scene, } from "phaser";
-import ServerStarSystem from "./ServerStarSystem";
+import ServerStarSystem from "../ServerStarSystem";
+import GalaxyScene from "../GalaxyScene";
 
 export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
@@ -112,12 +113,11 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     }
 
-    buyCommodity = (buyOrder:CommodityOrder) => {
-        //nutsack
-    }
-
-    sellCommodity = (sellOrder:CommodityOrder) => {
-        //nutsack
+    processOrder = (order:CommodityOrder) => {
+        //lol
+        debugger
+        const player = (this.scene.scene.scene as GalaxyScene).players.get(this.shipData.ownerId)
+        
     }
 
     rotateLeft = () => {
@@ -137,13 +137,13 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         this.setAcceleration(0,0)
     }
 
-    //Custom sprite needs this magical named method
-    preUpdate = (time, delta) =>
-    { }
+    //Custom sprite needs this magical named method for update
+    // preUpdate = (time, delta) =>
+    // { }
 
-    applyUpdate = (update:ShipUpdate) => {
-        //not used on server side
-    }
+    // applyUpdate = (update:ShipUpdate) => {
+    //     //not used on server side
+    // }
 
 }
 

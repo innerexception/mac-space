@@ -5,9 +5,14 @@ module.exports = {
         "./index.tsx"
     ],
     output: {
-        path: path.join(__dirname, './server/public/'),
+        path: path.join(__dirname, './build/'),
         filename: 'bundle.js',
         publicPath: './',
+    },
+    devServer: {
+        contentBase: path.join(__dirname, './build'),
+        compress: true,
+        port: 9000
     },
     devtool: 'eval-source-map',
     resolve: {extensions: ['.js', '.jsx', '.ts', '.tsx']},

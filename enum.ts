@@ -21,8 +21,7 @@ export const ReducerActions= {
     OPEN_PLANET: 'op',
     OPEN_MAP: 'om',
     PLAYER_EVENT: 'pev',
-    BUY_COMMODITY: 'bcc',
-    SELL_COMMODITY: 'scc',
+    COMMODITY_ORDER:'cord',
     PHASER_SCENE_CHANGE:'phsr',
     SET_LOGIN:'srl',
     LOGIN_FAILED: 'lff'
@@ -41,8 +40,8 @@ export enum PlayerEvents {
     START_JUMP='sj',
     TAKE_OFF='take_off',
     SELECT_SYSTEM='sys',
-    SELL_COMMODITY='scc',
-    BUY_COMMODITY='bcc'
+    COMMODITY_ORDER='cord',
+    PLAYER_LOGIN='plo'
 }
 
 export enum ServerMessages {
