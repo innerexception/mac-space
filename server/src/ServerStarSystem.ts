@@ -1,6 +1,6 @@
 import { Scene, GameObjects, Physics, } from "phaser";
-import Projectile from '../../client/components/util/display/Projectile'
-import ServerShipSprite from './ServerShipSprite'
+import Projectile from './display/Projectile'
+import ServerShipSprite from './display/ServerShipSprite'
 import * as Ships from '../../client/data/Ships'
 import { v4 } from 'uuid'
 import { PlayerEvents } from "../../enum";

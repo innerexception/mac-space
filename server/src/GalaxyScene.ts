@@ -2,8 +2,8 @@ import { Scene, Physics } from "phaser";
 import { StarSystems } from '../../client/data/StarSystems'
 import ServerStarSystem from "./ServerStarSystem";
 import WebsocketClient from "../../client/WebsocketClient";
+import ServerShipSprite from "./display/ServerShipSprite";
 import { ServerMessages, PlayerEvents } from "../../enum";
-import ServerShipSprite from "./ServerShipSprite";
 
 export default class GalaxyScene extends Scene {
 

@@ -1,6 +1,6 @@
 import { GameObjects, Physics, Scene, } from "phaser";
-import ServerStarSystem from "./ServerStarSystem";
-import GalaxyScene from "./GalaxyScene";
+import ServerStarSystem from "../ServerStarSystem";
+import GalaxyScene from "../GalaxyScene";
 
 export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
