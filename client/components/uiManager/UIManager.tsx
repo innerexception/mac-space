@@ -1,17 +1,16 @@
 import * as React from 'react';
-import Match from '../mainViewer/ViewscreenFrame'
+import ViewscreenFrame from '../mainViewer/ViewscreenFrame'
 import Login from '../Login'
 import AppStyles from '../../AppStyles'
 
 interface Props {
-    currentUser: Player
-    activeSession: Session
     isConnected: boolean
     showMap: boolean
     showPlanetMenu: boolean
     loginName: string
     loginPassword: string
     loginError: boolean
+    activeShip:ShipData
 }
 
 export default class UIManager extends React.Component<Props> {
@@ -21,7 +20,7 @@ export default class UIManager extends React.Component<Props> {
             return <Login {...this.props}/>
         }
         else if(this.props.loginName && this.props.loginPassword){
-            return <Match {...this.props}/>
+            return <ViewscreenFrame {...this.props}/>
         }
     }
 

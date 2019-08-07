@@ -56,13 +56,14 @@ var newPlayerStartingData = (name) => {
   var id = v4()
   shuttle.ownerId = id
   return {
-       name,
+       loginName:name,
        id,
        activeShipId: shuttle.id,
        ships:[shuttle],
        reputation:[],
-       notoriety: 0
-   }
+       notoriety: 0,
+       credits: 0
+   } as Player
 }
 
 var wsServer = new WebSocketServer({
@@ -103,7 +104,7 @@ wsServer.on('request', function(request) {
           case ServerMessages.SERVER_UPDATE:
             publishToPlayers(obj.event, obj.system)
             break
-          case ServerMessages.PLAYER_DATA:
+          case ServerMessages.PLAYER_DATA_UPDATED:
             publishToPlayer(obj.event, socketId)
             break
           case ServerMessages.PLAYER_LOGIN: 
@@ -130,6 +131,15 @@ wsServer.on('request', function(request) {
               publishToServer(getPlayerLoginMessage(player))
               console.log('logged in new player.')
             }
+            break
+          case ServerMessages.PLAYER_DATA_UPDATE: 
+            let playerUpdate = obj.event
+            if(session[playerUpdate.loginName]){
+              session[playerUpdate.loginName] = playerUpdate
+              publishToPlayer(playerUpdate, playerUpdate.socketId)
+              publishToServer(getPlayerDataMessage(playerUpdate))
+            }
+            break
         }
     }
   });
@@ -180,7 +190,7 @@ const getPlayerEventMessage = (event, system:string) => {
 //Player data was updated
 const getPlayerDataMessage = (event) => {
   return JSON.stringify({
-    type: ServerMessages.PLAYER_DATA,
+    type: ServerMessages.PLAYER_DATA_UPDATED,
     event
   })
 }

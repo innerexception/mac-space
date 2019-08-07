@@ -6,11 +6,11 @@ import Viewscreen from './Viewscreen'
 import { TopBar, Button } from '../Shared'
 
 interface Props {
-    currentUser?: Player
     showMap: boolean
     showPlanetMenu: boolean
     loginName: string
     loginPassword: string
+    activeShip:ShipData
 }
 
 interface State {
@@ -25,7 +25,6 @@ export default class Match extends React.Component<Props, State> {
     }
 
     render(){
-        const activeShip = this.props.currentUser && this.props.currentUser.ships.find(ship=>ship.id === this.props.currentUser.activeShipId)
         return (
             <div style={AppStyles.window}>
                 {TopBar('MacSpace')}
@@ -41,8 +40,8 @@ export default class Match extends React.Component<Props, State> {
                             options menu (esc)
                         </div>
                     </div>
-                    {this.props.showMap && <Map activeShip={activeShip}/>}
-                    {this.props.showPlanetMenu && <PlanetMenu activeShip={activeShip}/>}
+                    {this.props.showMap && <Map activeShip={this.props.activeShip}/>}
+                    {this.props.showPlanetMenu && this.props.activeShip.landedAt && <PlanetMenu activeShip={this.props.activeShip}/>}
                     <Viewscreen loginName={this.props.loginName} loginPassword={this.props.loginPassword}/>
                 </div>
          </div>

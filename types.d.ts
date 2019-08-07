@@ -26,10 +26,11 @@ declare enum PlayerEvents {
 
 declare enum ServerMessages {
     HEADLESS_CONNECT= 'hct',
-    PLAYER_DATA= 'pea',
+    PLAYER_DATA_UPDATED= 'pea',
     PLAYER_EVENT= 'pe',
     SERVER_UPDATE= 'su',
-    PLAYER_LOGIN='plo'
+    PLAYER_LOGIN='plo',
+    PLAYER_DATA_UPDATE='pda'
 }
 
 interface Tuple {
@@ -39,12 +40,13 @@ interface Tuple {
 }
 
 interface Player {
-    name:string
+    loginName:string
     id:string
     activeShipId: string
     ships: Array<ShipData>
     reputation: Array<Faction>
     notoriety: number
+    credits: number
 }
 
 interface PlayerSpawnPoint {
@@ -242,8 +244,7 @@ interface Asset {
 
 interface RState {
     isConnected: boolean
-    currentUser: Player | null
-    activeSession: Session
+    activeShip: ShipData | null
     showMap: boolean
     showPlanetMenu: boolean
     playerEvent: PlayerEvents
@@ -251,4 +252,5 @@ interface RState {
     loginName:string
     loginPassword:string
     loginError:boolean
+    systemName:string
 }

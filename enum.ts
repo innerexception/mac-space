@@ -17,14 +17,14 @@ export const ReducerActions= {
     CONNECTION_ERROR: 'ce',
     CONNECTED: 'c',
     SET_USER: 'su',
-    PLAYER_REPLACE: 'prp',
     OPEN_PLANET: 'op',
     OPEN_MAP: 'om',
     PLAYER_EVENT: 'pev',
     COMMODITY_ORDER:'cord',
-    PHASER_SCENE_CHANGE:'phsr',
     SET_LOGIN:'srl',
-    LOGIN_FAILED: 'lff'
+    LOGIN_FAILED: 'lff',
+    SYSTEM_SELECTED: 'ssl',
+    TAKE_OFF:'tot'
 }
 
 export enum PlayerEvents { 
@@ -46,8 +46,9 @@ export enum PlayerEvents {
 
 export enum ServerMessages {
     HEADLESS_CONNECT= 'hct',
-    PLAYER_DATA= 'pea',
+    PLAYER_DATA_UPDATED= 'pea',
     PLAYER_EVENT= 'pe',
     SERVER_UPDATE= 'su',
-    PLAYER_LOGIN='plo'
+    PLAYER_LOGIN='plo',
+    PLAYER_DATA_UPDATE='pda'
 }
