@@ -1,5 +1,4 @@
 import { GameObjects, Physics, Scene, } from "phaser";
-import System from "../StarSystem";
 import { onTogglePlanetMenu } from "../../uiManager/Thunks";
 import WebsocketClient from "../../../WebsocketClient";
 import { PlayerEvents, ServerMessages } from "../../../../enum";
@@ -50,7 +49,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             scale: 0.3
         })
         if(this.isPlayerControlled)
-            onTogglePlanetMenu(false)
+            onTogglePlanetMenu(false, this.shipData)
             
         this.shipData.landedAt = null
     }
@@ -62,7 +61,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             scale: 0,
             onComplete: ()=>{
                 if(this.isPlayerControlled)
-                    onTogglePlanetMenu(true)
+                    onTogglePlanetMenu(true, this.shipData)
             }
         })
     }

@@ -1,5 +1,5 @@
 import { dispatch } from '../../../client/App'
-import { ReducerActions } from '../../../enum'
+import { ReducerActions, PlayerEvents } from '../../../enum'
 
 export const setUser = (currentUser:object) => {
     dispatch({
@@ -8,34 +8,44 @@ export const setUser = (currentUser:object) => {
     })
 }
 
-export const onTogglePlanetMenu = (state:boolean) => {
+export const onSelectSystem = (systemName:string) => {
+    dispatch({
+        type: ReducerActions.SYSTEM_SELECTED,
+        systemName
+    })
+}
+
+export const onTogglePlanetMenu = (state:boolean, activeShip:ShipData) => {
     dispatch({
         type: ReducerActions.OPEN_PLANET,
-        state
+        state,
+        activeShip
     })
 }
 
-export const onToggleMapMenu = (state:boolean) => {
+export const onToggleMapMenu = (state:boolean, activeShip:ShipData) => {
     dispatch({
         type: ReducerActions.OPEN_MAP,
-        state
+        state,
+        activeShip
     })
 }
 
-export const onShipEvent = (ship:ShipData, event:PlayerEvents) => {
-    dispatch({
-        type: ReducerActions.PLAYER_EVENT,
-        ship,
-        event
-    })
-}
-
-export const onCommodityOrder = (commodity:Commodity, amount:number, buy:boolean) => {
+export const onCommodityOrder = (commodity:Commodity, amount:number, buy:boolean, activeShip:ShipData) => {
     dispatch({
         type: ReducerActions.COMMODITY_ORDER,
         commodity,
         amount,
-        buy
+        buy,
+        activeShip
+    })
+}
+
+export const onShipTakeOff = (activeShip:ShipData) => {
+    dispatch({
+        type: ReducerActions.TAKE_OFF,
+        playerEvent: PlayerEvents.TAKE_OFF,
+        activeShip
     })
 }
 
@@ -53,10 +63,4 @@ export const onConnectionError= () => {
 
 export const onLogin = (name:string, password:string) => {
     dispatch({ type: ReducerActions.SET_LOGIN, name, password })
-}
-
-export const onCleanSession = () => {
-    dispatch({
-        type: ReducerActions.MATCH_CLEANUP
-    })
 }

@@ -1,6 +1,7 @@
 import { GameObjects, Physics, Scene, } from "phaser";
 import ServerStarSystem from "../ServerStarSystem";
 import GalaxyScene from "../GalaxyScene";
+import { ServerMessages } from "../../../enum";
 
 export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
@@ -8,6 +9,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     landingSequence: Phaser.Tweens.Tween
     jumpSequence: boolean
     shipData: ShipData
+    theGalaxy: GalaxyScene
 
     constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, ship:ShipData){
         super(scene, x, y, texture)
@@ -19,6 +21,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         this.setMaxVelocity(ship.maxSpeed).setFriction(400, 400);
         this.depth = 3
         this.projectiles = projectiles
+        this.theGalaxy = (this.scene.scene.scene as GalaxyScene)
     }
 
     startLandingSequence = (target:GameObjects.Sprite) => {
@@ -48,6 +51,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     onComplete: ()=>{
                         this.stopLandingSequence()
                         this.shipData.landedAt = target.getData('state')
+                        console.log('landing sequence completed.')
                     }
                 })
             }
@@ -114,10 +118,23 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     }
 
     processOrder = (order:CommodityOrder) => {
-        //lol
-        debugger
-        const player = (this.scene.scene.scene as GalaxyScene).players.get(this.shipData.ownerId)
-        
+        const player = this.theGalaxy.players.get(this.shipData.ownerId)
+        if(player){
+            const ship = player.ships.find(ship=>ship.id===player.activeShipId)
+            let planet = (this.scene as ServerStarSystem).planets.find(planet=>planet.name === ship.landedAt.name)
+            let planetData = planet.getData('state') as StellarObjectConfig
+            let commodity = planetData.commodities.find(commodity=>commodity.name===order.commodity.name)
+            let price = commodity.price * order.amount
+            if(player.credits >= price && ship.cargoSpace >= order.amount){
+                ship.cargo.push({
+                    name: commodity.name,
+                    weight: order.amount,
+                    asset: ''
+                })
+                player.credits -= price
+                this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
+            }
+        }
     }
 
     rotateLeft = () => {

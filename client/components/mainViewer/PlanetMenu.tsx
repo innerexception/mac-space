@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { onShipEvent, onCommodityOrder } from '../uiManager/Thunks'
+import { onCommodityOrder, onShipTakeOff } from '../uiManager/Thunks'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
 import { PlayerEvents } from '../../../enum';
@@ -25,11 +25,11 @@ export default class PlanetMenu extends React.Component<Props, State> {
     }
 
     onTakeOff = () => {
-        onShipEvent({...this.props.activeShip}, PlayerEvents.TAKE_OFF)
+        onShipTakeOff({...this.props.activeShip})
     }
 
     onCommodityOrder = (commodity:Commodity, amount: number, buy: boolean) => {
-        onCommodityOrder(commodity, amount, buy)
+        onCommodityOrder(commodity, amount, buy, this.props.activeShip)
     }
 
     getPlanetMainMenu = () => {

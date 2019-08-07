@@ -20,7 +20,6 @@ export default class StarSystem extends Scene {
     resources: Map<string, Physics.Arcade.Sprite>
     projectiles: Physics.Arcade.Group
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
-    currentSystem: SystemState
     selectedSystem: SystemState
     selectedPlanetIndex: number
     name: string
@@ -45,18 +44,21 @@ export default class StarSystem extends Scene {
         this.unsubscribeRedux = store.subscribe(this.onReduxUpdate)
         this.loginName = config.loginName
         this.loginPassword = config.loginPassword
+        this.player = config.player
     }
 
     onReduxUpdate = () => {
-        if(this.player){
-            if(this.activeShip) {
-                this.activeShip.shipData = this.player.ships.find(ship=>ship.id === this.player.activeShipId)
-                let playerEvent = store.getState().playerEvent
-                if(playerEvent){
-                    this.activeShip.shipData.systemName = this.name //TODO figure out why we need this here...
-                    if(playerEvent !== PlayerEvents.SELECT_SYSTEM) this.activeShip.addShipUpdate(this.activeShip, playerEvent)
-                    this.selectedSystem = StarSystems.find(sys=>sys.name === this.activeShip.shipData.transientData.targetSystemName)
-                }
+        if(this.activeShip) {
+            this.activeShip.shipData = this.player.ships.find(ship=>ship.id === this.player.activeShipId)
+            let playerEvent = store.getState().playerEvent
+            switch(playerEvent){
+                case PlayerEvents.SELECT_SYSTEM:
+                    let name = store.getState().systemName
+                    console.log(store.getState())
+                    this.selectedSystem = StarSystems.find(system=>system.name===name)
+                    break
+                default:
+                    this.activeShip.addShipUpdate(this.activeShip, playerEvent)
             }
         }
     }
@@ -64,14 +66,6 @@ export default class StarSystem extends Scene {
     onConnected = () => {
         onConnected()
         console.log('star system '+this.name+' connected!')
-        this.server.publishMessage({
-            type: ServerMessages.PLAYER_LOGIN,
-            system: '',
-            event: {
-                loginName: this.loginName,
-                loginPassword: this.loginPassword
-            }
-        })
     }
 
     onConnectionError = () => {
@@ -117,7 +111,7 @@ export default class StarSystem extends Scene {
                         //We jumped somewhere else, change the scene over
                         const system = StarSystems.find(system=>system.name === update.shipData.transientData.targetSystemName)
                         if(ship.isPlayerControlled){
-                            this.scene.add(system.name, new StarSystem({key:system.name, server:this.server, initialState: system}, true), false)
+                            this.scene.add(system.name, new StarSystem({key:system.name, server:this.server, initialState: system, player:this.player}, true), false)
                             this.scene.start(system.name)
                             this.unsubscribeRedux()
                             this.scene.remove()
@@ -173,7 +167,6 @@ export default class StarSystem extends Scene {
     
     create = () =>
     {
-        this.player = store.getState().currentUser
         this.cameras.main.setBounds(0, 0, 3200, 3200).setName('main');
         this.physics.world.setBounds(0,0,3200,3200)
         this.physics.world.setBoundsCollision();
@@ -181,8 +174,6 @@ export default class StarSystem extends Scene {
         this.minimap.setBackgroundColor(0x002244);
         this.minimap.scrollX = 1600;
         this.minimap.scrollY = 400;
-        
-        this.currentSystem = Rigel
 
         this.anims.create({
             key: 'explode',
@@ -213,7 +204,7 @@ export default class StarSystem extends Scene {
             this.activeShip.firePrimary()
         });
         this.input.keyboard.on('keydown-M', (event) => {
-            onToggleMapMenu(true)
+            onToggleMapMenu(true, this.activeShip.shipData)
         });
         this.cursors = this.input.keyboard.createCursorKeys();
         
@@ -226,7 +217,7 @@ export default class StarSystem extends Scene {
             case ServerMessages.SERVER_UPDATE: 
                 this.onServerUpdate(payload)
                 break
-            case ServerMessages.PLAYER_DATA:
+            case ServerMessages.PLAYER_DATA_UPDATED:
                 this.onReplacePlayer(payload)
                 break
         }
@@ -234,40 +225,36 @@ export default class StarSystem extends Scene {
 
     onReplacePlayer = (payload:ServerMessage) => {
         this.player = (payload.event as Player)
-        if(this.player) store.dispatch({ type: ReducerActions.PLAYER_REPLACE, currentUser: this.player })
-        else store.dispatch({ type: ReducerActions.LOGIN_FAILED })
     }
 
     checkForActiveShip = () => {
-        if(this.player){
-            let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
-            this.activeShip = this.ships.get(activeShipData.id)
-            if(this.activeShip){
-                this.activeShip.shipData.systemName = this.name
-                this.activeShip.isPlayerControlled = true
-                store.dispatch({ type: ReducerActions.PHASER_SCENE_CHANGE, activeShip: this.activeShip.shipData })
-                this.time.removeAllEvents()
-                if(this.jumpedIn){
-                    console.log('jumped in...')
-                    this.cameras.main.flash(500)
-                }
-                else{
-                    this.activeShip.takeOff()
-                    // //run take-off tween
-                }
+        let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
+        this.activeShip = this.ships.get(activeShipData.id)
+        if(this.activeShip){
+            //means the server already spawned it for us
+            this.activeShip.shipData.systemName = this.name
+            this.activeShip.isPlayerControlled = true
+            this.time.removeAllEvents()
+            if(this.jumpedIn){
+                console.log('jumped in...')
+                this.cameras.main.flash(500)
             }
-            else {
-                //We should spawn it
-                //This is our starting sector so we spawn ourselves
-                let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
-                this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server);
-                this.ships.set(this.activeShip.shipData.id, this.activeShip)
-                activeShipData.systemName = this.name
-                //Add player ship notification
-                this.activeShip.sendSpawnUpdate()
+            else{
                 this.activeShip.takeOff()
-                //run take-off tween
+                // //run take-off tween
             }
+        }
+        else {
+            //We should spawn it
+            //This is our starting sector so we spawn ourselves
+            let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
+            this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server);
+            this.ships.set(this.activeShip.shipData.id, this.activeShip)
+            activeShipData.systemName = this.name
+            //Add player ship notification
+            this.activeShip.sendSpawnUpdate()
+            this.activeShip.takeOff()
+            //run take-off tween
         }
     }
 

@@ -24,7 +24,7 @@ export default class BootScene extends Scene {
     onWSMessage = (data:any) => {
         const payload = JSON.parse(data.data) as ServerMessage
         switch(payload.type){
-            case ServerMessages.PLAYER_DATA:
+            case ServerMessages.PLAYER_DATA_UPDATED:
                 this.onReplacePlayer(payload)
                 break
         }
@@ -33,11 +33,10 @@ export default class BootScene extends Scene {
     onReplacePlayer = (payload:ServerMessage) => {
         const player = (payload.event as Player)
         if(player) {
-            store.dispatch({ type: ReducerActions.PLAYER_REPLACE, currentUser: this.player })
             //let's load the correct scene now. we will put you where your active ship is.
             let systemName = player.ships.find(ship=>ship.id===player.activeShipId).systemName
             let system = StarSystems.find(system=>system.name===systemName)
-            this.scene.add(system.name, new StarSystem({key:system.name, server:this.server, initialState: system}, true), false)
+            this.scene.add(system.name, new StarSystem({key:system.name, server:this.server, initialState: system, player}, false), false)
             this.scene.start(system.name)
             this.scene.remove()
         }

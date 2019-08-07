@@ -41,7 +41,7 @@ export default class GalaxyScene extends Scene {
           type: ServerMessages.SERVER_UPDATE,
           system: scene.name,
           event: {
-              ships: getShipUpdates(scene.ships, scene.jumpingShips),
+              ships: getShipUpdates(scene.ships, scene.jumpingShips, this.players, this.server),
               asteroids: getAsteroidUpdates(scene.asteroids, scene.deadAsteroids),
               resources: getResourceUpdates(scene.resources, scene.deadResources)
           }
@@ -61,11 +61,11 @@ export default class GalaxyScene extends Scene {
         const payload = JSON.parse(data.data) as ServerMessage
         let type = payload.type
         //Store players at the galactic level...
-        if(type === ServerMessages.PLAYER_LOGIN){
+        if(type === ServerMessages.PLAYER_LOGIN || type === ServerMessages.PLAYER_DATA_UPDATED){
           //store player in memory
           let player = payload.event as Player
           this.players.set(player.id, player)
-          console.log('stored new player in memory: '+player.id)
+          console.log('stored player in server memory: '+player.loginName)
         }
         else
           this.onRecievePlayerUpdate(payload.event as ShipUpdate)
@@ -81,7 +81,7 @@ export default class GalaxyScene extends Scene {
     }
 }
 
-const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<ServerShipSprite>) => {
+const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<ServerShipSprite>, players:Map<string,Player>, server:WebsocketClient) => {
   let updates = new Array<ShipUpdate>()
   ships.forEach(ship=>{
     updates.push({
@@ -113,6 +113,15 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
       }
     })
     ship.shipData.transientData.targetSystemName = null
+
+    //Save new ship system to server store
+    let player = players.get(ship.shipData.ownerId)
+    player.ships = player.ships.map(pship=>{
+        if(pship.id === ship.shipData.id) return ship.shipData
+        return pship
+    })
+    console.log('saved player to data store: '+player)
+    server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' });                    
   })
   return updates
 }
