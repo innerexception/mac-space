@@ -97,7 +97,8 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
         transientData: {...ship.shipData.transientData}
       }
     })
-    //Transient data is for 1 time updates, they are cleared after being sent once
+    //Transient data is for 1 time updates that need to be 3rd party observable, 
+    //they are cleared after being sent once usually
     ship.shipData.transientData.firePrimary = false
     ship.shipData.transientData.takeOff = false
     ship.shipData.transientData.commodityOrder = null
@@ -114,7 +115,7 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
     })
     ship.shipData.transientData.targetSystemName = null
 
-    //Save new ship system to server store
+    //Save new ship data to server store
     let player = players.get(ship.shipData.ownerId)
     player.ships = player.ships.map(pship=>{
         if(pship.id === ship.shipData.id) return ship.shipData

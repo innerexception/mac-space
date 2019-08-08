@@ -7,6 +7,7 @@ import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
 import { onToggleMapMenu, onConnectionError, onConnected } from "../uiManager/Thunks";
 import { PlayerEvents, ReducerActions, ServerMessages } from "../../../enum";
+import Planet from "./display/Planet";
 
 export default class StarSystem extends Scene {
 
@@ -14,7 +15,7 @@ export default class StarSystem extends Scene {
     player: Player
     activeShip: ShipSprite
     ships: Map<string,ShipSprite>
-    planets: Array<GameObjects.Sprite>
+    planets: Array<Planet>
     asteroids: Map<string, Physics.Arcade.Sprite>
     explosions: GameObjects.Group
     resources: Map<string, Physics.Arcade.Sprite>
@@ -54,8 +55,12 @@ export default class StarSystem extends Scene {
             switch(playerEvent){
                 case PlayerEvents.SELECT_SYSTEM:
                     let name = store.getState().systemName
-                    console.log(store.getState())
                     this.selectedSystem = StarSystems.find(system=>system.name===name)
+                    break
+                case PlayerEvents.COMMODITY_ORDER:
+                    let order = store.getState().commodityOrder
+                    this.activeShip.shipData.transientData.commodityOrder = order
+                    this.activeShip.addShipUpdate(this.activeShip, playerEvent)
                     break
                 default:
                     this.activeShip.addShipUpdate(this.activeShip, playerEvent)
@@ -225,6 +230,9 @@ export default class StarSystem extends Scene {
 
     onReplacePlayer = (payload:ServerMessage) => {
         this.player = (payload.event as Player)
+        let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
+        this.activeShip.shipData = activeShipData
+        store.dispatch({ type: ReducerActions.PLAYER_REPLACE, player: this.player, activeShip: this.activeShip.shipData})
     }
 
     checkForActiveShip = () => {
@@ -315,7 +323,7 @@ export default class StarSystem extends Scene {
     addPlanets = () => {
         let planets = []
         this.state.stellarObjects.forEach(obj=>{
-            planets.push(this.add.sprite(obj.x, obj.y, obj.asset).setData('state', {...obj}))
+            planets.push(new Planet(this.scene.scene, obj.x, obj.y, obj.asset, obj))
         })
         this.planets = planets
     }

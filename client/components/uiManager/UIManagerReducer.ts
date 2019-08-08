@@ -21,8 +21,9 @@ const appReducer = (state = getInitialState(), action:any):RState => {
         case ReducerActions.COMMODITY_ORDER:
             return { ...state, 
                 commodityOrder: { ...action }, 
-                activeShip: action.activeShip,
                 playerEvent: PlayerEvents.COMMODITY_ORDER }
+        case ReducerActions.PLAYER_REPLACE:
+            return {...state, player: action.player, activeShip: action.activeShip, playerEvent: null }
         default:
             return state
     }
@@ -33,6 +34,7 @@ export default appReducer;
 const getInitialState = ():RState => {
     return {
         isConnected: false,
+        player: null,
         activeShip: null,
         showMap: false,
         showPlanetMenu: false,

@@ -31,13 +31,12 @@ export const onToggleMapMenu = (state:boolean, activeShip:ShipData) => {
     })
 }
 
-export const onCommodityOrder = (commodity:Commodity, amount:number, buy:boolean, activeShip:ShipData) => {
+export const onCommodityOrder = (commodity:Commodity, amount:number, buy:boolean) => {
     dispatch({
         type: ReducerActions.COMMODITY_ORDER,
         commodity,
         amount,
-        buy,
-        activeShip
+        buy
     })
 }
 

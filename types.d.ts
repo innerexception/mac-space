@@ -244,6 +244,7 @@ interface Asset {
 
 interface RState {
     isConnected: boolean
+    player: Player | null
     activeShip: ShipData | null
     showMap: boolean
     showPlanetMenu: boolean

@@ -3,6 +3,7 @@ import { onTogglePlanetMenu } from "../../uiManager/Thunks";
 import WebsocketClient from "../../../WebsocketClient";
 import { PlayerEvents, ServerMessages } from "../../../../enum";
 import StarSystem from "../StarSystem";
+import Planet from "./Planet";
 
 export default class ShipSprite extends Physics.Arcade.Sprite {
 
@@ -70,9 +71,9 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         this.addShipUpdate(this, PlayerEvents.PLAYER_SPAWNED)
     }
 
-    startLandingSequence = (target:GameObjects.Sprite) => {
+    startLandingSequence = (target:Planet) => {
         //landing sequence
-        this.shipData.transientData.landingTargetName = target.getData('state').name
+        this.shipData.transientData.landingTargetName = target.config.name
         this.addShipUpdate(this, PlayerEvents.START_LANDING)
     }
 

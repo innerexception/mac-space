@@ -2,7 +2,6 @@ import * as React from 'react'
 import { onCommodityOrder, onShipTakeOff } from '../uiManager/Thunks'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
-import { PlayerEvents } from '../../../enum';
 
 interface Props {
     activeShip: ShipData
@@ -29,7 +28,7 @@ export default class PlanetMenu extends React.Component<Props, State> {
     }
 
     onCommodityOrder = (commodity:Commodity, amount: number, buy: boolean) => {
-        onCommodityOrder(commodity, amount, buy, this.props.activeShip)
+        onCommodityOrder(commodity, amount, buy)
     }
 
     getPlanetMainMenu = () => {
@@ -40,7 +39,6 @@ export default class PlanetMenu extends React.Component<Props, State> {
                     <div>
                         {this.getView(this.state.activeView)}
                     </div>
-                    {Button(true, this.onTakeOff, 'Ok')}
                 </div>
             </div>
         )
@@ -60,6 +58,7 @@ export default class PlanetMenu extends React.Component<Props, State> {
             {planet.outfitter && LightButton(true, ()=>this.setState({activeView:'outfitter'}), 'Outfitter')}   
             {planet.bar && LightButton(true, ()=>this.setState({activeView:'bar'}), 'Bar')}        
             {planet.missions && LightButton(true, ()=>this.setState({activeView:'missions'}), 'Job Board')}         */}
+            {Button(true, this.onTakeOff, 'Leave')}
         </div>
     
 
@@ -73,6 +72,7 @@ export default class PlanetMenu extends React.Component<Props, State> {
                     {LightButton(ship.cargoSpace > 0, ()=>this.onCommodityOrder(commodity, ship.cargoSpace, true), 'Buy All')}
                     {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onCommodityOrder(commodity, 1, false), 'Sell 1')}
                     {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onCommodityOrder(commodity, ship.cargo.filter(item=>item.name === commodity.name).length, false), 'Sell All')}
+                    {Button(true, ()=>this.setState({activeView:'main'}), 'Done')}
                 </div>
             )}
         </div>

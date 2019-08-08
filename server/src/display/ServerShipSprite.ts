@@ -2,6 +2,7 @@ import { GameObjects, Physics, Scene, } from "phaser";
 import ServerStarSystem from "../ServerStarSystem";
 import GalaxyScene from "../GalaxyScene";
 import { ServerMessages } from "../../../enum";
+import Planet from "./Planet";
 
 export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
@@ -21,10 +22,10 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         this.setMaxVelocity(ship.maxSpeed).setFriction(400, 400);
         this.depth = 3
         this.projectiles = projectiles
-        this.theGalaxy = (this.scene.scene.scene as GalaxyScene)
+        this.theGalaxy = (this.scene.scene.manager.scenes[0] as GalaxyScene)
     }
 
-    startLandingSequence = (target:GameObjects.Sprite) => {
+    startLandingSequence = (target:Planet) => {
         //landing sequence
         let distance = Phaser.Math.Distance.Between(this.x, this.y, target.x, target.y)
         let planetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
@@ -50,8 +51,8 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     duration,
                     onComplete: ()=>{
                         this.stopLandingSequence()
-                        this.shipData.landedAt = target.getData('state')
-                        console.log('landing sequence completed.')
+                        this.shipData.landedAt = target.config
+                        console.log('landing sequence completed for: '+target.config.name)
                     }
                 })
             }
@@ -120,20 +121,38 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     processOrder = (order:CommodityOrder) => {
         const player = this.theGalaxy.players.get(this.shipData.ownerId)
         if(player){
-            const ship = player.ships.find(ship=>ship.id===player.activeShipId)
-            let planet = (this.scene as ServerStarSystem).planets.find(planet=>planet.name === ship.landedAt.name)
-            let planetData = planet.getData('state') as StellarObjectConfig
+            let planet = (this.scene as ServerStarSystem).planets.find(planet=>planet.config.name === this.shipData.landedAt.name)
+            let planetData = planet.config
             let commodity = planetData.commodities.find(commodity=>commodity.name===order.commodity.name)
             let price = commodity.price * order.amount
-            if(player.credits >= price && ship.cargoSpace >= order.amount){
-                ship.cargo.push({
-                    name: commodity.name,
-                    weight: order.amount,
-                    asset: ''
-                })
-                player.credits -= price
-                this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
+            if(order.buy){
+                if(player.credits >= price && this.shipData.cargoSpace >= order.amount){
+                    this.shipData.cargo.push({
+                        name: commodity.name,
+                        weight: order.amount,
+                        asset: ''
+                    })
+                    player.credits -= price
+                    player.ships = player.ships.map(ship=>{
+                        if(ship.id===this.shipData.id) return this.shipData
+                        return ship
+                    })
+                    console.log('buy processed order, new credits: '+player.credits)
+                }
             }
+            else {
+                // this.shipData.cargo.filter(cargo=>{
+                //     cargo.weight
+                // })
+                // player.credits += price
+                // player.ships = player.ships.map(ship=>{
+                //     if(ship.id===this.shipData.id) return this.shipData
+                //     return ship
+                // })
+                console.log('sell processed order, new credits: '+player.credits)
+            }
+            this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
+                
         }
     }
 
