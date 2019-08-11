@@ -62,7 +62,7 @@ var newPlayerStartingData = (name) => {
        ships:[shuttle],
        reputation:[],
        notoriety: 0,
-       credits: 0
+       credits: 100
    } as Player
 }
 

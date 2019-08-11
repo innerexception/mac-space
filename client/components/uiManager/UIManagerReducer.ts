@@ -7,7 +7,7 @@ const appReducer = (state = getInitialState(), action:any):RState => {
         case ReducerActions.CONNECTION_ERROR: 
             return { ...state, isConnected: false}
         case ReducerActions.OPEN_PLANET: 
-            return { ...state, showPlanetMenu: action.state, playerEvent:null, activeShip: action.activeShip }
+            return { ...state, showPlanetMenu: action.state, playerEvent:null, activeShip: action.activeShip, player: action.player }
         case ReducerActions.OPEN_MAP:
             return { ...state, showMap: action.state, playerEvent: null, activeShip: action.activeShip }
         case ReducerActions.SYSTEM_SELECTED:
@@ -21,8 +21,11 @@ const appReducer = (state = getInitialState(), action:any):RState => {
         case ReducerActions.COMMODITY_ORDER:
             return { ...state, 
                 commodityOrder: { ...action }, 
-                activeShip: action.activeShip,
                 playerEvent: PlayerEvents.COMMODITY_ORDER }
+        case ReducerActions.PLAYER_REPLACE:
+            return {...state, player: action.player, activeShip: action.activeShip, playerEvent: null }
+        case ReducerActions.PLAYER_REPLACE_SHIP:
+            return {...state, activeShip: action.activeShip, playerEvent: null }
         default:
             return state
     }
@@ -33,6 +36,7 @@ export default appReducer;
 const getInitialState = ():RState => {
     return {
         isConnected: false,
+        player: null,
         activeShip: null,
         showMap: false,
         showPlanetMenu: false,

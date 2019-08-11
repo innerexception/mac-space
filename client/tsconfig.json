@@ -19,7 +19,7 @@
     },
     "include": [
         "./**/*",
-        "../**/*.d.ts"
+        "../**/*.d.ts", "../server/src/StarSystems.ts"
     ],
     "exclude": [
         "node_modules",

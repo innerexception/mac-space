@@ -2,9 +2,9 @@ import * as React from 'react'
 import { onCommodityOrder, onShipTakeOff } from '../uiManager/Thunks'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
-import { PlayerEvents } from '../../../enum';
 
 interface Props {
+    player: Player
     activeShip: ShipData
 }
 
@@ -29,7 +29,7 @@ export default class PlanetMenu extends React.Component<Props, State> {
     }
 
     onCommodityOrder = (commodity:Commodity, amount: number, buy: boolean) => {
-        onCommodityOrder(commodity, amount, buy, this.props.activeShip)
+        onCommodityOrder(commodity, amount, buy)
     }
 
     getPlanetMainMenu = () => {
@@ -40,7 +40,6 @@ export default class PlanetMenu extends React.Component<Props, State> {
                     <div>
                         {this.getView(this.state.activeView)}
                     </div>
-                    {Button(true, this.onTakeOff, 'Ok')}
                 </div>
             </div>
         )
@@ -55,16 +54,20 @@ export default class PlanetMenu extends React.Component<Props, State> {
 
     mainView = (planet:StellarObjectConfig) => 
         <div>
+            <h4>{planet.description}</h4>
             {planet.commodities && LightButton(true, ()=>this.setState({activeView: 'commodities'}), 'Trade')}
-            {/* {planet.shipyard && LightButton(true, ()=>this.setState({activeView:'shipyard'}), 'Shipyard')} 
+            {planet.shipyard && LightButton(true, ()=>this.setState({activeView:'shipyard'}), 'Shipyard')} 
             {planet.outfitter && LightButton(true, ()=>this.setState({activeView:'outfitter'}), 'Outfitter')}   
             {planet.bar && LightButton(true, ()=>this.setState({activeView:'bar'}), 'Bar')}        
-            {planet.missions && LightButton(true, ()=>this.setState({activeView:'missions'}), 'Job Board')}         */}
+            {planet.missions && LightButton(true, ()=>this.setState({activeView:'missions'}), 'Job Board')}        
+            {Button(true, this.onTakeOff, 'Leave')}
         </div>
     
 
     commodityView = (planet:StellarObjectConfig, ship:ShipData) => 
         <div>
+            <h4>Credits: {this.props.player.credits}</h4>
+            <h4>Used Space: {getCargoWeight(ship)+'/'+ship.maxCargoSpace}</h4>
             {planet.commodities && planet.commodities.map(commodity => 
                 <div style={{display:"flex"}}>
                     <h5>{commodity.name}</h5>
@@ -75,6 +78,7 @@ export default class PlanetMenu extends React.Component<Props, State> {
                     {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onCommodityOrder(commodity, ship.cargo.filter(item=>item.name === commodity.name).length, false), 'Sell All')}
                 </div>
             )}
+            {Button(true, ()=>this.setState({activeView:'main'}), 'Done')}
         </div>
 
     handleKeyDown = (keyCode:number) =>{
@@ -86,6 +90,11 @@ export default class PlanetMenu extends React.Component<Props, State> {
     }
 }
 
+const getCargoWeight = (ship:ShipData) => {
+    let weights = 0
+    ship.cargo.forEach(item => weights += item.weight)
+    return weights
+}
 
 const styles = {
     disabled: {

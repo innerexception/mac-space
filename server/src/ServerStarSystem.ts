@@ -3,14 +3,15 @@ import Projectile from './display/Projectile'
 import ServerShipSprite from './display/ServerShipSprite'
 import * as Ships from '../../client/data/Ships'
 import { v4 } from 'uuid'
-import { PlayerEvents } from "../../enum";
+import { PlayerEvents, Metals } from "../../enum";
 import { StarSystems } from "../../client/data/StarSystems";
+import Planet from "./display/Planet";
 
 export default class ServerStarSystem extends Scene {
 
     ships: Map<string,ServerShipSprite>
     jumpingShips: Array<ServerShipSprite>
-    planets: Array<GameObjects.Sprite>
+    planets: Array<Planet>
     asteroids: Map<string, Physics.Arcade.Sprite>
     deadAsteroids: Array<DeadEntityUpdate>
     resources: Map<string, Physics.Arcade.Sprite>
@@ -80,7 +81,7 @@ export default class ServerStarSystem extends Scene {
                     ship.thrustOff()
                     break
                 case PlayerEvents.START_LANDING:
-                    const target = this.planets.find(planet=>planet.getData('state').name === update.shipData.transientData.landingTargetName)
+                    const target = this.planets.find(planet=>planet.config.name === update.shipData.transientData.landingTargetName)
                     ship.startLandingSequence(target)
                     break
                 case PlayerEvents.STOP_LANDING:
@@ -107,7 +108,7 @@ export default class ServerStarSystem extends Scene {
     addPlanets = () => {
         let planets = []
         this.state.stellarObjects.forEach(obj=>{
-            planets.push(this.add.sprite(obj.x, obj.y, obj.asset).setData('state', {...obj}))
+            planets.push(new Planet(this.scene.scene, obj.x, obj.y, obj.asset, obj))
         })
         this.planets = planets
     }
@@ -226,7 +227,7 @@ export default class ServerStarSystem extends Scene {
             .setData('state', {
                 id,
                 weight: 1,
-                type: 'Iron'
+                type: Metals.IRON
             } as ResourceData)
             .setScale(0.1)
             .setRotation(Phaser.Math.FloatBetween(3,0.1))

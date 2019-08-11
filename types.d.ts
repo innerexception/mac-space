@@ -1,10 +1,13 @@
-
 declare enum GunType {
     Energy, Kinetic, Quantum
 }
 
 declare enum Direction {
     DOWN, UP, FORWARD, REVERSE, RIGHT, LEFT
+}
+
+declare enum Metals {
+    IRON='Iron', SILVER='Silver', GOLD='Gold', PLATINUM='Platinum', COPPER='Copper'
 }
 
 declare enum PlayerEvents { 
@@ -21,7 +24,10 @@ declare enum PlayerEvents {
     TAKE_OFF='take_off',
     SELECT_SYSTEM='sys',
     COMMODITY_ORDER='cord',
-    PLAYER_LOGIN='plo'
+    PLAYER_LOGIN='plo',
+    OUTFIT_ORDER='outo',
+    SHIP_PURCHASE='spur',
+    ACCEPT_MISSION='amis'
 }
 
 declare enum ServerMessages {
@@ -31,6 +37,10 @@ declare enum ServerMessages {
     SERVER_UPDATE= 'su',
     PLAYER_LOGIN='plo',
     PLAYER_DATA_UPDATE='pda'
+}
+
+declare enum MissionType {
+    ESCORT, DELIVERY, DESTROY
 }
 
 interface Tuple {
@@ -92,6 +102,23 @@ interface Gun {
     isTurrent: boolean
 }
 
+interface Engine {
+    name: string
+    acceleration: number
+    maxSpeed: number
+}
+
+interface Thruster {
+    name: string
+    turn: number
+}
+
+interface ShipOutfit {
+    outfit: Gun | Engine | Thruster
+    weight: number
+    price: number
+}
+
 interface SystemState {
     name: string
     x: number
@@ -121,14 +148,14 @@ interface AsteroidData {
     y: number
     hp: number
     id:string
-    type?: 'Iron'|'Silver'|'Platinum'
+    type?: Metals
     dead: boolean
 }
 
 interface ResourceData {
     x: number
     y:number
-    type?: 'Iron'|'Silver'|'Platinum'
+    type?: Metals
     id: string
     weight: number
     dead: boolean
@@ -199,7 +226,7 @@ interface InventoryData {
 
 interface ServerMessage {
     type: ServerMessages
-    system: string
+    system: string | Array<SystemState>
     event: ShipUpdate | AsteroidData | ServerSystemUpdate | Player | PlayerLogin | CommodityOrder
 }
 
@@ -214,7 +241,21 @@ interface StellarObjectConfig {
     asset: string
     landable?: boolean
     name: string
+    description: string
     commodities?: Array<Commodity>
+    missions?: Array<Mission>
+    bar?: Array<Mission>
+    outfitter?: Array<ShipOutfit>
+    shipyard?: Array<ShipData>
+}
+
+interface Mission {
+    description: string
+    destination: StellarObjectConfig
+    payment: number
+    cargo: InventoryData
+    type: MissionType
+    targets: Array<ShipData>
 }
 
 interface Commodity {
@@ -223,7 +264,7 @@ interface Commodity {
 }
 
 interface AsteroidConfig {
-    type: 'Iron'|'Silver'|'Platinum',
+    type: Metals,
     density: number,
     isBelt: boolean
 }
@@ -244,6 +285,7 @@ interface Asset {
 
 interface RState {
     isConnected: boolean
+    player: Player | null
     activeShip: ShipData | null
     showMap: boolean
     showPlanetMenu: boolean

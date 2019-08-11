@@ -15,10 +15,11 @@ export const onSelectSystem = (systemName:string) => {
     })
 }
 
-export const onTogglePlanetMenu = (state:boolean, activeShip:ShipData) => {
+export const onTogglePlanetMenu = (state:boolean, activeShip:ShipData, player:Player) => {
     dispatch({
         type: ReducerActions.OPEN_PLANET,
         state,
+        player,
         activeShip
     })
 }
@@ -31,13 +32,12 @@ export const onToggleMapMenu = (state:boolean, activeShip:ShipData) => {
     })
 }
 
-export const onCommodityOrder = (commodity:Commodity, amount:number, buy:boolean, activeShip:ShipData) => {
+export const onCommodityOrder = (commodity:Commodity, amount:number, buy:boolean) => {
     dispatch({
         type: ReducerActions.COMMODITY_ORDER,
         commodity,
         amount,
-        buy,
-        activeShip
+        buy
     })
 }
 

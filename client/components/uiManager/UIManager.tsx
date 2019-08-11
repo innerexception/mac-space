@@ -11,6 +11,7 @@ interface Props {
     loginPassword: string
     loginError: boolean
     activeShip:ShipData
+    player:Player
 }
 
 export default class UIManager extends React.Component<Props> {
