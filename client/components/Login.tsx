@@ -24,7 +24,7 @@ export default class Login extends React.Component<Props> {
                         <h4>Password:</h4>
                         <input type="password" value={this.state.loginPassword} onChange={(e)=>this.setState({loginPassword: e.currentTarget.value})}/>
                     </div>
-                    <div>
+                    <div style={{margin:'1em'}}>
                         {Button(!!(this.state.loginName && this.state.loginPassword), ()=>onLogin(this.state.loginName, this.state.loginPassword), 'Ok')}
                     </div>
                 </div>

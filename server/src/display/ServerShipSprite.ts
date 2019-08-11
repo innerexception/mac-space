@@ -97,6 +97,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                         });
                         newShip.shipData.transientData.targetSystemName = targetSystem.name;
                         newShip.shipData.systemName = targetSystem.name;
+                        newShip.shipData.fuel = this.shipData.fuel-1;
                         (this.scene as ServerStarSystem).jumpingShips.push(newShip);
                         (this.scene as ServerStarSystem).ships.delete(this.shipData.id)
                         this.destroy()
@@ -118,6 +119,10 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     }
 
+    buyOutfit = (equipment:ShipOutfit) => {
+        //TODO
+    }
+
     processOrder = (order:CommodityOrder) => {
         const player = this.theGalaxy.players.get(this.shipData.ownerId)
         if(player){
@@ -127,30 +132,31 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             let price = commodity.price * order.amount
             if(order.buy){
                 if(player.credits >= price && this.shipData.cargoSpace >= order.amount){
-                    this.shipData.cargo.push({
-                        name: commodity.name,
-                        weight: order.amount,
-                        asset: ''
-                    })
+                    let existing = this.shipData.cargo.find(cargo=>cargo.name===order.commodity.name)
+                    if(existing)
+                        existing.weight += order.amount
+                    else 
+                        this.shipData.cargo.push({
+                            name: commodity.name,
+                            weight: order.amount,
+                            asset: ''
+                        })
                     player.credits -= price
-                    player.ships = player.ships.map(ship=>{
-                        if(ship.id===this.shipData.id) return this.shipData
-                        return ship
-                    })
                     console.log('buy processed order, new credits: '+player.credits)
                 }
             }
             else {
-                // this.shipData.cargo.filter(cargo=>{
-                //     cargo.weight
-                // })
-                // player.credits += price
-                // player.ships = player.ships.map(ship=>{
-                //     if(ship.id===this.shipData.id) return this.shipData
-                //     return ship
-                // })
+                let existing = this.shipData.cargo.find(cargo=>cargo.name===order.commodity.name)
+                if(existing && existing.weight >= order.amount) {
+                    existing.weight -= order.amount
+                    player.credits += price
+                }
                 console.log('sell processed order, new credits: '+player.credits)
             }
+            player.ships = player.ships.map(ship=>{
+                if(ship.id===this.shipData.id) return this.shipData
+                return ship
+            })
             this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
                 
         }

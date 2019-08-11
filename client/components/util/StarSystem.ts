@@ -1,11 +1,11 @@
 import { Scene, Cameras, GameObjects, Physics, } from "phaser";
-import { Arcturus, Rigel, StarSystems } from "../../data/StarSystems";
+import { StarSystems } from "../../data/StarSystems";
 import Projectile from "./display/Projectile";
 import ShipSprite from "./display/ShipSprite";
 import * as Ships from '../../data/Ships'
 import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
-import { onToggleMapMenu, onConnectionError, onConnected } from "../uiManager/Thunks";
+import { onToggleMapMenu, onConnectionError, onConnected, onTogglePlanetMenu } from "../uiManager/Thunks";
 import { PlayerEvents, ReducerActions, ServerMessages } from "../../../enum";
 import Planet from "./display/Planet";
 
@@ -56,6 +56,14 @@ export default class StarSystem extends Scene {
                 case PlayerEvents.SELECT_SYSTEM:
                     let name = store.getState().systemName
                     this.selectedSystem = StarSystems.find(system=>system.name===name)
+                    break
+                case PlayerEvents.ACCEPT_MISSION:
+                    // this.server.publishMessage(player data update)
+                    break
+                case PlayerEvents.SHIP_PURCHASE:
+                    // this.server.publishMessage(player data update)
+                    break
+                case PlayerEvents.OUTFIT_ORDER:
                     break
                 case PlayerEvents.COMMODITY_ORDER:
                     let order = store.getState().commodityOrder
@@ -242,7 +250,6 @@ export default class StarSystem extends Scene {
             //means the server already spawned it for us
             this.activeShip.shipData.systemName = this.name
             this.activeShip.isPlayerControlled = true
-            this.time.removeAllEvents()
             if(this.jumpedIn){
                 console.log('jumped in...')
                 this.cameras.main.flash(500)
@@ -256,7 +263,7 @@ export default class StarSystem extends Scene {
             //We should spawn it
             //This is our starting sector so we spawn ourselves
             let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
-            this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server);
+            this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server, this.onTogglePlanetMenu);
             this.ships.set(this.activeShip.shipData.id, this.activeShip)
             activeShipData.systemName = this.name
             //Add player ship notification
@@ -264,6 +271,12 @@ export default class StarSystem extends Scene {
             this.activeShip.takeOff()
             //run take-off tween
         }
+        this.time.removeAllEvents()
+        this.cameras.main.startFollow(this.activeShip)
+    }
+
+    onTogglePlanetMenu = (state:boolean, ship:ShipData) => {
+        onTogglePlanetMenu(state, ship, this.player)
     }
 
     update = () =>
@@ -286,8 +299,6 @@ export default class StarSystem extends Scene {
             }
             //  Position the center of the camera on the player
             //  we want the center of the camera on the player, not the left-hand side of it
-            this.cameras.main.scrollX = this.activeShip.x - 200;
-            this.cameras.main.scrollY = this.activeShip.y - 200;
             this.minimap.scrollX = this.activeShip.x;
             this.minimap.scrollY = this.activeShip.y;
         }
@@ -296,7 +307,7 @@ export default class StarSystem extends Scene {
     spawnShip = (config:ShipData, spawnPoint:PlayerSpawnPoint) => {
         let shipData = {...Ships[config.name], ...config}
         shipData.systemName = this.name
-        let ship = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, shipData.asset, this.projectiles, false, shipData, this.server)
+        let ship = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, shipData.asset, this.projectiles, false, shipData, this.server, this.onTogglePlanetMenu)
         ship.rotation = spawnPoint.rotation
         if(spawnPoint.xVelocity){
             //TODO: set starting edge coords based on previous system coords, right now defaults to top left corner

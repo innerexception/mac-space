@@ -3,7 +3,7 @@ import Projectile from './display/Projectile'
 import ServerShipSprite from './display/ServerShipSprite'
 import * as Ships from '../../client/data/Ships'
 import { v4 } from 'uuid'
-import { PlayerEvents } from "../../enum";
+import { PlayerEvents, Metals } from "../../enum";
 import { StarSystems } from "../../client/data/StarSystems";
 import Planet from "./display/Planet";
 
@@ -227,7 +227,7 @@ export default class ServerStarSystem extends Scene {
             .setData('state', {
                 id,
                 weight: 1,
-                type: 'Iron'
+                type: Metals.IRON
             } as ResourceData)
             .setScale(0.1)
             .setRotation(Phaser.Math.FloatBetween(3,0.1))

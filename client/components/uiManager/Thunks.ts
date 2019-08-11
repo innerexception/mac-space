@@ -15,10 +15,11 @@ export const onSelectSystem = (systemName:string) => {
     })
 }
 
-export const onTogglePlanetMenu = (state:boolean, activeShip:ShipData) => {
+export const onTogglePlanetMenu = (state:boolean, activeShip:ShipData, player:Player) => {
     dispatch({
         type: ReducerActions.OPEN_PLANET,
         state,
+        player,
         activeShip
     })
 }

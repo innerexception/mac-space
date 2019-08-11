@@ -1,5 +1,7 @@
 
 import * as Assets from './Assets'
+import Commodities from './Commodities';
+import { Metals } from '../../enum';
 
 export const Rigel:SystemState = {
     name: 'Rigel',
@@ -7,16 +9,17 @@ export const Rigel:SystemState = {
     y: 5000,
     stellarObjects: [{x: 550, y:550, asset: 'planet', 
         name: 'Rigel I',
-        commodities: [{name: 'Bag of Dicks', price: 5}, {name: 'Bag of Large Dicks', price: 10}, {name: 'DNC Politician', price: 1}]
+        description: "It's alright",
+        commodities: Commodities.Metals.concat(Commodities.Manufactured)
     }],
     asteroidConfig: [
         {
-            type: 'Silver',
+            type: Metals.SILVER,
             density: 1,
             isBelt: true
         },
         {
-            type: 'Iron',
+            type: Metals.IRON,
             density: 3,
             isBelt: true
         }
@@ -30,17 +33,17 @@ export const Arcturus:SystemState = {
     y: 10000,
     stellarObjects: [
         {x: 850, y:750, 
-            asset: 'planet', name: 'Haven', 
-            commodities: [{name: 'Bag of Dicks', price: 5}, {name: 'Bag of Large Dicks', price: 10}, {name: 'DNC Politician', price: 1}]}
+            asset: 'planet', name: 'Haven', description: "It's Haveny",
+            commodities: Commodities.Agriculture}
     ],
     asteroidConfig: [
         {
-            type: 'Silver',
+            type: Metals.SILVER,
             density: 1,
             isBelt: true
         },
         {
-            type: 'Iron',
+            type: Metals.IRON,
             density: 3,
             isBelt: true
         }
@@ -57,17 +60,17 @@ export const Centauri:SystemState = {
         x: 150, 
         y:750, 
         asset: 'planet', 
-        name: 'Centauri Prime', 
-        commodities: [{name: 'Bag of Dicks', price: 5}, {name: 'Bag of Large Dicks', price: 10}, {name: 'DNC Politician', price: 1}]
+        name: 'Centauri Prime', description: "It's Babylon 5-ey",
+        commodities: Commodities.Metals
     }],
     asteroidConfig: [
         {
-            type: 'Silver',
+            type: Metals.SILVER,
             density: 1,
             isBelt: true
         },
         {
-            type: 'Iron',
+            type: Metals.IRON,
             density: 3,
             isBelt: true
         }

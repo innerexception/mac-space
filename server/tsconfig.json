@@ -17,5 +17,5 @@
             "es7"
         ]
     },
-    "include": ["src/**/*", "../*.d.ts", "server.ts", "../client/components/match/ViewscreenFrame.tsx"],
+    "include": ["src/**/*", "../*.d.ts", "server.ts", "../client/components/match/ViewscreenFrame.tsx", "../client/data/StarSystems.ts"],
 }

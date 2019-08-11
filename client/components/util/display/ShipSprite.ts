@@ -1,9 +1,10 @@
 import { GameObjects, Physics, Scene, } from "phaser";
 import { onTogglePlanetMenu } from "../../uiManager/Thunks";
 import WebsocketClient from "../../../WebsocketClient";
-import { PlayerEvents, ServerMessages } from "../../../../enum";
+import { PlayerEvents, ServerMessages, ReducerActions } from "../../../../enum";
 import StarSystem from "../StarSystem";
 import Planet from "./Planet";
+import { store } from "../../../App";
 
 export default class ShipSprite extends Physics.Arcade.Sprite {
 
@@ -15,8 +16,9 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     lastAckSequence: number
     bufferedInputs: Array<ShipUpdate>
     server:WebsocketClient
+    onTogglePlanetMenu: Function
 
-    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, isPlayerControlled:boolean, ship:ShipData, server:WebsocketClient){
+    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, isPlayerControlled:boolean, ship:ShipData, server:WebsocketClient, onTogglePlanetMenu:Function){
         super(scene, x, y, texture)
         this.server=server
         this.bufferedInputs = []
@@ -39,7 +41,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         this.depth = 3
         this.projectiles = projectiles
         this.isPlayerControlled = isPlayerControlled
-        
+        this.onTogglePlanetMenu = onTogglePlanetMenu
     }
 
     takeOff = () => {
@@ -50,7 +52,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             scale: 0.3
         })
         if(this.isPlayerControlled)
-            onTogglePlanetMenu(false, this.shipData)
+            this.onTogglePlanetMenu(false, this.shipData)
             
         this.shipData.landedAt = null
     }
@@ -62,7 +64,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             scale: 0,
             onComplete: ()=>{
                 if(this.isPlayerControlled)
-                    onTogglePlanetMenu(true, this.shipData)
+                    this.onTogglePlanetMenu(true, this.shipData)
             }
         })
     }
@@ -172,6 +174,11 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             this.landing()
         }
         if(update.transientData.takeOff) this.takeOff()
+        if(this.shipData.cargoSpace !== update.cargoSpace){
+            this.shipData.cargo = update.cargo
+            this.shipData.cargoSpace = update.cargoSpace
+            store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
+        }
     }
 
     addShipUpdate = (ship:ShipSprite, event:PlayerEvents) => {

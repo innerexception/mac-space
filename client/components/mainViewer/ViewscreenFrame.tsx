@@ -11,6 +11,7 @@ interface Props {
     loginName: string
     loginPassword: string
     activeShip:ShipData
+    player:Player
 }
 
 interface State {
@@ -28,20 +29,21 @@ export default class Match extends React.Component<Props, State> {
         return (
             <div style={AppStyles.window}>
                 {TopBar('MacSpace')}
-                <div style={{padding:'0.5em', maxWidth:'25em'}}>
-                    <div>
-                        top right widgets:
-                        radar
-                        fuel / energy / heat
-                        sheild / hull
-                    </div>
+                <div style={{padding:'0.5em', position:'relative'}}>
+                    {this.props.activeShip && <div style={{position:'absolute', top:'1em', right:'1em', color:'green'}}>
+                        <div>fuel: {this.props.activeShip.fuel} / {this.props.activeShip.maxFuel}</div>
+                        <div>cargo: {this.props.activeShip.cargoSpace} / {this.props.activeShip.maxCargoSpace}</div>
+                        <div>energy: {this.props.activeShip.energy} / {this.props.activeShip.maxEnergy}</div>
+                    </div>}
                     <div style={{...styles.modal, display: this.state.showMatchOptions ? 'flex':'none'}}>
                         <div style={{display:'flex'}}>
                             options menu (esc)
                         </div>
                     </div>
                     {this.props.showMap && <Map activeShip={this.props.activeShip}/>}
-                    {this.props.showPlanetMenu && this.props.activeShip.landedAt && <PlanetMenu activeShip={this.props.activeShip}/>}
+                    {this.props.showPlanetMenu && this.props.activeShip.landedAt && 
+                        <PlanetMenu activeShip={this.props.activeShip} 
+                                    player={this.props.player}/>}
                     <Viewscreen loginName={this.props.loginName} loginPassword={this.props.loginPassword}/>
                 </div>
          </div>

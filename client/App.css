@@ -21,7 +21,8 @@ html {
 body {
   font-family: 'Code';
   font-size: calc(10px + 1vw);
-  line-height: unset
+  line-height: unset;
+  color: black;
 }
 
 h1,h2,h3,h4,h5,h6{
