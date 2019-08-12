@@ -52,27 +52,28 @@ export default class StarSystem extends Scene {
         if(this.activeShip) {
             this.activeShip.shipData = this.player.ships.find(ship=>ship.id === this.player.activeShipId)
             let playerEvent = store.getState().playerEvent
-            switch(playerEvent){
-                case PlayerEvents.SELECT_SYSTEM:
-                    let name = store.getState().systemName
-                    this.selectedSystem = StarSystems.find(system=>system.name===name)
-                    break
-                case PlayerEvents.ACCEPT_MISSION:
-                    // this.server.publishMessage(player data update)
-                    break
-                case PlayerEvents.SHIP_PURCHASE:
-                    // this.server.publishMessage(player data update)
-                    break
-                case PlayerEvents.OUTFIT_ORDER:
-                    break
-                case PlayerEvents.COMMODITY_ORDER:
-                    let order = store.getState().commodityOrder
-                    this.activeShip.shipData.transientData.commodityOrder = order
-                    this.activeShip.addShipUpdate(this.activeShip, playerEvent)
-                    break
-                default:
-                    this.activeShip.addShipUpdate(this.activeShip, playerEvent)
-            }
+            if(playerEvent)
+                switch(playerEvent){
+                    case PlayerEvents.SELECT_SYSTEM:
+                        let name = store.getState().systemName
+                        this.selectedSystem = StarSystems.find(system=>system.name===name)
+                        break
+                    case PlayerEvents.ACCEPT_MISSION:
+                        // this.server.publishMessage(player data update)
+                        break
+                    case PlayerEvents.SHIP_PURCHASE:
+                        // this.server.publishMessage(player data update)
+                        break
+                    case PlayerEvents.OUTFIT_ORDER:
+                        break
+                    case PlayerEvents.COMMODITY_ORDER:
+                        let order = store.getState().commodityOrder
+                        this.activeShip.shipData.transientData.commodityOrder = order
+                        this.activeShip.addShipUpdate(this.activeShip, playerEvent)
+                        break
+                    default:
+                        this.activeShip.addShipUpdate(this.activeShip, playerEvent)
+                }
         }
     }
 

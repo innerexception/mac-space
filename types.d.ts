@@ -189,7 +189,6 @@ interface ShipData {
     accel: number
     speed: number
     maxSpeed: number
-    cargoSpace: number
     maxCargoSpace: number
     gunMounts: number
     turrentMounts: number

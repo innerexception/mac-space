@@ -16,7 +16,6 @@ export const Shuttle:ShipData = {
     accel: 100,
     speed: 0,
     maxSpeed: 200,
-    cargoSpace: 20,
     maxCargoSpace: 20,
     gunMounts: 1,
     turrentMounts: 0,
