@@ -7,11 +7,13 @@ import { PlayerEvents, Metals } from "../../enum";
 import { StarSystems } from "../../client/data/StarSystems";
 import Planet from "./display/Planet";
 import { getCargoWeight } from "../../client/components/util/Util";
+import { Weapons } from '../../client/data/Weapons'
 
 export default class ServerStarSystem extends Scene {
 
     ships: Map<string,ServerShipSprite>
     jumpingShips: Array<ServerShipSprite>
+    deadShips: Array<ServerShipSprite>
     planets: Array<Planet>
     asteroids: Map<string, Physics.Arcade.Sprite>
     deadAsteroids: Array<DeadEntityUpdate>
@@ -32,6 +34,7 @@ export default class ServerStarSystem extends Scene {
         this.jumpingShips = []
         this.resources = new Map()
         this.deadResources = []
+        this.deadShips = []
     }
 
     preload = () =>
@@ -94,6 +97,9 @@ export default class ServerStarSystem extends Scene {
                     break
                 case PlayerEvents.TAKE_OFF:
                     ship.takeOff()
+                    break
+                case PlayerEvents.SELECT_PRIMARY:
+                    ship.selectPrimary()
                     break
                 case PlayerEvents.COMMODITY_ORDER:
                     ship.processOrder(update.shipData.transientData.commodityOrder)
@@ -179,7 +185,28 @@ export default class ServerStarSystem extends Scene {
         let rez = []
         this.resources.forEach(res=>rez.push(res))
         this.physics.add.overlap(rez, sprite, this.playerGotResource);
+        this.physics.add.overlap(this.projectiles, sprite, this.shipHitShip);
         return sprite
+    }
+
+    shipHitShip = (target:ServerShipSprite, projectile:Projectile) => {
+        projectile.destroy()
+        let launcher = Weapons.find(launcher=>projectile.weapon.name === launcher.name)
+        if(target.shipData.shields > 0)
+            target.shipData.shields -= launcher.shieldDamage
+        else if(target.shipData.armor > 0)
+            target.shipData.armor -= launcher.armorDamage
+        else 
+            target.shipData.hull -= launcher.armorDamage
+        if(target.shipData.hull <= 0) 
+            this.destroyShip(target)
+    }
+
+    destroyShip = (ship:ServerShipSprite) => {
+        this.deadShips.push(ship)
+        this.ships.delete(ship.shipData.id)
+        console.log('destryed ship with id: '+ship.shipData.id)
+        ship.destroy()
     }
 
     playerGotResource = (resource:Physics.Arcade.Sprite, ship:ServerShipSprite) =>

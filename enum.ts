@@ -15,6 +15,9 @@ export const ReducerActions= {
     PLAYER_REPLACE: 'rplpl',
     PLAYER_REPLACE_SHIP: 'prps'
 }
+export enum WeaponType {
+    Energy='e', Kinetic='k', Quantum='q'
+}
 export enum Metals {
     IRON='Iron', SILVER='Silver', GOLD='Gold', PLATINUM='Platinum', COPPER='Copper'
 }
@@ -35,7 +38,8 @@ export enum PlayerEvents {
     PLAYER_LOGIN='plo',
     OUTFIT_ORDER='outo',
     SHIP_PURCHASE='spur',
-    ACCEPT_MISSION='amis'
+    ACCEPT_MISSION='amis',
+    SELECT_PRIMARY='slctw'
 }
 
 export enum ServerMessages {

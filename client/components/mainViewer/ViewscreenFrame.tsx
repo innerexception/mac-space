@@ -35,6 +35,9 @@ export default class Match extends React.Component<Props, State> {
                         <div>fuel: {this.props.activeShip.fuel} / {this.props.activeShip.maxFuel}</div>
                         <div>cargo: {getCargoWeight(this.props.activeShip)} / {this.props.activeShip.maxCargoSpace}</div>
                         <div>energy: {this.props.activeShip.energy} / {this.props.activeShip.maxEnergy}</div>
+                        <div>sheild: {this.props.activeShip.shields} / {this.props.activeShip.maxShields}</div>
+                        <div>hull: {this.props.activeShip.hull} / {this.props.activeShip.maxHull}</div>
+                        <div>selected: {this.props.activeShip.weapons[this.props.activeShip.selectedPrimaryIndex].name}</div>
                     </div>}
                     <div style={{...styles.modal, display: this.state.showMatchOptions ? 'flex':'none'}}>
                         <div style={{display:'flex'}}>

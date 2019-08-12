@@ -1,4 +1,4 @@
-import { Scene, Cameras, GameObjects, Physics, } from "phaser";
+import { Scene, Cameras, GameObjects, Physics, Time, } from "phaser";
 import { StarSystems } from "../../data/StarSystems";
 import Projectile from "./display/Projectile";
 import ShipSprite from "./display/ShipSprite";
@@ -8,6 +8,8 @@ import { store } from "../../App";
 import { onToggleMapMenu, onConnectionError, onConnected, onTogglePlanetMenu } from "../uiManager/Thunks";
 import { PlayerEvents, ReducerActions, ServerMessages } from "../../../enum";
 import Planet from "./display/Planet";
+import { Weapons } from "../../data/Weapons";
+import Beam from "./display/Beam";
 
 export default class StarSystem extends Scene {
 
@@ -20,6 +22,7 @@ export default class StarSystem extends Scene {
     explosions: GameObjects.Group
     resources: Map<string, Physics.Arcade.Sprite>
     projectiles: Physics.Arcade.Group
+    beams: Physics.Arcade.Group
     cursors: Phaser.Types.Input.Keyboard.CursorKeys
     selectedSystem: SystemState
     selectedPlanetIndex: number
@@ -30,6 +33,7 @@ export default class StarSystem extends Scene {
     unsubscribeRedux: Function
     loginName: string
     loginPassword: string
+    firingEvent: Time.TimerEvent
 
     constructor(config, jumpedIn?:boolean){
         super(config)
@@ -115,6 +119,7 @@ export default class StarSystem extends Scene {
                 let roids = []
                 this.asteroids.forEach(aster=>roids.push(aster))
                 this.physics.add.overlap(this.projectiles, roids, this.playerShotAsteroid)
+                this.physics.add.overlap(this.beams, roids, this.playerShotAsteroid)
                 console.log('asteroid physics init completed.')
             }
             
@@ -199,7 +204,9 @@ export default class StarSystem extends Scene {
 
         this.projectiles = this.physics.add.group({ classType: Projectile  })
         this.projectiles.runChildUpdate = true
-        
+        this.beams = this.physics.add.group({ classType: Beam  })
+        this.beams.runChildUpdate = true
+
         this.createStarfield()
         this.addPlanets()
 
@@ -215,10 +222,28 @@ export default class StarSystem extends Scene {
             else console.log('no system selected...')
         })
         this.input.keyboard.on('keydown-SPACE', (event) => {
-            this.activeShip.firePrimary()
+            let weapon = this.activeShip.shipData.weapons[this.activeShip.shipData.selectedPrimaryIndex]
+            if(weapon.isBeam){
+                this.activeShip.firePrimary()
+            }
+            else{
+                this.firingEvent = this.time.addEvent({ 
+                    delay: 1000/weapon.shotsPerSecond, 
+                    callback: ()=>{
+                        this.activeShip.firePrimary()
+                    },
+                    loop:true
+                })
+            }
         });
+        this.input.keyboard.on('keyup-SPACE', (event) => {
+            this.firingEvent.remove()
+        })
         this.input.keyboard.on('keydown-M', (event) => {
             onToggleMapMenu(true, this.activeShip.shipData)
+        });
+        this.input.keyboard.on('keydown-W', (event) => {
+            this.activeShip.selectPrimary()
         });
         this.cursors = this.input.keyboard.createCursorKeys();
         
@@ -264,7 +289,7 @@ export default class StarSystem extends Scene {
             //We should spawn it
             //This is our starting sector so we spawn ourselves
             let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
-            this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, true, activeShipData, this.server, this.onTogglePlanetMenu);
+            this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, this.beams, true, activeShipData, this.server, this.onTogglePlanetMenu, this.destroyShip);
             this.ships.set(this.activeShip.shipData.id, this.activeShip)
             activeShipData.systemName = this.name
             //Add player ship notification
@@ -308,13 +333,15 @@ export default class StarSystem extends Scene {
     spawnShip = (config:ShipData, spawnPoint:PlayerSpawnPoint) => {
         let shipData = {...Ships[config.name], ...config}
         shipData.systemName = this.name
-        let ship = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, shipData.asset, this.projectiles, false, shipData, this.server, this.onTogglePlanetMenu)
+        let ship = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, shipData.asset, this.projectiles, this.beams, false, shipData, this.server, this.onTogglePlanetMenu, this.destroyShip)
         ship.rotation = spawnPoint.rotation
         if(spawnPoint.xVelocity){
             //TODO: set starting edge coords based on previous system coords, right now defaults to top left corner
             ship.setVelocity(spawnPoint.xVelocity*500, spawnPoint.yVelocity*-500)
         }
         this.ships.set(shipData.id, ship)
+        this.physics.add.overlap(this.projectiles, ship, this.projectileHitShip);
+        //TODO this.physics.add.overlap(this.beams, ship, this.beamHitShip);
     }
 
     spawnResource = (update:ResourceData) => {
@@ -383,7 +410,7 @@ export default class StarSystem extends Scene {
 
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:Projectile) =>
     {
-        projectile.destroy();
+        projectile.destroy()
     }
 
     destroyAsteroid = (asteroid:Physics.Arcade.Sprite) => {
@@ -391,6 +418,10 @@ export default class StarSystem extends Scene {
         // this.asteroids.delete(asteroid.getData('state').id)
         this.asteroids.delete(asteroid.getData('state').id)
         asteroid.destroy()
+    }
+
+    projectileHitShip = (target:ShipSprite, projectile:Projectile) => {
+        projectile.destroy()
     }
 
     destroyShip = (ship:ShipSprite) => {

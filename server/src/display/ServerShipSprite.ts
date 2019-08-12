@@ -4,6 +4,7 @@ import GalaxyScene from "../GalaxyScene";
 import { ServerMessages } from "../../../enum";
 import { getCargoWeight } from '../../../client/components/util/Util'
 import Planet from "./Planet";
+import Projectile from "./Projectile";
 
 export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
@@ -109,11 +110,15 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     }
 
     firePrimary = () => {
-        const projectile = this.projectiles.get().setActive(true).setVisible(true)
+        const projectile = this.projectiles.get().setActive(true).setVisible(true) as Projectile
         if(projectile){
-            projectile.fire(this)
+            projectile.fire(this.shipData.weapons[this.shipData.selectedPrimaryIndex], this)
             this.shipData.transientData.firePrimary = true
         }
+    }
+
+    selectPrimary = () => {
+        this.shipData.selectedPrimaryIndex = (this.shipData.selectedPrimaryIndex + 1) % this.shipData.weapons.length
     }
 
     fireSecondary = () => {

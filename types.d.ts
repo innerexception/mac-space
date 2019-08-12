@@ -1,5 +1,5 @@
-declare enum GunType {
-    Energy, Kinetic, Quantum
+declare enum WeaponType {
+    Energy='e', Kinetic='k', Quantum='q'
 }
 
 declare enum Direction {
@@ -27,7 +27,8 @@ declare enum PlayerEvents {
     PLAYER_LOGIN='plo',
     OUTFIT_ORDER='outo',
     SHIP_PURCHASE='spur',
-    ACCEPT_MISSION='amis'
+    ACCEPT_MISSION='amis',
+    SELECT_PRIMARY='slctw'
 }
 
 declare enum ServerMessages {
@@ -87,19 +88,24 @@ interface ShipSprite extends Phaser.Physics.Arcade.Sprite {
     sendSpawnUpdate()
 }
 
-interface Gun {
+interface Weapon {
     name: string
-    type: GunType
+    type: WeaponType
     energyPerShot: number
     heatPerShot: number
     projectileSpeed: number
     accuracy: number
-    shotsPerSecond: number
-    ammo: number
-    maxAmmo: number
-    projectileTrackingInterval: number
-    projectileTurnSpeed: number
+    shotsPerSecond?: number
+    ammo?: number
+    maxAmmo?: number
+    projectileTrackingInterval?: number
+    projectileTurnSpeed?: number
     isTurrent: boolean
+    shieldDamage: number
+    armorDamage: number
+    projectileAsset: string
+    range: number
+    isBeam: boolean
 }
 
 interface Engine {
@@ -114,7 +120,7 @@ interface Thruster {
 }
 
 interface ShipOutfit {
-    outfit: Gun | Engine | Thruster
+    outfit: Weapon | Engine | Thruster
     weight: number
     price: number
 }
@@ -176,8 +182,10 @@ interface ShipData {
     id:string
     ownerId: string
     shields: number
+    maxShields: number
     armor: number
     hull: number
+    maxHull:number
     fuel: number
     maxFuel: number
     energy: number
@@ -193,7 +201,8 @@ interface ShipData {
     gunMounts: number
     turrentMounts: number
     hardPoints: number
-    guns: Array<Gun>
+    weapons: Array<Weapon>
+    selectedPrimaryIndex: number
     asset: string
     cargo: Array<InventoryData>
     systemName: string

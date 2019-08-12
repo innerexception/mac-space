@@ -41,7 +41,7 @@ export default class GalaxyScene extends Scene {
           type: ServerMessages.SERVER_UPDATE,
           system: scene.name,
           event: {
-              ships: getShipUpdates(scene.ships, scene.jumpingShips, this.players, this.server),
+              ships: getShipUpdates(scene.ships, scene.jumpingShips, this.players, this.server, scene.deadShips),
               asteroids: getAsteroidUpdates(scene.asteroids, scene.deadAsteroids),
               resources: getResourceUpdates(scene.resources, scene.deadResources)
           }
@@ -49,6 +49,7 @@ export default class GalaxyScene extends Scene {
         scene.deadAsteroids = []
         scene.deadResources = []
         scene.jumpingShips = []
+        scene.deadShips = []
       }
       this.playerUpdates = []
     }
@@ -81,7 +82,7 @@ export default class GalaxyScene extends Scene {
     }
 }
 
-const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<ServerShipSprite>, players:Map<string,Player>, server:WebsocketClient) => {
+const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<ServerShipSprite>, players:Map<string,Player>, server:WebsocketClient, deadShips:Array<ServerShipSprite>) => {
   let updates = new Array<ShipUpdate>()
   ships.forEach(ship=>{
     updates.push({
@@ -123,6 +124,14 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
     })
     console.log('saved player to data store: '+player)
     server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' });                    
+  })
+  deadShips.forEach(ship=>{
+    updates.push({
+      type: PlayerEvents.SERVER_STATE,
+      sequence: Date.now(),
+      shipData: {...ship.shipData}
+    })
+    console.log('sent final update for dead ship: '+ship.shipData.id)
   })
   return updates
 }
