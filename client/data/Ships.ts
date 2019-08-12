@@ -1,10 +1,14 @@
+import { ProtonGun, LaserCannon } from "./Weapons";
+
 export const Shuttle:ShipData = {
     name: 'Shuttle',
     id:'',
     ownerId: '',
     shields: 10,
+    maxShields: 10,
     armor: 0,
     hull: 10,
+    maxHull: 10,
     fuel: 3,
     maxFuel: 3,
     energy: 5,
@@ -20,7 +24,8 @@ export const Shuttle:ShipData = {
     gunMounts: 1,
     turrentMounts: 0,
     hardPoints: 0,
-    guns: [],
+    weapons: [ProtonGun, LaserCannon],
+    selectedPrimaryIndex: 0,
     asset: 'ship',
     cargo: [],
     systemName: 'Rigel',
