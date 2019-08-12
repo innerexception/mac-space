@@ -5,6 +5,7 @@ import { PlayerEvents, ServerMessages, ReducerActions } from "../../../../enum";
 import StarSystem from "../StarSystem";
 import Planet from "./Planet";
 import { store } from "../../../App";
+import { getCargoWeight } from "../Util";
 
 export default class ShipSprite extends Physics.Arcade.Sprite {
 
@@ -174,9 +175,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             this.landing()
         }
         if(update.transientData.takeOff) this.takeOff()
-        if(this.shipData.cargoSpace !== update.cargoSpace){
+        if(getCargoWeight(this.shipData) !== getCargoWeight(update)){
             this.shipData.cargo = update.cargo
-            this.shipData.cargoSpace = update.cargoSpace
             store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }
     }

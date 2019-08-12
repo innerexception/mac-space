@@ -4,6 +4,7 @@ import Map from './Map'
 import PlanetMenu from './PlanetMenu'
 import Viewscreen from './Viewscreen'
 import { TopBar, Button } from '../Shared'
+import { getCargoWeight } from '../util/Util';
 
 interface Props {
     showMap: boolean
@@ -32,7 +33,7 @@ export default class Match extends React.Component<Props, State> {
                 <div style={{padding:'0.5em', position:'relative'}}>
                     {this.props.activeShip && <div style={{position:'absolute', top:'1em', right:'1em', color:'green'}}>
                         <div>fuel: {this.props.activeShip.fuel} / {this.props.activeShip.maxFuel}</div>
-                        <div>cargo: {this.props.activeShip.cargoSpace} / {this.props.activeShip.maxCargoSpace}</div>
+                        <div>cargo: {getCargoWeight(this.props.activeShip)} / {this.props.activeShip.maxCargoSpace}</div>
                         <div>energy: {this.props.activeShip.energy} / {this.props.activeShip.maxEnergy}</div>
                     </div>}
                     <div style={{...styles.modal, display: this.state.showMatchOptions ? 'flex':'none'}}>

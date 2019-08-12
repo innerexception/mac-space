@@ -6,6 +6,7 @@ import { v4 } from 'uuid'
 import { PlayerEvents, Metals } from "../../enum";
 import { StarSystems } from "../../client/data/StarSystems";
 import Planet from "./display/Planet";
+import { getCargoWeight } from "../../client/components/util/Util";
 
 export default class ServerStarSystem extends Scene {
 
@@ -183,14 +184,19 @@ export default class ServerStarSystem extends Scene {
 
     playerGotResource = (resource:Physics.Arcade.Sprite, ship:ServerShipSprite) =>
     {
-        if(ship.shipData.cargoSpace >= resource.getData('state').weight){
-            //TODO: pick up resource and add to cargo
-            ship.shipData.cargoSpace -= resource.getData('state').weight
-            ship.shipData.cargo.push({
-                weight: resource.getData('state').weight,
-                name: resource.getData('state').type,
-                asset: resource.getData('state').type
-            })
+        let resourceData = resource.getData('state') as ResourceData
+        if(ship.shipData.maxCargoSpace - getCargoWeight(ship.shipData) >= resourceData.weight){
+            let existing = ship.shipData.cargo.find(item=>item.name === resourceData.type)
+            if(existing){
+                existing.weight += resourceData.weight
+            }
+            else {
+                ship.shipData.cargo.push({
+                    weight: resourceData.weight,
+                    name: resourceData.type,
+                    asset: resourceData.type
+                })
+            }
             console.log('you get it: '+ship.shipData.cargo)
             this.destroyResource(resource)
         }

@@ -2,6 +2,7 @@ import { GameObjects, Physics, Scene, } from "phaser";
 import ServerStarSystem from "../ServerStarSystem";
 import GalaxyScene from "../GalaxyScene";
 import { ServerMessages } from "../../../enum";
+import { getCargoWeight } from '../../../client/components/util/Util'
 import Planet from "./Planet";
 
 export default class ServerShipSprite extends Physics.Arcade.Sprite {
@@ -131,7 +132,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             let commodity = planetData.commodities.find(commodity=>commodity.name===order.commodity.name)
             let price = commodity.price * order.amount
             if(order.buy){
-                if(player.credits >= price && this.shipData.cargoSpace >= order.amount){
+                if(player.credits >= price && this.shipData.maxCargoSpace - getCargoWeight(this.shipData) >= order.amount){
                     let existing = this.shipData.cargo.find(cargo=>cargo.name===order.commodity.name)
                     if(existing)
                         existing.weight += order.amount
@@ -151,6 +152,9 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     existing.weight -= order.amount
                     player.credits += price
                 }
+                if(existing.weight <= 0){
+                    this.shipData.cargo = this.shipData.cargo.filter(item=>item.name !== order.commodity.name)
+                }
                 console.log('sell processed order, new credits: '+player.credits)
             }
             player.ships = player.ships.map(ship=>{
@@ -158,7 +162,6 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                 return ship
             })
             this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
-                
         }
     }
 

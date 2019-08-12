@@ -2,6 +2,7 @@ import * as React from 'react'
 import { onCommodityOrder, onShipTakeOff } from '../uiManager/Thunks'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
+import { getCargoWeight } from '../util/Util';
 
 interface Props {
     player: Player
@@ -72,10 +73,10 @@ export default class PlanetMenu extends React.Component<Props, State> {
                 <div style={{display:"flex"}}>
                     <h5>{commodity.name}</h5>
                     <div>{commodity.price}</div>
-                    {LightButton(ship.cargoSpace > 0, ()=>this.onCommodityOrder(commodity, 1, true), 'Buy 1')}
-                    {LightButton(ship.cargoSpace > 0, ()=>this.onCommodityOrder(commodity, ship.cargoSpace, true), 'Buy All')}
+                    {LightButton(getCargoWeight(ship) <= ship.maxCargoSpace, ()=>this.onCommodityOrder(commodity, 1, true), 'Buy 1')}
+                    {LightButton(getCargoWeight(ship) <= ship.maxCargoSpace, ()=>this.onCommodityOrder(commodity, ship.maxCargoSpace-getCargoWeight(ship), true), 'Buy All')}
                     {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onCommodityOrder(commodity, 1, false), 'Sell 1')}
-                    {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onCommodityOrder(commodity, ship.cargo.filter(item=>item.name === commodity.name).length, false), 'Sell All')}
+                    {LightButton(ship.cargo.find(item=>item.name === commodity.name) ? true : false, ()=>this.onCommodityOrder(commodity, ship.cargo.find(item=>item.name === commodity.name).weight, false), 'Sell All')}
                 </div>
             )}
             {Button(true, ()=>this.setState({activeView:'main'}), 'Done')}
@@ -90,11 +91,6 @@ export default class PlanetMenu extends React.Component<Props, State> {
     }
 }
 
-const getCargoWeight = (ship:ShipData) => {
-    let weights = 0
-    ship.cargo.forEach(item => weights += item.weight)
-    return weights
-}
 
 const styles = {
     disabled: {
