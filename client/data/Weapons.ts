@@ -14,6 +14,7 @@ export const ProtonGun:Weapon = {
     projectileAsset: 'proton',
     range: 300,
     isBeam: false,
+    shipId: ''
 }
 
 export const LaserCannon:Weapon = {
@@ -28,7 +29,8 @@ export const LaserCannon:Weapon = {
     shieldDamage: 0.1,
     armorDamage: 0.1,
     projectileAsset: 'lazor',
-    range: 200
+    range: 200,
+    shipId: ''
 }
 
 export const Weapons:Array<Weapon> = [ProtonGun, LaserCannon]

@@ -16,7 +16,7 @@ export default class Projectile extends GameObjects.Image {
         this.setTexture(weapon.projectileAsset)
         this.setPosition(shooter.x, shooter.y); // Initial position
         this.setScale(0.2,0.2)
-        if(target) this.rotation = Math.atan( (target.x-this.x) / (target.y-this.y));
+        if(target && weapon.isTurrent) this.rotation = Math.atan( (target.x-this.x) / (target.y-this.y));
         else this.rotation = shooter.rotation
 
         let targetVector = { x: Math.sin(shooter.rotation), y: Math.cos(shooter.rotation)}
