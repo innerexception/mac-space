@@ -135,23 +135,21 @@ export default class StarSystem extends Scene {
                             this.unsubscribeRedux()
                             this.scene.remove()
                         }
-                        else{
-                            //Somebody else left...
-                            this.ships.delete(ship.shipData.id)
-                            console.log('destryed ship with id: '+ship.shipData.id)
-                            ship.destroy()
-                        }
+                        // else{
+                        //     //Somebody else left...but this is server's responsibility
+                                //TODO: This is a memory leak probably
+                        // }
                     }
                     if(update.shipData.hull <= 0){
                         this.destroyShip(ship)
                     }
                     else {
-                        ship.applyUpdate(update)
+                        ship.body && ship.applyUpdate(update)
                     }
                 }
                 else {
                     console.log('spawning new ship at '+update.shipData.x+','+update.shipData.y)
-                    this.spawnShip(update.shipData, { x: this.planets[0].x, y: this.planets[0].y, rotation: 0 })
+                    this.spawnShip(update.shipData)
                 }
             })
 
@@ -330,15 +328,11 @@ export default class StarSystem extends Scene {
         }
     }
     
-    spawnShip = (config:ShipData, spawnPoint:PlayerSpawnPoint) => {
+    spawnShip = (config:ShipData) => {
         let shipData = {...Ships[config.name], ...config}
         shipData.systemName = this.name
-        let ship = new ShipSprite(this.scene.scene, spawnPoint.x, spawnPoint.y, shipData.asset, this.projectiles, this.beams, false, shipData, this.server, this.onTogglePlanetMenu, this.destroyShip)
-        ship.rotation = spawnPoint.rotation
-        if(spawnPoint.xVelocity){
-            //TODO: set starting edge coords based on previous system coords, right now defaults to top left corner
-            ship.setVelocity(spawnPoint.xVelocity*500, spawnPoint.yVelocity*-500)
-        }
+        let ship = new ShipSprite(this.scene.scene, config.x, config.y, shipData.asset, this.projectiles, this.beams, false, shipData, this.server, this.onTogglePlanetMenu, this.destroyShip)
+        ship.rotation = config.rotation
         this.ships.set(shipData.id, ship)
         this.physics.add.overlap(this.projectiles, ship, this.projectileHitShip);
         //TODO this.physics.add.overlap(this.beams, ship, this.beamHitShip);

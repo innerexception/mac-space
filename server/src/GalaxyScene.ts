@@ -101,7 +101,6 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
     //Transient data is for 1 time updates that need to be 3rd party observable, 
     //they are cleared after being sent once usually
     ship.shipData.transientData.firePrimary = false
-    ship.shipData.transientData.takeOff = false
     ship.shipData.transientData.commodityOrder = null
   })
   jumpingShips.forEach(ship=>{
@@ -116,14 +115,16 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
     })
     ship.shipData.transientData.targetSystemName = null
 
-    //Save new ship data to server store
+    //Save new ship data to server store if not ai ship
     let player = players.get(ship.shipData.ownerId)
-    player.ships = player.ships.map(pship=>{
-        if(pship.id === ship.shipData.id) return ship.shipData
-        return pship
-    })
-    console.log('saved player to data store: '+player)
-    server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' });                    
+    if(player){
+      player.ships = player.ships.map(pship=>{
+          if(pship.id === ship.shipData.id) return ship.shipData
+          return pship
+      })
+      console.log('saved player to data store: '+player)
+      server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' });    
+    }
   })
   deadShips.forEach(ship=>{
     updates.push({

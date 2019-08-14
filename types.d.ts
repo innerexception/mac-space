@@ -31,6 +31,13 @@ declare enum PlayerEvents {
     SELECT_PRIMARY='slctw'
 }
 
+declare enum AiProfileType {
+    
+    MERCHANT='merc',
+    PIRATE='pirate',
+    POLICE='police'
+}
+
 declare enum ServerMessages {
     HEADLESS_CONNECT= 'hct',
     PLAYER_DATA_UPDATED= 'pea',
@@ -106,6 +113,7 @@ interface Weapon {
     projectileAsset: string
     range: number
     isBeam: boolean
+    shipId: string
 }
 
 interface Engine {
@@ -211,13 +219,21 @@ interface ShipData {
     y?: number
     rotation?: number
     velocity?: Tuple
+    aiProfile: AiProfile
     transientData: {
         firePrimary?: boolean
         landingTargetName?: string
-        takeOff?: boolean
         targetSystemName?: string
         commodityOrder?: CommodityOrder
     }
+}
+
+interface AiProfile {
+    type: AiProfileType
+    underAttack: boolean
+    attackerId: string
+    attackTime: number
+    jumpedIn: boolean
 }
 
 interface CommodityOrder {

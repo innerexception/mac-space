@@ -24,10 +24,13 @@ export const Shuttle:ShipData = {
     gunMounts: 1,
     turrentMounts: 0,
     hardPoints: 0,
-    weapons: [ProtonGun, LaserCannon],
+    weapons: [ProtonGun],
     selectedPrimaryIndex: 0,
     asset: 'ship',
     cargo: [],
     systemName: 'Rigel',
-    transientData: {}
+    transientData: {},
+    aiProfile: null
 }
+
+export const Ships = [Shuttle]

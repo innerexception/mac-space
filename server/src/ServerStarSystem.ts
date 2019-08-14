@@ -3,10 +3,10 @@ import Projectile from './display/Projectile'
 import ServerShipSprite from './display/ServerShipSprite'
 import * as Ships from '../../client/data/Ships'
 import { v4 } from 'uuid'
-import { PlayerEvents, Metals } from "../../enum";
+import { PlayerEvents, Metals, AiProfileType } from "../../enum";
 import { StarSystems } from "../../client/data/StarSystems";
 import Planet from "./display/Planet";
-import { getCargoWeight } from "../../client/components/util/Util";
+import { getCargoWeight, getNPCShipData } from "../../client/components/util/Util";
 import { Weapons } from '../../client/data/Weapons'
 
 export default class ServerStarSystem extends Scene {
@@ -57,6 +57,7 @@ export default class ServerStarSystem extends Scene {
         this.addAsteroids()
         this.addPlanets()
         
+        this.initNPCTraffic()
     }
     
     update = (time, delta) =>
@@ -200,11 +201,16 @@ export default class ServerStarSystem extends Scene {
             target.shipData.hull -= launcher.armorDamage
         if(target.shipData.hull <= 0) 
             this.destroyShip(target)
+        if(target.shipData.aiProfile){
+            target.shipData.aiProfile.underAttack = true
+            target.shipData.aiProfile.attackerId = projectile.weapon.shipId
+        }
     }
 
     destroyShip = (ship:ServerShipSprite) => {
         this.deadShips.push(ship)
         this.ships.delete(ship.shipData.id)
+        ship.aiEvent && ship.aiEvent.remove()
         console.log('destryed ship with id: '+ship.shipData.id)
         ship.destroy()
     }
@@ -274,8 +280,26 @@ export default class ServerStarSystem extends Scene {
         //TODO: send boarding action message with 2 participant ships ids
     }
 
-    shipDamaged = (ship:Physics.Arcade.Sprite) => {
-        //TODO: send ship damaged message with id
-        //TODO: potentially send ship destroyed message
+    initNPCTraffic = () => {
+        new Array(Phaser.Math.Between(0,4)).fill(null).forEach(ship=>{
+            let shipData = getNPCShipData()
+            const rotation = Phaser.Math.FloatBetween(0,Math.PI*2)
+            let systemVector = { x: Math.sin(rotation), y: Math.cos(rotation), rotation}
+            if(shipData.aiProfile.jumpedIn){
+                let x = Phaser.Math.Between(100,3000)
+                this.spawnShip(shipData, {
+                    x, y:100, rotation, 
+                    xVelocity: systemVector.x*shipData.maxSpeed, 
+                    yVelocity: systemVector.y*shipData.maxSpeed
+                })
+            }
+            else{
+                let origin = this.planets[0]
+                this.spawnShip(shipData, {
+                    x:origin.x, y:origin.y, rotation
+                })
+            }
+            console.log('created ai ship')
+        })
     }
 }

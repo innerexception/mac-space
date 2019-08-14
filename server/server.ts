@@ -52,9 +52,11 @@ var session = {
 }
 
 var newPlayerStartingData = (name) => {
-  let shuttle = {...Shuttle, id:v4()}
+  const shipId = v4()
+  let shuttle = {...Shuttle, id:shipId}
   var id = v4()
   shuttle.ownerId = id
+  shuttle.weapons.forEach(weapon=>weapon.shipId = shipId)
   return {
        loginName:name,
        id,

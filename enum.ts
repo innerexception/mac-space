@@ -42,6 +42,12 @@ export enum PlayerEvents {
     SELECT_PRIMARY='slctw'
 }
 
+export enum AiProfileType {
+    MERCHANT='merc',
+    PIRATE='pirate',
+    POLICE='police'
+}
+
 export enum ServerMessages {
     HEADLESS_CONNECT= 'hct',
     PLAYER_DATA_UPDATED= 'pea',
