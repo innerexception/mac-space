@@ -101,7 +101,6 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
     //Transient data is for 1 time updates that need to be 3rd party observable, 
     //they are cleared after being sent once usually
     ship.shipData.transientData.firePrimary = false
-    ship.shipData.transientData.takeOff = false
     ship.shipData.transientData.commodityOrder = null
   })
   jumpingShips.forEach(ship=>{

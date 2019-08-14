@@ -15,7 +15,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     shipData: ShipData
     theGalaxy: GalaxyScene
     aiEvent: Phaser.Time.TimerEvent
-    waitOne: Phaser.Time.TimerEvent
+    nextAiEvent: number
 
     constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, ship:ShipData){
         super(scene, x, y, texture)
@@ -34,13 +34,17 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             ship.aiProfile.jumpedIn=true
             switch(ship.aiProfile.type){
                 case AiProfileType.MERCHANT:
-                    this.aiEvent = this.scene.time.addEvent({ delay: 500, callback: this.merchantAITick, loop: true})
+                    this.aiEvent = this.scene.time.addEvent({ delay: 500, callback: this.merchantAICombatListener, loop: true})
+                    this.scene.time.addEvent({
+                        delay: 3000,
+                        callback: this.MerchantAiEvents[0]
+                    })
                     break
                 case AiProfileType.PIRATE:
-                    this.aiEvent = this.scene.time.addEvent({ delay: 500, callback: this.pirateAITick, loop: true})
+                    this.aiEvent = this.scene.time.addEvent({ delay: 500, callback: this.pirateAICombatListener, loop: true})
                     break
                 case AiProfileType.POLICE:
-                    this.aiEvent = this.scene.time.addEvent({ delay: 500, callback: this.policeAITick, loop: true})
+                    this.aiEvent = this.scene.time.addEvent({ delay: 500, callback: this.policeAICombatListener, loop: true})
                     break
             }
         }
@@ -51,7 +55,6 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         //landing sequence
         let distance = Phaser.Math.Distance.Between(this.x, this.y, target.x, target.y)
         let planetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
-        this.shipData.aiProfile.isLanding = true
         this.scene.tweens.add({
             targets:this.body.velocity,
             x: 0,
@@ -75,7 +78,13 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     onComplete: ()=>{
                         this.stopLandingSequence()
                         this.shipData.landedAt = target.config
-                        console.log('landing sequence completed for: '+target.config.name)
+                        console.log('landing sequence completed for: '+this.shipData.id)
+                        if(this.shipData.aiProfile){
+                            this.scene.time.addEvent({
+                                delay: 5000,
+                                callback: this.MerchantAiEvents[1]
+                            })
+                        }
                     }
                 })
             }
@@ -85,13 +94,17 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     stopLandingSequence = () => {
         if(this.landingSequence) this.landingSequence.stop()
         this.shipData.transientData.landingTargetName = ''
-        this.shipData.aiProfile.isLanding = false
     }
 
     takeOff = () => {
         console.log('take off')
-        this.shipData.transientData.takeOff = true
         this.shipData.landedAt = null
+        if(this.shipData.aiProfile){
+            this.scene.time.addEvent({
+                delay: 3000,
+                callback: this.MerchantAiEvents[2]
+            })
+        }
     }
 
     startJumpSequence = (targetSystem:SystemState) => {
@@ -218,38 +231,12 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     //     //not used on server side
     // }
 
-    merchantAITick = () => {
-        //Choose a landable target
-        if(!this.shipData.aiProfile.isLanding && !this.shipData.aiProfile.underAttack && !this.shipData.landedAt){
-            if(this.shipData.aiProfile.jumpedIn){
-                let system = (this.scene as ServerStarSystem)
-                let target = system.planets[Phaser.Math.Between(0, system.planets.length-1)]
-                this.startLandingSequence(target)
-            }
-            else if(!this.shipData.aiProfile.isJumping){
-                this.aiEvent && this.aiEvent.remove()
-                this.shipData.aiProfile.isJumping = true
-                let targetName = this.theGalaxy.scenes[Phaser.Math.Between(0,this.theGalaxy.scenes.length-1)]
-                const system = StarSystems.find(system=>system.name === targetName)
-                this.startJumpSequence(system)
-            }
-        }
-        else if(this.shipData.landedAt && !this.waitOne){
-            this.waitOne = this.scene.time.addEvent({
-                delay: 5000, 
-                callback: ()=>{
-                    this.takeOff()
-                    this.shipData.aiProfile.jumpedIn = false
-                    delete this.waitOne
-                }
-            })
-        }
-
+    merchantAICombatListener = () => {
         //If attacked, respond and retreat to other non-hostile ships
         if(this.shipData.aiProfile.underAttack){
             let system = (this.scene as ServerStarSystem)
             let target = system.ships.get(this.shipData.aiProfile.attackerId)
-            this.firePrimary()
+            //this.firePrimary()
             let targetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
             const rotation = -(targetAngle+(Math.PI/2))
             this.scene.tweens.add({
@@ -259,11 +246,10 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             })
             this.thrust()
         }
-        //Random radio chatter
-        
+        //Random radio chatter?
     }
 
-    pirateAITick = () => {
+    pirateAICombatListener = () => {
         //Choose a target of power <= your own
         //Engage target
         //If disabled, attempt to board
@@ -272,7 +258,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     }
 
-    policeAITick = () => {
+    policeAICombatListener = () => {
         //Choose a landable target
         //Start landing sequence
         //or
@@ -281,6 +267,28 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
         //If any neutral is attacked, or a pirate appears, engage targets
     }
+
+    MerchantAiEvents = [
+        ()=>{
+            let system = (this.scene as ServerStarSystem)
+            let target = system.planets[Phaser.Math.Between(0, system.planets.length-1)]
+            this.startLandingSequence(target)
+            console.log('ai landing start:'+this.shipData.id)
+        },
+        ()=>{
+            this.takeOff()
+            console.log('ai takeoff start '+this.shipData.id)
+        },
+        ()=>{
+            this.aiEvent && this.aiEvent.remove()
+            this.shipData.aiProfile.isJumping = true
+            let otherSystems = this.theGalaxy.scenes.filter(scene=>scene!==(this.scene as ServerStarSystem).name)
+            let targetName = otherSystems[Phaser.Math.Between(0,otherSystems.length-1)]
+            const system = StarSystems.find(system=>system.name === targetName)
+            this.startJumpSequence(system)
+            console.log('ai jump start to:'+ system.name+' '+this.shipData.id)
+        }
+    ]
 }
 
 

@@ -60,8 +60,6 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         })
         if(this.isPlayerControlled)
             this.onTogglePlanetMenu(false, this.shipData)
-            
-        this.shipData.landedAt = null
     }
 
     landing = () => {
@@ -189,7 +187,10 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             this.shipData.landedAt = update.landedAt
             this.landing()
         }
-        if(update.transientData.takeOff) this.takeOff()
+        if(!update.landedAt && this.shipData.landedAt){
+            delete this.shipData.landedAt
+            this.takeOff()
+        }
         if(getCargoWeight(this.shipData) !== getCargoWeight(update)){
             this.shipData.cargo = update.cargo
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
