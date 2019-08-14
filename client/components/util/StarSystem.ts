@@ -135,12 +135,10 @@ export default class StarSystem extends Scene {
                             this.unsubscribeRedux()
                             this.scene.remove()
                         }
-                        else{
-                            //Somebody else left...
-                            this.ships.delete(ship.shipData.id)
-                            console.log('ship left system: '+ship.shipData.id)
-                            ship.destroy()
-                        }
+                        // else{
+                        //     //Somebody else left...but this is server's responsibility
+                                //TODO: This is a memory leak probably
+                        // }
                     }
                     if(update.shipData.hull <= 0){
                         this.destroyShip(ship)

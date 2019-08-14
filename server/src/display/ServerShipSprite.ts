@@ -29,9 +29,10 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         this.projectiles = projectiles
         this.theGalaxy = (this.scene.scene.manager.scenes[0] as GalaxyScene)
         if(ship.aiProfile){
-            ship.aiProfile.isJumping=false
-            ship.aiProfile.isLanding=false
             ship.aiProfile.jumpedIn=true
+            ship.aiProfile.attackTime=0
+            ship.aiProfile.underAttack=false
+            ship.aiProfile.attackerId=''
             switch(ship.aiProfile.type){
                 case AiProfileType.MERCHANT:
                     this.aiEvent = this.scene.time.addEvent({ delay: 500, callback: this.merchantAICombatListener, loop: true})
@@ -234,17 +235,23 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     merchantAICombatListener = () => {
         //If attacked, respond and retreat to other non-hostile ships
         if(this.shipData.aiProfile.underAttack){
-            let system = (this.scene as ServerStarSystem)
-            let target = system.ships.get(this.shipData.aiProfile.attackerId)
-            //this.firePrimary()
-            let targetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
-            const rotation = -(targetAngle+(Math.PI/2))
-            this.scene.tweens.add({
-                targets: this,
-                rotation,
-                duration: this.shipData.turn*10000
-            })
-            this.thrust()
+            if(this.shipData.aiProfile.attackTime > 20){
+                this.MerchantAiEvents[2]()
+            }
+            else{
+                let system = (this.scene as ServerStarSystem)
+                let target = system.ships.get(this.shipData.aiProfile.attackerId)
+                //this.firePrimary()
+                let targetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
+                const rotation = (targetAngle+(Math.PI/2))+Math.PI
+                this.scene.tweens.add({
+                    targets: this,
+                    rotation,
+                    duration: this.shipData.turn*10000
+                })
+                this.thrust()
+                this.shipData.aiProfile.attackTime+=1
+            }
         }
         //Random radio chatter?
     }
@@ -281,7 +288,6 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         },
         ()=>{
             this.aiEvent && this.aiEvent.remove()
-            this.shipData.aiProfile.isJumping = true
             let otherSystems = this.theGalaxy.scenes.filter(scene=>scene!==(this.scene as ServerStarSystem).name)
             let targetName = otherSystems[Phaser.Math.Between(0,otherSystems.length-1)]
             const system = StarSystems.find(system=>system.name === targetName)

@@ -21,8 +21,7 @@ export const getNPCShipData = () => {
         jumpedIn: true,
         underAttack: false,
         attackerId: '',
-        isLanding: false,
-        isJumping: false
+        attackTime: 0
     }
     shipData.id = v4()
     return shipData

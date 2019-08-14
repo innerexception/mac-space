@@ -115,7 +115,7 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
     })
     ship.shipData.transientData.targetSystemName = null
 
-    //Save new ship data to server store
+    //Save new ship data to server store if not ai ship
     let player = players.get(ship.shipData.ownerId)
     if(player){
       player.ships = player.ships.map(pship=>{

@@ -232,8 +232,7 @@ interface AiProfile {
     type: AiProfileType
     underAttack: boolean
     attackerId: string
-    isLanding: boolean
-    isJumping: boolean
+    attackTime: number
     jumpedIn: boolean
 }
 

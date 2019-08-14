@@ -281,7 +281,7 @@ export default class ServerStarSystem extends Scene {
     }
 
     initNPCTraffic = () => {
-        new Array(1).fill(null).forEach(ship=>{
+        new Array(Phaser.Math.Between(0,4)).fill(null).forEach(ship=>{
             let shipData = getNPCShipData()
             const rotation = Phaser.Math.FloatBetween(0,Math.PI*2)
             let systemVector = { x: Math.sin(rotation), y: Math.cos(rotation), rotation}
