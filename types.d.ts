@@ -31,6 +31,12 @@ declare enum PlayerEvents {
     SELECT_PRIMARY='slctw'
 }
 
+declare enum FactionName {
+    NEUTRAL='neut',
+    PIRATE='pirat',
+    POLICE='poletzei'
+}
+
 declare enum AiProfileType {
     
     MERCHANT='merc',
@@ -76,8 +82,9 @@ interface PlayerSpawnPoint {
 }
 
 interface Faction {
-    name: string
+    name: FactionName
     reputation: number
+    missions: Array<Mission>
 }
 
 interface ShipSprite extends Phaser.Physics.Arcade.Sprite {
@@ -189,6 +196,7 @@ interface ShipData {
     name: string
     id:string
     ownerId: string
+    faction: FactionName
     shields: number
     maxShields: number
     armor: number
@@ -234,6 +242,7 @@ interface AiProfile {
     attackerId: string
     attackTime: number
     jumpedIn: boolean
+    targetShipId: string
 }
 
 interface CommodityOrder {

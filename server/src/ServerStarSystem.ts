@@ -68,7 +68,7 @@ export default class ServerStarSystem extends Scene {
     onApplyPlayerUpdate = (update:ShipUpdate) => {
         //perform change on entity
         let ship = this.ships.get(update.shipData.id)
-        if(ship){
+        if(ship && ship.shipData.hull > 5){
             switch(update.type){
                 case PlayerEvents.FIRE_PRIMARY: 
                     ship.firePrimary()

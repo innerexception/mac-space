@@ -33,6 +33,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             ship.aiProfile.attackTime=0
             ship.aiProfile.underAttack=false
             ship.aiProfile.attackerId=''
+            ship.aiProfile.targetShipId=''
             switch(ship.aiProfile.type){
                 case AiProfileType.MERCHANT:
                     this.aiEvent = this.scene.time.addEvent({ delay: 500, callback: this.merchantAICombatListener, loop: true})
@@ -52,8 +53,10 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     
     }
 
-    startBoardingSequence = (target:ShipData) => {
+    startBoardingSequence = (targetShipId:string) => {
         //boarding sequence
+        let system = (this.scene as ServerStarSystem)
+        let target = system.ships.get(targetShipId)
         let distance = Phaser.Math.Distance.Between(this.x, this.y, target.x, target.y)
         let planetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
         this.scene.tweens.add({
@@ -288,33 +291,38 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     }
 
     pirateAICombatListener = () => {
-        if(!this.shipData.aiProfile.target){
-            //Choose a target of power <= your own
+        if(!this.shipData.aiProfile.targetShipId){
+            //Choose a target of faction not your own
             let system = (this.scene as ServerStarSystem)
-            this.shipData.aiProfile.target = getHighValueTarget(system.ships)
+            system.ships.forEach(ship=>{
+                if(ship.shipData.faction !== this.shipData.faction) 
+                    this.shipData.aiProfile.targetShipId = ship.shipData.id
+            })
         }
-        
-        let targetAngle = Phaser.Math.Angle.Between(this.x, this.y, this.shipData.aiProfile.target.x, this.shipData.aiProfile.target.y)
-        const rotation = targetAngle+(Math.PI/2)
-        this.scene.tweens.add({
-            targets: this,
-            rotation,
-            duration: this.shipData.turn*10000
-        })
-        this.thrust()
-        //Engage target
-        if(this.shipData.aiProfile.target.hull > 5)
-            this.firePrimary()
-        else{
-            this.aiEvent.remove()
-            this.AiEvents.board()
-        }
-            
-        //If disabled, attempt to board
+        if(this.shipData.aiProfile.targetShipId){
+            let system = (this.scene as ServerStarSystem)
+            let target = system.ships.get(this.shipData.aiProfile.targetShipId)
+                
+            let targetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
+            const rotation = targetAngle+(Math.PI/2)
+            this.scene.tweens.add({
+                targets: this,
+                rotation,
+                duration: this.shipData.turn*10000
+            })
+            this.thrust()
+            //Engage target
+            if(target.shipData.hull > 5)
+                this.firePrimary()
+            else{
+                this.aiEvent.remove()
+                this.AiEvents.board()
+            }
 
-        //Roll for rage kill after boarding, then leave system
-        //Attempt retreat when hull is < 50%
-        if(this.shipData.hull < 5) this.AiEvents.jump()
+            //Roll for rage kill after boarding, then leave system
+            //Attempt retreat when hull is < 50%
+            if(this.shipData.hull < 5) this.AiEvents.jump()
+        }
     }
 
     policeAICombatListener = () => {
@@ -347,14 +355,14 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             console.log('ai jump start to:'+ system.name+' '+this.shipData.id)
         },
         board: () => {
-            this.startBoardingSequence(this.shipData.aiProfile.target)
+            this.startBoardingSequence(this.shipData.aiProfile.targetShipId)
         },
         plunderAndTakeOff: () => {
             //TODO: remove any carried goods
-
+            let system = (this.scene as ServerStarSystem)
+            let target = system.ships.get(this.shipData.aiProfile.targetShipId)
+            target.shipData.cargo = []
             this.AiEvents.jump()
         }
     }
 }
-
-

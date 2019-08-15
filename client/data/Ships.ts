@@ -1,9 +1,11 @@
 import { ProtonGun, LaserCannon } from "./Weapons";
+import { FactionName } from "../../enum";
 
 export const Shuttle:ShipData = {
     name: 'Shuttle',
     id:'',
     ownerId: '',
+    faction: FactionName.NEUTRAL,
     shields: 10,
     maxShields: 10,
     armor: 0,
