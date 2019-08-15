@@ -199,12 +199,12 @@ export default class ServerStarSystem extends Scene {
             target.shipData.armor -= launcher.armorDamage
         else 
             target.shipData.hull -= launcher.armorDamage
-        if(target.shipData.hull <= 0) 
-            this.destroyShip(target)
+
         if(target.shipData.aiProfile){
-            target.shipData.aiProfile.underAttack = true
             target.shipData.aiProfile.attackerId = projectile.weapon.shipId
         }
+        if(target.shipData.hull <= 0) 
+            this.destroyShip(target)
     }
 
     destroyShip = (ship:ServerShipSprite) => {
@@ -230,7 +230,6 @@ export default class ServerStarSystem extends Scene {
                     asset: resourceData.type
                 })
             }
-            console.log('you get it: '+ship.shipData.cargo)
             this.destroyResource(resource)
         }
     }
@@ -246,7 +245,6 @@ export default class ServerStarSystem extends Scene {
         if(asteroid.getData('state').hp > 0){
             projectile.destroy();
             asteroid.getData('state').hp-=1
-            console.log('damaged asteroid: '+asteroid.getData('state').hp)
             if(asteroid.getData('state').hp <= 0){
                 this.spawnResource(asteroid)
                 this.destroyAsteroid(asteroid)
@@ -281,7 +279,7 @@ export default class ServerStarSystem extends Scene {
     }
 
     initNPCTraffic = () => {
-        new Array(Phaser.Math.Between(0,4)).fill(null).forEach(ship=>{
+        new Array(Phaser.Math.Between(0,8)).fill(null).forEach(ship=>{
             let shipData = getNPCShipData()
             const rotation = Phaser.Math.FloatBetween(0,Math.PI*2)
             let systemVector = { x: Math.sin(rotation), y: Math.cos(rotation), rotation}
@@ -299,7 +297,7 @@ export default class ServerStarSystem extends Scene {
                     x:origin.x, y:origin.y, rotation
                 })
             }
-            console.log('created ai ship')
+            console.log('created ai ship: '+shipData.aiProfile.type)
         })
     }
 }

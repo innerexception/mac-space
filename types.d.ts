@@ -238,7 +238,6 @@ interface ShipData {
 
 interface AiProfile {
     type: AiProfileType
-    underAttack: boolean
     attackerId: string
     attackTime: number
     jumpedIn: boolean

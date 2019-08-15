@@ -19,7 +19,6 @@ export const getNPCShipData = () => {
     shipData.aiProfile = {
         type: AiProfileType.MERCHANT,
         jumpedIn: true,
-        underAttack: false,
         attackerId: '',
         attackTime: 0,
         targetShipId: ''
