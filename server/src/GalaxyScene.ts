@@ -152,7 +152,6 @@ const getAsteroidUpdates = (asteroids:Map<string, Physics.Arcade.Sprite>, deadAs
     }
   })
   deadAsteroids.forEach(roid=>{
-    console.log('asteroid gc')
     updates.push({
       x: -1,
       y: -1,
@@ -180,7 +179,6 @@ const getResourceUpdates = (resources:Map<string, Physics.Arcade.Sprite>, deadRe
   })
   //These have been removed from the normal update loop to be sent out one last time so clients can GC them
   deadResources.forEach(resource=>{
-    console.log('resource gc')
     updates.push({
         x: -1,
         y: -1,

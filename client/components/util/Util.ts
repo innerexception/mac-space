@@ -1,6 +1,6 @@
 import { Position, Toaster } from "@blueprintjs/core"
 import { Ships } from '../../data/Ships'
-import { AiProfileType } from "../../../enum";
+import { AiProfileType, FactionName } from "../../../enum";
 import { v4 } from 'uuid'
 
 export const toast = Toaster.create({
@@ -19,10 +19,20 @@ export const getNPCShipData = () => {
     shipData.aiProfile = {
         type: AiProfileType.MERCHANT,
         jumpedIn: true,
-        underAttack: false,
         attackerId: '',
-        attackTime: 0
+        attackTime: 0,
+        targetShipId: ''
     }
     shipData.id = v4()
+    switch(Phaser.Math.Between(0,2)){
+        case 1: 
+            shipData.faction = FactionName.PIRATE
+            shipData.aiProfile.type = AiProfileType.PIRATE
+            break
+        case 2:     
+            shipData.faction = FactionName.POLICE
+            shipData.aiProfile.type = AiProfileType.POLICE
+            break
+    }
     return shipData
 }

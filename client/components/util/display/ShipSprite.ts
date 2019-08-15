@@ -100,8 +100,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             const projectile = this.projectiles.get().setActive(true).setVisible(true) as Projectile
             if(projectile){
                 projectile.fire(this.shipData.weapons[this.shipData.selectedPrimaryIndex], this)
+                this.shipData.transientData.firePrimary = true
                 if(this.isPlayerControlled){
-                    this.shipData.transientData.firePrimary = true
                     this.addShipUpdate(this, PlayerEvents.FIRE_PRIMARY)
                 }
             }

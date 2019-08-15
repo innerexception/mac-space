@@ -21,6 +21,11 @@ export enum WeaponType {
 export enum Metals {
     IRON='Iron', SILVER='Silver', GOLD='Gold', PLATINUM='Platinum', COPPER='Copper'
 }
+export enum FactionName {
+    NEUTRAL='neut',
+    PIRATE='pirat',
+    POLICE='poletzei'
+}
 export enum PlayerEvents { 
     ROTATE_L= 'rl',
     ROTATE_R= 'rr',
