@@ -1,14 +1,13 @@
 import { Scene, Cameras, GameObjects, Physics, Time, } from "phaser";
-import { StarSystems } from "../../data/StarSystems";
+import { StarSystems } from "../../../server/src/data/StarSystems";
 import Projectile from "./display/Projectile";
 import ShipSprite from "./display/ShipSprite";
-import * as Ships from '../../data/Ships'
+import * as Ships from '../../../server/src/data/Ships'
 import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
 import { onToggleMapMenu, onConnectionError, onConnected, onTogglePlanetMenu } from "../uiManager/Thunks";
 import { PlayerEvents, ReducerActions, ServerMessages } from "../../../enum";
 import Planet from "./display/Planet";
-import { Weapons } from "../../data/Weapons";
 import Beam from "./display/Beam";
 
 export default class StarSystem extends Scene {

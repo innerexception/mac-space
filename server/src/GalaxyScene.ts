@@ -1,5 +1,5 @@
 import { Scene, Physics } from "phaser";
-import { StarSystems } from '../../client/data/StarSystems'
+import { StarSystems } from './data/StarSystems'
 import ServerStarSystem from "./ServerStarSystem";
 import WebsocketClient from "../../client/WebsocketClient";
 import ServerShipSprite from "./display/ServerShipSprite";

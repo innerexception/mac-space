@@ -1,7 +1,7 @@
 
-import * as Assets from './Assets'
+import * as Assets from '../../../client/assets/Assets'
 import Commodities from './Commodities';
-import { Metals } from '../../enum';
+import { Metals } from '../../../enum';
 
 export const Rigel:SystemState = {
     name: 'Rigel',

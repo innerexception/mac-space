@@ -19,7 +19,7 @@
     },
     "include": [
         "./**/*",
-        "../**/*.d.ts", "../server/src/StarSystems.ts"
+        "../**/*.d.ts", "../server/src/StarSystems.ts", "assets/Assets.ts", "../server/src/data/StarSystems.ts", "../server/src/data/Ships.ts", "../server/src/data/Weapons.ts"
     ],
     "exclude": [
         "node_modules",

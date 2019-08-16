@@ -1,4 +1,4 @@
-import { Metals } from "../../enum";
+import { Metals } from "../../../enum";
 
 export default {
     Metals: [

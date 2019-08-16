@@ -1,4 +1,4 @@
-import { WeaponType } from "../../enum";
+import { WeaponType } from "../../../enum";
 
 export const ProtonGun:Weapon = {
     name: 'Proton Gun',

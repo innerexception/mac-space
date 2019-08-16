@@ -1,5 +1,5 @@
 import { ServerMessages, PlayerEvents } from "../enum";
-import { Shuttle } from "../client/data/Ships";
+import { Shuttle } from "./src/data/Ships";
 
 const path = require('path');
 const jsdom = require('jsdom');

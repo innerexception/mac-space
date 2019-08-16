@@ -1,13 +1,13 @@
 import { Scene, GameObjects, Physics, } from "phaser";
 import Projectile from './display/Projectile'
 import ServerShipSprite from './display/ServerShipSprite'
-import * as Ships from '../../client/data/Ships'
+import * as Ships from './data/Ships'
 import { v4 } from 'uuid'
 import { PlayerEvents, Metals, AiProfileType } from "../../enum";
-import { StarSystems } from "../../client/data/StarSystems";
+import { StarSystems } from "./data/StarSystems";
 import Planet from "./display/Planet";
 import { getCargoWeight, getNPCShipData } from "../../client/components/util/Util";
-import { Weapons } from '../../client/data/Weapons'
+import { Weapons } from './data/Weapons'
 
 export default class ServerStarSystem extends Scene {
 

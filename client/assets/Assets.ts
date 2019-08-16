@@ -1,12 +1,12 @@
-export const star = require('../assets/star/g0.png')
-export const star2 = require('../assets/star/a0.png')
-export const ship = require('../assets/ship/aerie.png')
-export const planet = require('../assets/planet/callisto.png')
-export const asteroid1 = require('../assets/asteroid/iron/spin-00.png')
-export const asteroid2 = require('../assets/asteroid/lead/spin-00.png')
-export const lazor = require('../assets/projectile/laser+0.png')
-export const boom = require('../assets/explosion.png')
-export const proton = require('../assets/projectile/proton+.png')
+export const star = require('./star/g0.png')
+export const star2 = require('./star/a0.png')
+export const ship = require('./ship/aerie.png')
+export const planet = require('./planet/callisto.png')
+export const asteroid1 = require('./asteroid/iron/spin-00.png')
+export const asteroid2 = require('./asteroid/lead/spin-00.png')
+export const lazor = require('./projectile/laser+0.png')
+export const boom = require('./explosion.png')
+export const proton = require('./projectile/proton+.png')
 
 
 export const defaults = [

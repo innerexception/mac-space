@@ -1,5 +1,5 @@
 import { Position, Toaster } from "@blueprintjs/core"
-import { Ships } from '../../data/Ships'
+import { Ships } from '../../../server/src/data/Ships'
 import { AiProfileType, FactionName } from "../../../enum";
 import { v4 } from 'uuid'
 
