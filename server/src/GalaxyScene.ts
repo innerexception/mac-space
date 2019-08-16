@@ -4,6 +4,7 @@ import ServerStarSystem from "./ServerStarSystem";
 import WebsocketClient from "../../client/WebsocketClient";
 import ServerShipSprite from "./display/ServerShipSprite";
 import { ServerMessages, PlayerEvents } from "../../enum";
+import Planet from "./display/Planet";
 
 export default class GalaxyScene extends Scene {
 
@@ -43,7 +44,8 @@ export default class GalaxyScene extends Scene {
           event: {
               ships: getShipUpdates(scene.ships, scene.jumpingShips, this.players, this.server, scene.deadShips),
               asteroids: getAsteroidUpdates(scene.asteroids, scene.deadAsteroids),
-              resources: getResourceUpdates(scene.resources, scene.deadResources)
+              resources: getResourceUpdates(scene.resources, scene.deadResources),
+              planets: scene.planets.map(planet=>planet.config)
           }
         })
         scene.deadAsteroids = []
