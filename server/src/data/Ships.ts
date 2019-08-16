@@ -1,5 +1,5 @@
 import { ProtonGun, LaserCannon } from "./Weapons";
-import { FactionName } from "../../enum";
+import { FactionName } from "../../../enum";
 
 export const Shuttle:ShipData = {
     name: 'Shuttle',

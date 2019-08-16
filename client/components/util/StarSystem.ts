@@ -1,14 +1,13 @@
 import { Scene, Cameras, GameObjects, Physics, Time, } from "phaser";
-import { StarSystems } from "../../data/StarSystems";
+import { StarSystems } from "../../../server/src/data/StarSystems";
 import Projectile from "./display/Projectile";
 import ShipSprite from "./display/ShipSprite";
-import * as Ships from '../../data/Ships'
+import * as Ships from '../../../server/src/data/Ships'
 import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
 import { onToggleMapMenu, onConnectionError, onConnected, onTogglePlanetMenu } from "../uiManager/Thunks";
 import { PlayerEvents, ReducerActions, ServerMessages } from "../../../enum";
 import Planet from "./display/Planet";
-import { Weapons } from "../../data/Weapons";
 import Beam from "./display/Beam";
 
 export default class StarSystem extends Scene {
@@ -123,6 +122,20 @@ export default class StarSystem extends Scene {
                 console.log('asteroid physics init completed.')
             }
             
+            //Super duper inefficient but there's never more than 3 planets
+            state.planets.forEach(planetConfig=>{
+                let found = false
+                this.planets.forEach(planet=>{
+                    if(planet.config.name === planetConfig.name){
+                        planet.config = planetConfig
+                        found=true
+                    }
+                })
+                if(!found){
+                    this.spawnPlanet(planetConfig)
+                }
+            })
+
             state.ships.forEach(update=> {
                 let ship = this.ships.get(update.shipData.id)
                 if(ship){
@@ -206,7 +219,6 @@ export default class StarSystem extends Scene {
         this.beams.runChildUpdate = true
 
         this.createStarfield()
-        this.addPlanets()
 
         //we need to wait until the server gives us a ship to focus on
         this.time.addEvent({ delay: 100, callback: this.checkForActiveShip, loop: true });
@@ -353,12 +365,8 @@ export default class StarSystem extends Scene {
         this.physics.add.overlap(ships, rez, this.playerGotResource)
     }
 
-    addPlanets = () => {
-        let planets = []
-        this.state.stellarObjects.forEach(obj=>{
-            planets.push(new Planet(this.scene.scene, obj.x, obj.y, obj.asset, obj))
-        })
-        this.planets = planets
+    spawnPlanet = (planet:StellarObjectConfig) => {
+        this.planets.push(new Planet(this.scene.scene, planet.x, planet.y, planet.asset, planet))
     }
 
     createStarfield ()

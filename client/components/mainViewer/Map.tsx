@@ -2,7 +2,7 @@ import * as React from 'react'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
 import { onSelectSystem } from '../uiManager/Thunks';
-import { StarSystems } from '../../data/StarSystems';
+import { StarSystems } from '../../../server/src/data/StarSystems';
 
 interface Props {
     activeShip: ShipData

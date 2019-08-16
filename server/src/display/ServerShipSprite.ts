@@ -5,7 +5,7 @@ import { ServerMessages, AiProfileType, FactionName } from "../../../enum";
 import { getCargoWeight } from '../../../client/components/util/Util'
 import Planet from "./Planet";
 import Projectile from "./Projectile";
-import { StarSystems } from "../../../client/data/StarSystems";
+import { StarSystems } from "../data/StarSystems";
 
 export default class ServerShipSprite extends Physics.Arcade.Sprite {
 

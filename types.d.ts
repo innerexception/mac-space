@@ -162,6 +162,7 @@ interface ServerSystemUpdate {
     ships: Array<ShipUpdate>
     asteroids: Array<AsteroidData>
     resources: Array<ResourceData>
+    planets: Array<StellarObjectConfig>
 }
 
 interface AsteroidData {
