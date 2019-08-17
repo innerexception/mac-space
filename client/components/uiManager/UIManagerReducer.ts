@@ -7,7 +7,7 @@ const appReducer = (state = getInitialState(), action:any):RState => {
         case ReducerActions.CONNECTION_ERROR: 
             return { ...state, isConnected: false}
         case ReducerActions.OPEN_PLANET: 
-            return { ...state, showPlanetMenu: action.state, playerEvent:null, activeShip: action.activeShip, player: action.player }
+            return { ...state, showPlanetMenu: action.state, playerEvent:null, activeShip: action.activeShip, player: action.player, activePlanet: action.activePlanet }
         case ReducerActions.OPEN_MAP:
             return { ...state, showMap: action.state, playerEvent: null, activeShip: action.activeShip }
         case ReducerActions.SYSTEM_SELECTED:
@@ -26,6 +26,8 @@ const appReducer = (state = getInitialState(), action:any):RState => {
             return {...state, player: action.player, activeShip: action.activeShip, playerEvent: null }
         case ReducerActions.PLAYER_REPLACE_SHIP:
             return {...state, activeShip: action.activeShip, playerEvent: null }
+        case ReducerActions.PLANET_REPLACE:
+            return {...state, activePlanet: action.planet, playerEvent: null }
         default:
             return state
     }
@@ -38,6 +40,7 @@ const getInitialState = ():RState => {
         isConnected: false,
         player: null,
         activeShip: null,
+        activePlanet: null,
         showMap: false,
         showPlanetMenu: false,
         playerEvent: null,

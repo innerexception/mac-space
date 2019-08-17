@@ -13,6 +13,7 @@ interface Props {
     loginPassword: string
     activeShip:ShipData
     player:Player
+    activePlanet: StellarObjectConfig
 }
 
 interface State {
@@ -45,8 +46,9 @@ export default class Match extends React.Component<Props, State> {
                         </div>
                     </div>
                     {this.props.showMap && <Map activeShip={this.props.activeShip}/>}
-                    {this.props.showPlanetMenu && this.props.activeShip.landedAt && 
+                    {this.props.showPlanetMenu && this.props.activeShip.landedAtName && 
                         <PlanetMenu activeShip={this.props.activeShip} 
+                                    planet={this.props.activePlanet}
                                     player={this.props.player}/>}
                     <Viewscreen loginName={this.props.loginName} loginPassword={this.props.loginPassword}/>
                 </div>

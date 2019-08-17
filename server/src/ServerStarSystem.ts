@@ -86,7 +86,7 @@ export default class ServerStarSystem extends Scene {
                     ship.thrustOff()
                     break
                 case PlayerEvents.START_LANDING:
-                    const target = this.planets.find(planet=>planet.config.name === update.shipData.transientData.landingTargetName)
+                    const target = this.planets.find(planet=>planet.config.planetName === update.shipData.transientData.landingTargetName)
                     ship.startLandingSequence(target)
                     break
                 case PlayerEvents.STOP_LANDING:

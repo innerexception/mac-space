@@ -115,7 +115,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     duration,
                     onComplete: ()=>{
                         this.stopLandingSequence()
-                        this.shipData.landedAt = target.config
+                        this.shipData.landedAtName = target.config.planetName
                         console.log('landing sequence completed for: '+this.shipData.id)
                         if(this.shipData.aiProfile){
                             this.scene && this.scene.time.addEvent({
@@ -136,7 +136,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     takeOff = () => {
         console.log('take off')
-        this.shipData.landedAt = null
+        this.shipData.landedAtName = null
         if(this.shipData.aiProfile){
             this.scene.time.addEvent({
                 delay: 3000,
@@ -208,7 +208,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     processOrder = (order:CommodityOrder) => {
         const player = this.theGalaxy.players.get(this.shipData.ownerId)
         if(player){
-            let planet = (this.scene as ServerStarSystem).planets.find(planet=>planet.config.name === this.shipData.landedAt.name)
+            let planet = (this.scene as ServerStarSystem).planets.find(planet=>planet.config.planetName === this.shipData.landedAtName)
             let planetData = planet.config
             let commodity = planetData.commodities.find(commodity=>commodity.name===order.commodity.name)
             let price = commodity.price * order.amount
@@ -225,6 +225,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                         })
                     player.credits -= price
                     console.log('buy processed order, new credits: '+player.credits)
+                    commodity.price += Math.round(commodity.price * (0.01 * order.amount))
                 }
             }
             else {
@@ -237,6 +238,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     this.shipData.cargo = this.shipData.cargo.filter(item=>item.name !== order.commodity.name)
                 }
                 console.log('sell processed order, new credits: '+player.credits)
+                commodity.price -= Math.round(commodity.price * (0.01 * order.amount))
             }
             player.ships = player.ships.map(ship=>{
                 if(ship.id===this.shipData.id) return this.shipData
@@ -406,7 +408,8 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             //TODO: remove any carried goods
             let system = (this.scene as ServerStarSystem)
             let target = system.ships.get(this.shipData.aiProfile.targetShipId)
-            target.shipData.cargo = []
+            if(target) target.shipData.cargo = []
+            delete this.shipData.aiProfile.targetShipId
             this.AiEvents.jump()
         }
     }

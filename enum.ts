@@ -13,7 +13,8 @@ export const ReducerActions= {
     SYSTEM_SELECTED: 'ssl',
     TAKE_OFF:'tot',
     PLAYER_REPLACE: 'rplpl',
-    PLAYER_REPLACE_SHIP: 'prps'
+    PLAYER_REPLACE_SHIP: 'prps',
+    PLANET_REPLACE: 'plrp'
 }
 export enum WeaponType {
     Energy='e', Kinetic='k', Quantum='q'

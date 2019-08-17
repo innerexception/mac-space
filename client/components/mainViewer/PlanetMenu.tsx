@@ -7,17 +7,16 @@ import { getCargoWeight } from '../util/Util';
 interface Props {
     player: Player
     activeShip: ShipData
+    planet: StellarObjectConfig
 }
 
 interface State {
-    planet:StellarObjectConfig
     activeView: string
 }
 
 export default class PlanetMenu extends React.Component<Props, State> {
 
     state = {
-        planet: this.props.activeShip.landedAt,
         activeView: 'main'
     }
 
@@ -37,7 +36,7 @@ export default class PlanetMenu extends React.Component<Props, State> {
         return (
             <div style={{...styles.disabled, display: 'flex'}}>
                 <div style={AppStyles.notification}>
-                    <h3>{this.state.planet.name}</h3>
+                    <h3>{this.props.planet.planetName}</h3>
                     <div>
                         {this.getView(this.state.activeView)}
                     </div>
@@ -48,8 +47,8 @@ export default class PlanetMenu extends React.Component<Props, State> {
 
     getView = (viewName:string) => {
         switch(viewName){
-            case 'main': return this.mainView(this.state.planet)
-            case 'commodities': return this.commodityView(this.state.planet, this.props.activeShip)
+            case 'main': return this.mainView(this.props.planet)
+            case 'commodities': return this.commodityView(this.props.planet, this.props.activeShip)
         }
     }
 

@@ -8,7 +8,7 @@ export const Rigel:SystemState = {
     x: 5000,
     y: 5000,
     stellarObjects: [{x: 550, y:550, asset: 'planet', 
-        name: 'Rigel I',
+        planetName: 'Rigel I',
         description: "It's alright",
         commodities: Commodities.Metals.concat(Commodities.Manufactured)
     }],
@@ -33,7 +33,7 @@ export const Arcturus:SystemState = {
     y: 10000,
     stellarObjects: [
         {x: 850, y:750, 
-            asset: 'planet', name: 'Haven', description: "It's Haveny",
+            asset: 'planet', planetName: 'Haven', description: "It's Haveny",
             commodities: Commodities.Agriculture}
     ],
     asteroidConfig: [
@@ -60,7 +60,7 @@ export const Centauri:SystemState = {
         x: 150, 
         y:750, 
         asset: 'planet', 
-        name: 'Centauri Prime', description: "It's Babylon 5-ey",
+        planetName: 'Centauri Prime', description: "It's Babylon 5-ey",
         commodities: Commodities.Metals
     }],
     asteroidConfig: [

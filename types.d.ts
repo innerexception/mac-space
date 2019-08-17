@@ -50,7 +50,8 @@ declare enum ServerMessages {
     PLAYER_EVENT= 'pe',
     SERVER_UPDATE= 'su',
     PLAYER_LOGIN='plo',
-    PLAYER_DATA_UPDATE='pda'
+    PLAYER_DATA_UPDATE='pda',
+    PLANET_EVENT='plev'
 }
 
 declare enum MissionType {
@@ -223,7 +224,7 @@ interface ShipData {
     asset: string
     cargo: Array<InventoryData>
     systemName: string
-    landedAt?: StellarObjectConfig
+    landedAtName?: string
     x?: number
     y?: number
     rotation?: number
@@ -273,7 +274,7 @@ interface StellarObjectConfig {
     y: number
     asset: string
     landable?: boolean
-    name: string
+    planetName: string
     description: string
     commodities?: Array<Commodity>
     missions?: Array<Mission>
@@ -320,6 +321,7 @@ interface RState {
     isConnected: boolean
     player: Player | null
     activeShip: ShipData | null
+    activePlanet: StellarObjectConfig | null
     showMap: boolean
     showPlanetMenu: boolean
     playerEvent: PlayerEvents
