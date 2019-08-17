@@ -42,6 +42,13 @@ export const onCommodityOrder = (commodity:Commodity, amount:number, buy:boolean
     })
 }
 
+export const onAcceptMission = (mission:Mission) => {
+    dispatch({
+        type: ReducerActions.ACCEPT_MISSION,
+        mission
+    })
+}
+
 export const onShipTakeOff = (activeShip:ShipData) => {
     dispatch({
         type: ReducerActions.TAKE_OFF,

@@ -71,8 +71,11 @@ export default class StarSystem extends Scene {
                         //TODO
                         break
                     case PlayerEvents.COMMODITY_ORDER:
-                        let order = store.getState().commodityOrder
-                        this.activeShip.shipData.transientData.commodityOrder = order
+                        this.activeShip.shipData.transientData.commodityOrder = store.getState().commodityOrder
+                        this.activeShip.addShipUpdate(this.activeShip, playerEvent)
+                        break
+                    case PlayerEvents.ACCEPT_MISSION:
+                        this.activeShip.shipData.transientData.mission = store.getState().mission
                         this.activeShip.addShipUpdate(this.activeShip, playerEvent)
                         break
                     default:

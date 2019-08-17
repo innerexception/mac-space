@@ -104,6 +104,7 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
     //they are cleared after being sent once usually
     ship.shipData.transientData.firePrimary = false
     ship.shipData.transientData.commodityOrder = null
+    ship.shipData.transientData.mission = null
   })
   jumpingShips.forEach(ship=>{
     //These have been removed from the scene and no new updates will be sent

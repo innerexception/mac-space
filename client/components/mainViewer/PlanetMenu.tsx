@@ -1,8 +1,8 @@
 import * as React from 'react'
-import { onCommodityOrder, onShipTakeOff } from '../uiManager/Thunks'
+import { onCommodityOrder, onShipTakeOff, onAcceptMission } from '../uiManager/Thunks'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
-import { getCargoWeight } from '../util/Util';
+import { getCargoWeight, getPlayerFactionMissions } from '../util/Util';
 
 interface Props {
     player: Player
@@ -32,6 +32,10 @@ export default class PlanetMenu extends React.Component<Props, State> {
         onCommodityOrder(commodity, amount, buy)
     }
 
+    onAcceptMission = (mission:Mission) => {
+        onAcceptMission(mission)
+    }
+
     getPlanetMainMenu = () => {
         return (
             <div style={{...styles.disabled, display: 'flex'}}>
@@ -49,6 +53,8 @@ export default class PlanetMenu extends React.Component<Props, State> {
         switch(viewName){
             case 'main': return this.mainView(this.props.planet)
             case 'commodities': return this.commodityView(this.props.planet, this.props.activeShip)
+            case 'missions': return this.missionView(this.props.planet, this.props.activeShip)
+            case 'bar': return this.barView(this.props.player, this.props.activeShip)
         }
     }
 
@@ -63,6 +69,34 @@ export default class PlanetMenu extends React.Component<Props, State> {
             {Button(true, this.onTakeOff, 'Leave')}
         </div>
     
+
+    missionView = (planet:StellarObjectConfig, ship:ShipData) => 
+        <div>
+            <h4>Public Jobs</h4>
+            {planet.missions && planet.missions.map(mission => 
+                <div style={{display:"flex"}}>
+                    <h5>{mission.type}</h5>
+                    <div>{mission.description}</div>
+                    <div>{mission.payment}</div>
+                    {LightButton(mission.cargo.weight <= getCargoWeight(ship), ()=>this.onAcceptMission(mission), 'Accept')}
+                </div>
+            )}
+            {Button(true, ()=>this.setState({activeView:'main'}), 'Done')}
+        </div>
+
+    barView = (player:Player, ship:ShipData) => 
+        <div>
+            <h4>Spaceport Bar</h4>
+            {getPlayerFactionMissions(player).map(mission => 
+                <div style={{display:"flex"}}>
+                    <h5>{mission.type}</h5>
+                    <div>{mission.description}</div>
+                    <div>{mission.payment}</div>
+                    {LightButton(mission.cargo.weight <= getCargoWeight(ship), ()=>this.onAcceptMission(mission), 'Accept')}
+                </div>
+            )}
+            {Button(true, ()=>this.setState({activeView:'main'}), 'Done')}
+        </div>
 
     commodityView = (planet:StellarObjectConfig, ship:ShipData) => 
         <div>

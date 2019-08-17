@@ -2,7 +2,7 @@ import { GameObjects, Physics, Scene, } from "phaser";
 import ServerStarSystem from "../ServerStarSystem";
 import GalaxyScene from "../GalaxyScene";
 import { ServerMessages, AiProfileType, FactionName } from "../../../enum";
-import { getCargoWeight } from '../../../client/components/util/Util'
+import { getCargoWeight, getRandomPublicMission } from '../../../client/components/util/Util'
 import Planet from "./Planet";
 import Projectile from "./Projectile";
 import { StarSystems } from "../data/StarSystems";
@@ -205,6 +205,18 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         //TODO
     }
 
+    acceptMission = (mission:Mission) => {
+        const player = this.theGalaxy.players.get(this.shipData.ownerId)
+        if(player){
+            player.missions.push(mission)
+            this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
+            let planet = (this.scene as ServerStarSystem).planets.find(planet=>planet.config.planetName === this.shipData.landedAtName)
+            let planetData = planet.config
+            planetData.missions = planetData.missions.filter(pmission=>pmission.id !== mission.id)
+            planetData.missions.push(getRandomPublicMission(planet.config.planetName, (this.scene as ServerStarSystem).name))
+        }
+    }
+
     processOrder = (order:CommodityOrder) => {
         const player = this.theGalaxy.players.get(this.shipData.ownerId)
         if(player){
@@ -225,6 +237,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                         })
                     player.credits -= price
                     console.log('buy processed order, new credits: '+player.credits)
+                    //TODO: fix pump and dump exploit
                     commodity.price += Math.round(commodity.price * (0.01 * order.amount))
                 }
             }

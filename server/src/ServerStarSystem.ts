@@ -105,6 +105,8 @@ export default class ServerStarSystem extends Scene {
                 case PlayerEvents.COMMODITY_ORDER:
                     ship.processOrder(update.shipData.transientData.commodityOrder)
                     break
+                case PlayerEvents.ACCEPT_MISSION: 
+                    ship.acceptMission(update.shipData.transientData.mission)
             }
         }
         else if(update.type === PlayerEvents.PLAYER_SPAWNED){
@@ -116,7 +118,7 @@ export default class ServerStarSystem extends Scene {
     addPlanets = () => {
         let planets = []
         this.state.stellarObjects.forEach(obj=>{
-            planets.push(new Planet(this.scene.scene, obj.x, obj.y, obj.asset, obj))
+            planets.push(new Planet((this.scene.scene as ServerStarSystem), obj.x, obj.y, obj.asset, obj))
         })
         this.planets = planets
     }

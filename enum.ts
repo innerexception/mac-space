@@ -14,7 +14,8 @@ export const ReducerActions= {
     TAKE_OFF:'tot',
     PLAYER_REPLACE: 'rplpl',
     PLAYER_REPLACE_SHIP: 'prps',
-    PLANET_REPLACE: 'plrp'
+    PLANET_REPLACE: 'plrp',
+    ACCEPT_MISSION: 'ams'
 }
 export enum WeaponType {
     Energy='e', Kinetic='k', Quantum='q'
@@ -26,6 +27,9 @@ export enum FactionName {
     NEUTRAL='neut',
     PIRATE='pirat',
     POLICE='poletzei'
+}
+export enum MissionType {
+    ESCORT='esco', DELIVERY='deliv', DESTROY='destro'
 }
 export enum PlayerEvents { 
     ROTATE_L= 'rl',

@@ -55,7 +55,7 @@ declare enum ServerMessages {
 }
 
 declare enum MissionType {
-    ESCORT, DELIVERY, DESTROY
+    ESCORT='esco', DELIVERY='deliv', DESTROY='destro'
 }
 
 interface Tuple {
@@ -70,6 +70,7 @@ interface Player {
     activeShipId: string
     ships: Array<ShipData>
     reputation: Array<Faction>
+    missions: Array<Mission>
     notoriety: number
     credits: number
 }
@@ -235,6 +236,7 @@ interface ShipData {
         landingTargetName?: string
         targetSystemName?: string
         commodityOrder?: CommodityOrder
+        mission?:Mission
     }
 }
 
@@ -284,12 +286,15 @@ interface StellarObjectConfig {
 }
 
 interface Mission {
+    id: string
     description: string
-    destination: StellarObjectConfig
+    destinationPlanetName: string
+    destinationSystemName: string
     payment: number
-    cargo: InventoryData
+    cargo?: InventoryData
     type: MissionType
-    targets: Array<ShipData>
+    targets?: Array<ShipData>
+    reputationMinimum?:number
 }
 
 interface Commodity {
@@ -326,6 +331,7 @@ interface RState {
     showPlanetMenu: boolean
     playerEvent: PlayerEvents
     commodityOrder: CommodityOrder
+    mission: Mission
     loginName:string
     loginPassword:string
     loginError:boolean
