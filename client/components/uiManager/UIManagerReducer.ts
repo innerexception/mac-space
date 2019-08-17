@@ -3,11 +3,11 @@ import { ReducerActions, PlayerEvents } from '../../../enum'
 const appReducer = (state = getInitialState(), action:any):RState => {
     switch (action.type) {
         case ReducerActions.CONNECTED: 
-            return { ...state, isConnected: true}
+            return { ...state, isConnected: true, playerEvent: null}
         case ReducerActions.CONNECTION_ERROR: 
-            return { ...state, isConnected: false}
+            return { ...state, isConnected: false, playerEvent: null}
         case ReducerActions.OPEN_PLANET: 
-            return { ...state, showPlanetMenu: action.state, playerEvent:null, activeShip: action.activeShip, player: action.player }
+            return { ...state, showPlanetMenu: action.state, playerEvent:null, activeShip: action.activeShip, player: action.player, activePlanet: action.activePlanet }
         case ReducerActions.OPEN_MAP:
             return { ...state, showMap: action.state, playerEvent: null, activeShip: action.activeShip }
         case ReducerActions.SYSTEM_SELECTED:
@@ -19,13 +19,15 @@ const appReducer = (state = getInitialState(), action:any):RState => {
         case ReducerActions.LOGIN_FAILED:
             return {...state, loginPassword:'', loginError:true}
         case ReducerActions.COMMODITY_ORDER:
-            return { ...state, 
-                commodityOrder: { ...action }, 
-                playerEvent: PlayerEvents.COMMODITY_ORDER }
+            return { ...state, commodityOrder: { ...action }, playerEvent: PlayerEvents.COMMODITY_ORDER }
+        case ReducerActions.ACCEPT_MISSION:
+            return {...state, mission: {...action}, playerEvent: PlayerEvents.ACCEPT_MISSION}
         case ReducerActions.PLAYER_REPLACE:
             return {...state, player: action.player, activeShip: action.activeShip, playerEvent: null }
         case ReducerActions.PLAYER_REPLACE_SHIP:
             return {...state, activeShip: action.activeShip, playerEvent: null }
+        case ReducerActions.PLANET_REPLACE:
+            return {...state, activePlanet: action.planet, playerEvent: null }
         default:
             return state
     }
@@ -38,6 +40,7 @@ const getInitialState = ():RState => {
         isConnected: false,
         player: null,
         activeShip: null,
+        activePlanet: null,
         showMap: false,
         showPlanetMenu: false,
         playerEvent: null,
@@ -45,6 +48,7 @@ const getInitialState = ():RState => {
         loginName: '',
         loginPassword: '',
         loginError:false,
-        systemName:''
+        systemName:'',
+        mission: null
     }
 }

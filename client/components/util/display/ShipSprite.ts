@@ -80,7 +80,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     startLandingSequence = (target:Planet) => {
         //landing sequence
-        this.shipData.transientData.landingTargetName = target.config.name
+        this.shipData.transientData.landingTargetName = target.config.planetName
         this.addShipUpdate(this, PlayerEvents.START_LANDING)
     }
 
@@ -183,12 +183,12 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         }
         this.setVelocity(update.velocity.x, update.velocity.y)
         if(update.transientData.firePrimary && !this.isPlayerControlled) this.firePrimary()
-        if(update.landedAt && !this.shipData.landedAt){
-            this.shipData.landedAt = update.landedAt
+        if(update.landedAtName && !this.shipData.landedAtName){
+            this.shipData.landedAtName = update.landedAtName
             this.landing()
         }
-        if(!update.landedAt && this.shipData.landedAt){
-            delete this.shipData.landedAt
+        if(!update.landedAtName && this.shipData.landedAtName){
+            delete this.shipData.landedAtName
             this.takeOff()
         }
         if(getCargoWeight(this.shipData) !== getCargoWeight(update)){

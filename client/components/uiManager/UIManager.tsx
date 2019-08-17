@@ -11,6 +11,7 @@ interface Props {
     loginPassword: string
     loginError: boolean
     activeShip:ShipData
+    activePlanet: StellarObjectConfig
     player:Player
 }
 

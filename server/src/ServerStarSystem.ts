@@ -3,7 +3,7 @@ import Projectile from './display/Projectile'
 import ServerShipSprite from './display/ServerShipSprite'
 import * as Ships from './data/Ships'
 import { v4 } from 'uuid'
-import { PlayerEvents, Metals, AiProfileType } from "../../enum";
+import { PlayerEvents, Metals, AiProfileType, CargoType } from "../../enum";
 import { StarSystems } from "./data/StarSystems";
 import Planet from "./display/Planet";
 import { getCargoWeight, getNPCShipData } from "../../client/components/util/Util";
@@ -86,7 +86,7 @@ export default class ServerStarSystem extends Scene {
                     ship.thrustOff()
                     break
                 case PlayerEvents.START_LANDING:
-                    const target = this.planets.find(planet=>planet.config.name === update.shipData.transientData.landingTargetName)
+                    const target = this.planets.find(planet=>planet.config.planetName === update.shipData.transientData.landingTargetName)
                     ship.startLandingSequence(target)
                     break
                 case PlayerEvents.STOP_LANDING:
@@ -105,6 +105,8 @@ export default class ServerStarSystem extends Scene {
                 case PlayerEvents.COMMODITY_ORDER:
                     ship.processOrder(update.shipData.transientData.commodityOrder)
                     break
+                case PlayerEvents.ACCEPT_MISSION: 
+                    ship.acceptMission(update.shipData.transientData.mission)
             }
         }
         else if(update.type === PlayerEvents.PLAYER_SPAWNED){
@@ -116,7 +118,7 @@ export default class ServerStarSystem extends Scene {
     addPlanets = () => {
         let planets = []
         this.state.stellarObjects.forEach(obj=>{
-            planets.push(new Planet(this.scene.scene, obj.x, obj.y, obj.asset, obj))
+            planets.push(new Planet((this.scene.scene as ServerStarSystem), obj.x, obj.y, obj.asset, obj))
         })
         this.planets = planets
     }
@@ -227,7 +229,8 @@ export default class ServerStarSystem extends Scene {
                 ship.shipData.cargo.push({
                     weight: resourceData.weight,
                     name: resourceData.type,
-                    asset: resourceData.type
+                    asset: resourceData.type,
+                    type: CargoType.COMMODITY
                 })
             }
             this.destroyResource(resource)

@@ -37,6 +37,12 @@ declare enum FactionName {
     POLICE='poletzei'
 }
 
+declare enum CargoType {
+    PASSENGER='pass',
+    COMMODITY='comm',
+    ILLEGAL='ille'
+}
+
 declare enum AiProfileType {
     
     MERCHANT='merc',
@@ -50,11 +56,12 @@ declare enum ServerMessages {
     PLAYER_EVENT= 'pe',
     SERVER_UPDATE= 'su',
     PLAYER_LOGIN='plo',
-    PLAYER_DATA_UPDATE='pda'
+    PLAYER_DATA_UPDATE='pda',
+    PLANET_EVENT='plev'
 }
 
 declare enum MissionType {
-    ESCORT, DELIVERY, DESTROY
+    ESCORT='esco', DELIVERY='deliv', DESTROY='destro', PATROL='pat'
 }
 
 interface Tuple {
@@ -69,6 +76,7 @@ interface Player {
     activeShipId: string
     ships: Array<ShipData>
     reputation: Array<Faction>
+    missions: Array<Mission>
     notoriety: number
     credits: number
 }
@@ -146,7 +154,6 @@ interface SystemState {
     y: number
     stellarObjects: Array<StellarObjectConfig>
     asteroidConfig: Array<AsteroidConfig>
-    ships: Array<ShipData>,
     assetList: Array<Asset>
 }
 
@@ -223,7 +230,7 @@ interface ShipData {
     asset: string
     cargo: Array<InventoryData>
     systemName: string
-    landedAt?: StellarObjectConfig
+    landedAtName?: string
     x?: number
     y?: number
     rotation?: number
@@ -234,6 +241,7 @@ interface ShipData {
         landingTargetName?: string
         targetSystemName?: string
         commodityOrder?: CommodityOrder
+        mission?:Mission
     }
 }
 
@@ -255,6 +263,7 @@ interface InventoryData {
     name: string
     weight: number
     asset: string
+    type: CargoType
 }
 
 interface ServerMessage {
@@ -273,7 +282,7 @@ interface StellarObjectConfig {
     y: number
     asset: string
     landable?: boolean
-    name: string
+    planetName: string
     description: string
     commodities?: Array<Commodity>
     missions?: Array<Mission>
@@ -283,12 +292,17 @@ interface StellarObjectConfig {
 }
 
 interface Mission {
+    id: string
     description: string
-    destination: StellarObjectConfig
+    destinationPlanetName: string
+    destinationSystemName: string
     payment: number
-    cargo: InventoryData
+    cargo?: InventoryData
     type: MissionType
-    targets: Array<ShipData>
+    targets?: number | Array<ShipData>
+    reputationMinimum?:number
+    faction?:FactionName
+    notorietyMinimum?:number
 }
 
 interface Commodity {
@@ -320,10 +334,12 @@ interface RState {
     isConnected: boolean
     player: Player | null
     activeShip: ShipData | null
+    activePlanet: StellarObjectConfig | null
     showMap: boolean
     showPlanetMenu: boolean
     playerEvent: PlayerEvents
     commodityOrder: CommodityOrder
+    mission: Mission
     loginName:string
     loginPassword:string
     loginError:boolean

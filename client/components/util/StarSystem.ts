@@ -68,10 +68,14 @@ export default class StarSystem extends Scene {
                         // this.server.publishMessage(player data update)
                         break
                     case PlayerEvents.OUTFIT_ORDER:
+                        //TODO
                         break
                     case PlayerEvents.COMMODITY_ORDER:
-                        let order = store.getState().commodityOrder
-                        this.activeShip.shipData.transientData.commodityOrder = order
+                        this.activeShip.shipData.transientData.commodityOrder = store.getState().commodityOrder
+                        this.activeShip.addShipUpdate(this.activeShip, playerEvent)
+                        break
+                    case PlayerEvents.ACCEPT_MISSION:
+                        this.activeShip.shipData.transientData.mission = store.getState().mission
                         this.activeShip.addShipUpdate(this.activeShip, playerEvent)
                         break
                     default:
@@ -126,9 +130,11 @@ export default class StarSystem extends Scene {
             state.planets.forEach(planetConfig=>{
                 let found = false
                 this.planets.forEach(planet=>{
-                    if(planet.config.name === planetConfig.name){
+                    if(planet.config.planetName === planetConfig.planetName){
                         planet.config = planetConfig
                         found=true
+                        if(this.activeShip.shipData.landedAtName === planetConfig.planetName)
+                            this.onReplacePlanet(planetConfig)
                     }
                 })
                 if(!found){
@@ -279,6 +285,10 @@ export default class StarSystem extends Scene {
         store.dispatch({ type: ReducerActions.PLAYER_REPLACE, player: this.player, activeShip: this.activeShip.shipData})
     }
 
+    onReplacePlanet = (planet:StellarObjectConfig) => {
+        store.dispatch({ type: ReducerActions.PLANET_REPLACE, planet })
+    }
+
     checkForActiveShip = () => {
         let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
         this.activeShip = this.ships.get(activeShipData.id)
@@ -312,7 +322,7 @@ export default class StarSystem extends Scene {
     }
 
     onTogglePlanetMenu = (state:boolean, ship:ShipData) => {
-        onTogglePlanetMenu(state, ship, this.player)
+        onTogglePlanetMenu(state, ship, this.player, ship.landedAtName ? this.planets.find(planet=>ship.landedAtName === planet.config.planetName).config : null)
     }
 
     update = () =>
@@ -385,7 +395,8 @@ export default class StarSystem extends Scene {
         Phaser.Actions.RandomRectangle(group.getChildren(), rect);
     
         group.children.iterate((child, index) => {
-            // var sf = Math.max(0.3, Math.random());
+            var sf = Math.max(0.3, Math.random());
+            (child as GameObjects.Sprite).setScrollFactor(sf)
             this.minimap.ignore(child);
         }, this);
     }
