@@ -28,9 +28,20 @@ export enum FactionName {
     PIRATE='pirat',
     POLICE='poletzei'
 }
-export enum MissionType {
-    ESCORT='esco', DELIVERY='deliv', DESTROY='destro'
+export enum CargoType {
+    PASSENGER='pass',
+    COMMODITY='comm',
+    ILLEGAL='ille'
 }
+export const CargoTypes = [
+    CargoType.PASSENGER, CargoType.ILLEGAL, CargoType.COMMODITY
+]
+export enum MissionType {
+    ESCORT='esco', DELIVERY='deliv', DESTROY='destro', PATROL='pat'
+}
+export const MissionTypes = [
+    MissionType.DELIVERY, MissionType.DESTROY, MissionType.ESCORT
+]
 export enum PlayerEvents { 
     ROTATE_L= 'rl',
     ROTATE_R= 'rr',

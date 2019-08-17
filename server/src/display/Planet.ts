@@ -9,6 +9,6 @@ export default class Planet extends GameObjects.Sprite {
     constructor(scene:ServerStarSystem, x:number, y:number, texture:string, config:StellarObjectConfig){
         super(scene, x, y, texture)
         this.config = config
-        config.missions = new Array(10).fill(null).map(slot=>getRandomPublicMission(config.planetName, scene.name))
+        config.missions = new Array(10).fill(null).map(slot=>getRandomPublicMission(scene.state))
     }
 }

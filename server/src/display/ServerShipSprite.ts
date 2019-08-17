@@ -1,7 +1,7 @@
 import { GameObjects, Physics, Scene, } from "phaser";
 import ServerStarSystem from "../ServerStarSystem";
 import GalaxyScene from "../GalaxyScene";
-import { ServerMessages, AiProfileType, FactionName } from "../../../enum";
+import { ServerMessages, AiProfileType, FactionName, CargoType } from "../../../enum";
 import { getCargoWeight, getRandomPublicMission } from '../../../client/components/util/Util'
 import Planet from "./Planet";
 import Projectile from "./Projectile";
@@ -208,12 +208,14 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     acceptMission = (mission:Mission) => {
         const player = this.theGalaxy.players.get(this.shipData.ownerId)
         if(player){
-            player.missions.push(mission)
-            this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
             let planet = (this.scene as ServerStarSystem).planets.find(planet=>planet.config.planetName === this.shipData.landedAtName)
             let planetData = planet.config
+            let sMission = planetData.missions.find(pmission=>pmission.id === mission.id)
+            sMission.payment = sMission.payment ? sMission.payment : player.notoriety*100
+            player.missions.push(sMission)
+            this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
             planetData.missions = planetData.missions.filter(pmission=>pmission.id !== mission.id)
-            planetData.missions.push(getRandomPublicMission(planet.config.planetName, (this.scene as ServerStarSystem).name))
+            planetData.missions.push(getRandomPublicMission((this.scene as ServerStarSystem).state))
         }
     }
 
@@ -233,7 +235,8 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                         this.shipData.cargo.push({
                             name: commodity.name,
                             weight: order.amount,
-                            asset: ''
+                            asset: '',
+                            type: CargoType.COMMODITY
                         })
                     player.credits -= price
                     console.log('buy processed order, new credits: '+player.credits)

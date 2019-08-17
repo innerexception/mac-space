@@ -3,7 +3,7 @@ import Projectile from './display/Projectile'
 import ServerShipSprite from './display/ServerShipSprite'
 import * as Ships from './data/Ships'
 import { v4 } from 'uuid'
-import { PlayerEvents, Metals, AiProfileType } from "../../enum";
+import { PlayerEvents, Metals, AiProfileType, CargoType } from "../../enum";
 import { StarSystems } from "./data/StarSystems";
 import Planet from "./display/Planet";
 import { getCargoWeight, getNPCShipData } from "../../client/components/util/Util";
@@ -229,7 +229,8 @@ export default class ServerStarSystem extends Scene {
                 ship.shipData.cargo.push({
                     weight: resourceData.weight,
                     name: resourceData.type,
-                    asset: resourceData.type
+                    asset: resourceData.type,
+                    type: CargoType.COMMODITY
                 })
             }
             this.destroyResource(resource)

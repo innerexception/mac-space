@@ -24,7 +24,6 @@ export const Rigel:SystemState = {
             isBelt: true
         }
     ],
-    ships: [],
     assetList: Assets.defaults
 }
 export const Arcturus:SystemState = {
@@ -48,7 +47,6 @@ export const Arcturus:SystemState = {
             isBelt: true
         }
     ],
-    ships: [],
     assetList: Assets.defaults
 }
 
@@ -75,7 +73,6 @@ export const Centauri:SystemState = {
             isBelt: true
         }
     ],
-    ships: [],
     assetList: Assets.defaults
 }
 

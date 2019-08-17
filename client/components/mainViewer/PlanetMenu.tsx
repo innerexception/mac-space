@@ -36,6 +36,10 @@ export default class PlanetMenu extends React.Component<Props, State> {
         onAcceptMission(mission)
     }
 
+    onAbandon = (mission:Mission) => {
+        //TODO
+    }
+
     getPlanetMainMenu = () => {
         return (
             <div style={{...styles.disabled, display: 'flex'}}>
@@ -65,20 +69,29 @@ export default class PlanetMenu extends React.Component<Props, State> {
             {planet.shipyard && LightButton(true, ()=>this.setState({activeView:'shipyard'}), 'Shipyard')} 
             {planet.outfitter && LightButton(true, ()=>this.setState({activeView:'outfitter'}), 'Outfitter')}   
             {planet.bar && LightButton(true, ()=>this.setState({activeView:'bar'}), 'Bar')}        
-            {planet.missions && LightButton(true, ()=>this.setState({activeView:'missions'}), 'Job Board')}        
+            {planet.missions && LightButton(true, ()=>this.setState({activeView:'missions'}), 'Contracts')}        
             {Button(true, this.onTakeOff, 'Leave')}
         </div>
     
 
     missionView = (planet:StellarObjectConfig, ship:ShipData) => 
         <div>
-            <h4>Public Jobs</h4>
+            <h4>Active Contracts</h4>
+            {this.props.player.missions.map(mission=>{
+                <div>
+                    <h5>{mission.type}</h5>
+                    <div>{mission.description}</div>
+                    <div>{mission.payment}</div>
+                    {LightButton(true, ()=>this.onAbandon(mission), 'Abandon')}
+                </div>
+            })}
+            <h4>Available Contracts</h4>
             {planet.missions && planet.missions.map(mission => 
                 <div style={{display:"flex"}}>
                     <h5>{mission.type}</h5>
                     <div>{mission.description}</div>
-                    <div>{mission.payment}</div>
-                    {LightButton(mission.cargo.weight <= getCargoWeight(ship), ()=>this.onAcceptMission(mission), 'Accept')}
+                    <div>{mission.payment ? mission.payment : this.props.player.notoriety*100}</div>
+                    {LightButton(mission.cargo ? mission.cargo.weight <= getCargoWeight(ship) : mission.notorietyMinimum <= this.props.player.notoriety, ()=>this.onAcceptMission(mission), 'Accept')}
                 </div>
             )}
             {Button(true, ()=>this.setState({activeView:'main'}), 'Done')}
@@ -91,7 +104,7 @@ export default class PlanetMenu extends React.Component<Props, State> {
                 <div style={{display:"flex"}}>
                     <h5>{mission.type}</h5>
                     <div>{mission.description}</div>
-                    <div>{mission.payment}</div>
+                    <div>{mission.payment ? mission.payment : player.notoriety*100}</div>
                     {LightButton(mission.cargo.weight <= getCargoWeight(ship), ()=>this.onAcceptMission(mission), 'Accept')}
                 </div>
             )}

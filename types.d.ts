@@ -37,6 +37,12 @@ declare enum FactionName {
     POLICE='poletzei'
 }
 
+declare enum CargoType {
+    PASSENGER='pass',
+    COMMODITY='comm',
+    ILLEGAL='ille'
+}
+
 declare enum AiProfileType {
     
     MERCHANT='merc',
@@ -55,7 +61,7 @@ declare enum ServerMessages {
 }
 
 declare enum MissionType {
-    ESCORT='esco', DELIVERY='deliv', DESTROY='destro'
+    ESCORT='esco', DELIVERY='deliv', DESTROY='destro', PATROL='pat'
 }
 
 interface Tuple {
@@ -148,7 +154,6 @@ interface SystemState {
     y: number
     stellarObjects: Array<StellarObjectConfig>
     asteroidConfig: Array<AsteroidConfig>
-    ships: Array<ShipData>,
     assetList: Array<Asset>
 }
 
@@ -258,6 +263,7 @@ interface InventoryData {
     name: string
     weight: number
     asset: string
+    type: CargoType
 }
 
 interface ServerMessage {
@@ -293,8 +299,10 @@ interface Mission {
     payment: number
     cargo?: InventoryData
     type: MissionType
-    targets?: Array<ShipData>
+    targets?: number | Array<ShipData>
     reputationMinimum?:number
+    faction?:FactionName
+    notorietyMinimum?:number
 }
 
 interface Commodity {
