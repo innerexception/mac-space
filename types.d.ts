@@ -28,7 +28,9 @@ declare enum PlayerEvents {
     OUTFIT_ORDER='outo',
     SHIP_PURCHASE='spur',
     ACCEPT_MISSION='amis',
-    SELECT_PRIMARY='slctw'
+    SELECT_PRIMARY='slctw',
+    COMPLETE_MISSION='cmplm',
+    ABANDON_MISSION='abndm'
 }
 
 declare enum FactionName {
@@ -297,9 +299,13 @@ interface Mission {
     destinationPlanetName: string
     destinationSystemName: string
     payment: number
-    cargo?: InventoryData
     type: MissionType
+    cargo?: InventoryData
     targets?: number | Array<ShipData>
+    targetsDestroyed?: boolean
+    escortsAlive?: boolean
+    timeElapsedInSystem?: number
+    minimumTimeInSystem?: number
     reputationMinimum?:number
     faction?:FactionName
     notorietyMinimum?:number

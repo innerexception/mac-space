@@ -61,9 +61,6 @@ export default class StarSystem extends Scene {
                         let name = store.getState().systemName
                         this.selectedSystem = StarSystems.find(system=>system.name===name)
                         break
-                    case PlayerEvents.ACCEPT_MISSION:
-                        // this.server.publishMessage(player data update)
-                        break
                     case PlayerEvents.SHIP_PURCHASE:
                         // this.server.publishMessage(player data update)
                         break
@@ -75,6 +72,8 @@ export default class StarSystem extends Scene {
                         this.activeShip.addShipUpdate(this.activeShip, playerEvent)
                         break
                     case PlayerEvents.ACCEPT_MISSION:
+                    case PlayerEvents.COMPLETE_MISSION:
+                    case PlayerEvents.ABANDON_MISSION:
                         this.activeShip.shipData.transientData.mission = store.getState().mission
                         this.activeShip.addShipUpdate(this.activeShip, playerEvent)
                         break

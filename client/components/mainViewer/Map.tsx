@@ -19,6 +19,7 @@ export default class Map extends React.Component<Props, State> {
     }
 
     onChooseDestination = () => {
+        //TODO: check adjacency collection of system to see what should be clickable
         onSelectSystem(this.state.selectedSystemName)
     }
 

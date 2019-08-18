@@ -15,7 +15,9 @@ export const ReducerActions= {
     PLAYER_REPLACE: 'rplpl',
     PLAYER_REPLACE_SHIP: 'prps',
     PLANET_REPLACE: 'plrp',
-    ACCEPT_MISSION: 'ams'
+    ACCEPT_MISSION: 'ams',
+    COMPLETE_MISSION: 'compm',
+    ABANDON_MISSION: 'abndm'
 }
 export enum WeaponType {
     Energy='e', Kinetic='k', Quantum='q'
@@ -60,7 +62,9 @@ export enum PlayerEvents {
     OUTFIT_ORDER='outo',
     SHIP_PURCHASE='spur',
     ACCEPT_MISSION='amis',
-    SELECT_PRIMARY='slctw'
+    SELECT_PRIMARY='slctw',
+    COMPLETE_MISSION='cmplm',
+    ABANDON_MISSION='abndm'
 }
 
 export enum AiProfileType {

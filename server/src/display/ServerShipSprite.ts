@@ -1,7 +1,7 @@
 import { GameObjects, Physics, Scene, } from "phaser";
 import ServerStarSystem from "../ServerStarSystem";
 import GalaxyScene from "../GalaxyScene";
-import { ServerMessages, AiProfileType, FactionName, CargoType } from "../../../enum";
+import { ServerMessages, AiProfileType, FactionName, CargoType, MissionType } from "../../../enum";
 import { getCargoWeight, getRandomPublicMission } from '../../../client/components/util/Util'
 import Planet from "./Planet";
 import Projectile from "./Projectile";
@@ -165,19 +165,21 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                         y: targetSystem.y,
                         duration: duration,
                         onComplete: ()=> {
-                            const target = this.scene.scene.get(targetSystem.name) as ServerStarSystem
-                            let x = Phaser.Math.Between(100,3000)
-                            let newShip = target.spawnShip(this.shipData, {
-                                x, y:100, rotation, 
-                                xVelocity: systemVector.x*this.shipData.maxSpeed, 
-                                yVelocity: systemVector.y*this.shipData.maxSpeed
-                            });
-                            newShip.shipData.transientData.targetSystemName = targetSystem.name;
-                            newShip.shipData.systemName = targetSystem.name;
-                            newShip.shipData.fuel = this.shipData.fuel-1;
-                            (this.scene as ServerStarSystem).jumpingShips.push(newShip);
-                            (this.scene as ServerStarSystem).ships.delete(this.shipData.id)
-                            this.destroy()
+                            if(this.scene){
+                                const target = this.scene.scene.get(targetSystem.name) as ServerStarSystem
+                                let x = Phaser.Math.Between(100,3000)
+                                let newShip = target.spawnShip(this.shipData, {
+                                    x, y:100, rotation, 
+                                    xVelocity: systemVector.x*this.shipData.maxSpeed, 
+                                    yVelocity: systemVector.y*this.shipData.maxSpeed
+                                });
+                                newShip.shipData.transientData.targetSystemName = targetSystem.name;
+                                newShip.shipData.systemName = targetSystem.name;
+                                newShip.shipData.fuel = this.shipData.fuel-1;
+                                (this.scene as ServerStarSystem).jumpingShips.push(newShip);
+                                (this.scene as ServerStarSystem).ships.delete(this.shipData.id)
+                                this.destroy()
+                            }
                         }
                     })
                 }
@@ -186,6 +188,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     }
 
     firePrimary = (target?:ShipSprite) => {
+        //TODO: change to fireOn/fireOff
         const projectile = this.projectiles.get().setActive(true).setVisible(true) as Projectile
         if(projectile){
             projectile.fire(this.shipData.weapons[this.shipData.selectedPrimaryIndex], this, target)
@@ -213,9 +216,67 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             let sMission = planetData.missions.find(pmission=>pmission.id === mission.id)
             sMission.payment = sMission.payment ? sMission.payment : player.notoriety*100
             player.missions.push(sMission)
+            if(mission.cargo)
+                this.shipData.cargo.push(mission.cargo)
+            if(mission.targets){
+                if(mission.type === MissionType.DESTROY){
+                    //TODO: spawn appropriate number of targets in system with PATROL ai so they don't leave
+                }
+                if(mission.type === MissionType.ESCORT){
+                    //TODO: spawn number of merchant or vip ships to escort and give them a TRAVELTO ai
+                }
+            }
+            if(mission.minimumTimeInSystem){
+                //TODO: start the clock once this ship takes off
+            }
+            
             this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
             planetData.missions = planetData.missions.filter(pmission=>pmission.id !== mission.id)
             planetData.missions.push(getRandomPublicMission((this.scene as ServerStarSystem).state))
+        }
+    }
+
+    completeMission = (mission:Mission) => {
+        const player = this.theGalaxy.players.get(this.shipData.ownerId)
+        if(player){
+            let planet = (this.scene as ServerStarSystem).planets.find(planet=>planet.config.planetName === this.shipData.landedAtName)
+            let planetData = planet.config
+            if(mission.destinationPlanetName === planetData.planetName){
+                let success = (mission.type === MissionType.DELIVERY && mission.destinationPlanetName === planetData.planetName) ||
+                            (mission.type === MissionType.DESTROY && mission.targetsDestroyed) ||
+                            (mission.type === MissionType.ESCORT && mission.escortsAlive) ||
+                            (mission.type === MissionType.PATROL && mission.timeElapsedInSystem >= mission.minimumTimeInSystem)
+                if(success){
+                    player.credits += mission.payment
+                    if(mission.type === MissionType.ESCORT || mission.type === MissionType.DESTROY){
+                        player.notoriety+=1
+                    }
+                    if(mission.faction){
+                        player.reputation.forEach(faction=>{
+                            if(faction.name === mission.faction) faction.reputation+=1
+                        })
+                    }
+                    player.missions = player.missions.filter(pmission=>mission.id!==pmission.id)
+                }
+            }
+            this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
+        }
+    }
+
+    abandonMission = (mission:Mission) => {
+        const player = this.theGalaxy.players.get(this.shipData.ownerId)
+        if(player){
+            if(mission.type === MissionType.ESCORT || mission.type === MissionType.DESTROY){
+                player.notoriety-=1
+                if(player.notoriety < 0) player.notoriety = 0
+            }
+            if(mission.faction){
+                player.reputation.forEach(faction=>{
+                    if(faction.name === mission.faction) faction.reputation-=1
+                    if(faction.reputation < 0) faction.reputation = 0
+                })
+            }
+            this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
         }
     }
 
@@ -422,11 +483,13 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         },
         plunderAndTakeOff: () => {
             //TODO: remove any carried goods
-            let system = (this.scene as ServerStarSystem)
-            let target = system.ships.get(this.shipData.aiProfile.targetShipId)
-            if(target) target.shipData.cargo = []
-            delete this.shipData.aiProfile.targetShipId
-            this.AiEvents.jump()
+            if(this.scene){
+                let system = (this.scene as ServerStarSystem)
+                let target = system.ships.get(this.shipData.aiProfile.targetShipId)
+                if(target) target.shipData.cargo = []
+                delete this.shipData.aiProfile.targetShipId
+                this.AiEvents.jump()
+            }
         }
     }
 }

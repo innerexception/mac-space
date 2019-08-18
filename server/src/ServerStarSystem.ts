@@ -107,6 +107,13 @@ export default class ServerStarSystem extends Scene {
                     break
                 case PlayerEvents.ACCEPT_MISSION: 
                     ship.acceptMission(update.shipData.transientData.mission)
+                    break
+                case PlayerEvents.COMPLETE_MISSION: 
+                    ship.completeMission(update.shipData.transientData.mission)
+                    break
+                case PlayerEvents.ABANDON_MISSION: 
+                    ship.abandonMission(update.shipData.transientData.mission)
+                    break
             }
         }
         else if(update.type === PlayerEvents.PLAYER_SPAWNED){

@@ -49,6 +49,20 @@ export const onAcceptMission = (mission:Mission) => {
     })
 }
 
+export const onCompleteMission = (mission:Mission) => {
+    dispatch({
+        type: ReducerActions.COMPLETE_MISSION,
+        mission
+    })
+}
+
+export const onAbandonMission = (mission:Mission) => {
+    dispatch({
+        type: ReducerActions.ABANDON_MISSION,
+        mission
+    })
+}
+
 export const onShipTakeOff = (activeShip:ShipData) => {
     dispatch({
         type: ReducerActions.TAKE_OFF,

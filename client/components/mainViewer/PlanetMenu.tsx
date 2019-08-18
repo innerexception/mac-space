@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { onCommodityOrder, onShipTakeOff, onAcceptMission } from '../uiManager/Thunks'
+import { onCommodityOrder, onShipTakeOff, onAcceptMission, onCompleteMission, onAbandonMission } from '../uiManager/Thunks'
 import AppStyles from '../../AppStyles';
 import { Button, LightButton } from '../Shared'
 import { getCargoWeight, getPlayerFactionMissions } from '../util/Util';
@@ -36,8 +36,12 @@ export default class PlanetMenu extends React.Component<Props, State> {
         onAcceptMission(mission)
     }
 
+    onComplete = (mission:Mission) => {
+        onCompleteMission(mission)
+    }
+
     onAbandon = (mission:Mission) => {
-        //TODO
+        onAbandonMission(mission)
     }
 
     getPlanetMainMenu = () => {
@@ -75,23 +79,25 @@ export default class PlanetMenu extends React.Component<Props, State> {
     
 
     missionView = (planet:StellarObjectConfig, ship:ShipData) => 
-        <div>
+        <div style={{height:'80vh', overflow:'auto'}}>
             <h4>Active Contracts</h4>
-            {this.props.player.missions.map(mission=>{
+            {this.props.player.missions.map(mission=>
                 <div>
                     <h5>{mission.type}</h5>
                     <div>{mission.description}</div>
                     <div>{mission.payment}</div>
-                    {LightButton(true, ()=>this.onAbandon(mission), 'Abandon')}
+                    {LightButton(true, mission.destinationPlanetName === planet.planetName ?
+                        ()=>this.onComplete(mission) : ()=>this.onAbandon(mission), 
+                        mission.destinationPlanetName === planet.planetName ? 'Complete' : 'Abandon')}
                 </div>
-            })}
+            )}
             <h4>Available Contracts</h4>
             {planet.missions && planet.missions.map(mission => 
                 <div style={{display:"flex"}}>
                     <h5>{mission.type}</h5>
                     <div>{mission.description}</div>
-                    <div>{mission.payment ? mission.payment : this.props.player.notoriety*100}</div>
-                    {LightButton(mission.cargo ? mission.cargo.weight <= getCargoWeight(ship) : mission.notorietyMinimum <= this.props.player.notoriety, ()=>this.onAcceptMission(mission), 'Accept')}
+                    <div>{mission.payment ? mission.payment : this.props.player.notoriety*1000}</div>
+                    {LightButton(mission.cargo ? mission.cargo.weight <= ship.maxCargoSpace - getCargoWeight(ship) : mission.notorietyMinimum <= this.props.player.notoriety, ()=>this.onAcceptMission(mission), 'Accept')}
                 </div>
             )}
             {Button(true, ()=>this.setState({activeView:'main'}), 'Done')}

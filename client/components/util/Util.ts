@@ -53,13 +53,14 @@ export const getRandomPublicMission = (startingSystem:SystemState) => {
 }
 
 const getRandomDeliveryMission = (startingSystem:SystemState) => {
-    let destinationSystem = StarSystems[Phaser.Math.Between(0,StarSystems.length-1)]
+    let othersystems = StarSystems.filter(system=>system.name!==startingSystem.name)
+    let destinationSystem = othersystems[Phaser.Math.Between(0,othersystems.length-1)]
     let destinationPlanet = destinationSystem.stellarObjects[Phaser.Math.Between(0, destinationSystem.stellarObjects.length-1)]
     let distance = Phaser.Math.Distance.Between(startingSystem.x, startingSystem.y, destinationSystem.x, destinationSystem.y)
     let cargo = getDeliveryCargo()
     let mission:Mission = {
         id:v4(),
-        payment: distance * 100,
+        payment: Math.round(distance),
         destinationPlanetName: destinationPlanet.planetName,
         destinationSystemName: destinationSystem.name,
         cargo,
@@ -82,7 +83,7 @@ const getDeliveryCargo = () => {
         cargo.asset = 'passengers'
     }
     else{
-        cargo.weight = Phaser.Math.Between(5, 50)
+        cargo.weight = Phaser.Math.Between(5, 10)
         cargo.name = cargo.weight+' tons of '+CommodityNames[Phaser.Math.Between(0,CommodityNames.length-1)]
         cargo.asset = 'junk'
     } 
