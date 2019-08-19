@@ -23,7 +23,7 @@ export default class GalaxyScene extends Scene {
     }
 
     create() {
-        //TODO: load up all the systems in the galaxy. In future, we want 1 server per system probs
+        //TODO: In future, we want 1 server per system probs
         StarSystems.forEach((system)=>{
           this.scene.add(system.name, new ServerStarSystem({key:system.name}, system), true)
         })

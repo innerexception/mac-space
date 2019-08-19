@@ -21,7 +21,11 @@ const appReducer = (state = getInitialState(), action:any):RState => {
         case ReducerActions.COMMODITY_ORDER:
             return { ...state, commodityOrder: { ...action }, playerEvent: PlayerEvents.COMMODITY_ORDER }
         case ReducerActions.ACCEPT_MISSION:
-            return {...state, mission: {...action}, playerEvent: PlayerEvents.ACCEPT_MISSION}
+            return {...state, mission: action.mission, playerEvent: PlayerEvents.ACCEPT_MISSION}
+        case ReducerActions.COMPLETE_MISSION:
+            return {...state, mission: action.mission, playerEvent: PlayerEvents.COMPLETE_MISSION}
+        case ReducerActions.ABANDON_MISSION:
+            return {...state, mission: action.mission, playerEvent: PlayerEvents.ABANDON_MISSION}
         case ReducerActions.PLAYER_REPLACE:
             return {...state, player: action.player, activeShip: action.activeShip, playerEvent: null }
         case ReducerActions.PLAYER_REPLACE_SHIP:
