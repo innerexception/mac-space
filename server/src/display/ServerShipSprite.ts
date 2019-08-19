@@ -67,24 +67,26 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             rotation: planetAngle+(Math.PI/2),
             duration: 1500,
             onComplete: ()=>{
-                const duration = (distance/(this.shipData.maxSpeed/2))*1000
-                this.setVelocity(0,0)
-                this.landingSequence = this.scene.tweens.add({
-                    targets: this,
-                    x: target.x,
-                    y: target.y,
-                    ease: Phaser.Math.Easing.Cubic.InOut,
-                    duration,
-                    onComplete: ()=>{
-                        console.log('boarding sequence completed for: '+this.shipData.id)
-                        if(this.shipData.aiProfile){
-                            this.scene && this.scene.time.addEvent({
-                                delay: 5000,
-                                callback: this.AiEvents.plunderAndTakeOff
-                            })
+                if(this.scene){
+                    const duration = (distance/(this.shipData.maxSpeed/2))*1000
+                    this.setVelocity(0,0)
+                    this.landingSequence = this.scene.tweens.add({
+                        targets: this,
+                        x: target.x,
+                        y: target.y,
+                        ease: Phaser.Math.Easing.Cubic.InOut,
+                        duration,
+                        onComplete: ()=>{
+                            console.log('boarding sequence completed for: '+this.shipData.id)
+                            if(this.shipData.aiProfile){
+                                this.scene && this.scene.time.addEvent({
+                                    delay: 5000,
+                                    callback: this.AiEvents.plunderAndTakeOff
+                                })
+                            }
                         }
-                    }
-                })
+                    })
+                }
             }
         })
     }
@@ -105,26 +107,28 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             rotation: planetAngle+(Math.PI/2),
             duration: 1500,
             onComplete: ()=>{
-                const duration = (distance/(this.shipData.maxSpeed/2))*1000
-                this.setVelocity(0,0)
-                this.landingSequence = this.scene.tweens.add({
-                    targets: this,
-                    x: target.x,
-                    y: target.y,
-                    ease: Phaser.Math.Easing.Cubic.InOut,
-                    duration,
-                    onComplete: ()=>{
-                        this.stopLandingSequence()
-                        this.shipData.landedAtName = target.config.planetName
-                        console.log('landing sequence completed for: '+this.shipData.id)
-                        if(this.shipData.aiProfile){
-                            this.scene && this.scene.time.addEvent({
-                                delay: 5000,
-                                callback: this.AiEvents.takeOff
-                            })
+                if(this.scene){
+                    const duration = (distance/(this.shipData.maxSpeed/2))*1000
+                    this.setVelocity(0,0)
+                    this.landingSequence = this.scene.tweens.add({
+                        targets: this,
+                        x: target.x,
+                        y: target.y,
+                        ease: Phaser.Math.Easing.Cubic.InOut,
+                        duration,
+                        onComplete: ()=>{
+                            this.stopLandingSequence()
+                            this.shipData.landedAtName = target.config.planetName
+                            console.log('landing sequence completed for: '+this.shipData.id)
+                            if(this.shipData.aiProfile){
+                                this.scene && this.scene.time.addEvent({
+                                    delay: 5000,
+                                    callback: this.AiEvents.takeOff
+                                })
+                            }
                         }
-                    }
-                })
+                    })
+                }
             }
         })
     }

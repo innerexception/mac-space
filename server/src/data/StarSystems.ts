@@ -7,6 +7,7 @@ export const Rigel:SystemState = {
     name: 'Rigel',
     x: 5000,
     y: 5000,
+    neighbors: ['Arcturus', 'Centauri'],
     stellarObjects: [{x: 550, y:550, asset: 'planet', 
         planetName: 'Rigel I',
         description: "It's alright",
@@ -30,6 +31,7 @@ export const Arcturus:SystemState = {
     name: 'Arcturus',
     x: 10000,
     y: 10000,
+    neighbors: ['Rigel', 'Centauri'],
     stellarObjects: [
         {x: 850, y:750, 
             asset: 'planet', planetName: 'Haven', description: "It's Haveny",
@@ -54,6 +56,7 @@ export const Centauri:SystemState = {
     name: 'Centauri',
     x: 15000,
     y: 1000,
+    neighbors: ['Arcturus', 'Rigel'],
     stellarObjects: [{
         x: 150, 
         y:750, 
@@ -76,6 +79,33 @@ export const Centauri:SystemState = {
     assetList: Assets.defaults
 }
 
+export const Deneb:SystemState = {
+    name: 'Deneb',
+    x: 15000,
+    y: 7000,
+    neighbors: ['Arcturus', 'Centauri'],
+    stellarObjects: [{
+        x: 450, 
+        y:750, 
+        asset: 'planet', 
+        planetName: 'Deneb 3', description: "Deneb 3 description",
+        commodities: Commodities.Metals
+    }],
+    asteroidConfig: [
+        {
+            type: Metals.SILVER,
+            density: 1,
+            isBelt: false
+        },
+        {
+            type: Metals.IRON,
+            density: 3,
+            isBelt: false
+        }
+    ],
+    assetList: Assets.defaults
+}
+
 export const StarSystems:Array<SystemState> = [
-    Rigel, Arcturus, Centauri
+    Rigel, Arcturus, Centauri, Deneb
 ]

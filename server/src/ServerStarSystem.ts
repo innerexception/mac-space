@@ -143,24 +143,38 @@ export default class ServerStarSystem extends Scene {
             let arr = []
             asteroids.forEach(roid=>arr.push(roid))
 
-            if(aConfig.isBelt)
+            if(aConfig.isBelt){
                 Phaser.Actions.RandomEllipse(arr, new Phaser.Geom.Ellipse(1600, 1600, 1000, 1000));
-            else
+                asteroids.forEach((sprite:Physics.Arcade.Sprite)=>{
+                    let d=Phaser.Math.Between(700,1000)
+                    let r=Phaser.Math.FloatBetween(-0.01,0.1)
+                    this.time.addEvent({
+                        delay: 25, 
+                        callback: ()=>{
+                            sprite.rotation+=r
+                            Phaser.Actions.RotateAroundDistance([sprite], { x: 1600, y: 1600 }, 0.001, d)
+                        },
+                        loop: true 
+                    });
+                    roidRay.push(sprite)
+                })
+            }
+            else{
                 Phaser.Actions.RandomRectangle(arr, new Phaser.Geom.Rectangle(0, 0, 3200, 3200));
+                asteroids.forEach((sprite:Physics.Arcade.Sprite)=>{
+                    let r=Phaser.Math.FloatBetween(-0.01,0.1)
+                    this.time.addEvent({
+                        delay: 25, 
+                        callback: ()=>{
+                            sprite.rotation+=r
+                        },
+                        loop: true 
+                    });
+                    roidRay.push(sprite)
+                })
+            }
                     
-            asteroids.forEach((sprite:Physics.Arcade.Sprite)=>{
-                let d=Phaser.Math.Between(700,1000)
-                let r=Phaser.Math.FloatBetween(-0.01,0.1)
-                this.time.addEvent({
-                    delay: 1, 
-                    callback: ()=>{
-                        sprite.rotation+=r
-                        Phaser.Actions.RotateAroundDistance([sprite], { x: 1600, y: 1600 }, 0.001, d)
-                    },
-                    loop: true 
-                });
-                roidRay.push(sprite)
-            })              
+                          
         })
         
         let temp = []
@@ -282,10 +296,6 @@ export default class ServerStarSystem extends Scene {
         let ships = []
         this.ships.forEach(ship=>ships.push(ship))
         this.physics.add.overlap(rez, ships, this.playerGotResource)
-    }
-
-    playerBoardedShip = (player:Physics.Arcade.Sprite, targetShip:Physics.Arcade.Sprite) => {
-        //TODO: send boarding action message with 2 participant ships ids
     }
 
     initNPCTraffic = () => {

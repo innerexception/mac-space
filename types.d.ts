@@ -157,6 +157,7 @@ interface SystemState {
     stellarObjects: Array<StellarObjectConfig>
     asteroidConfig: Array<AsteroidConfig>
     assetList: Array<Asset>
+    neighbors: Array<string>
 }
 
 interface JumpVector {

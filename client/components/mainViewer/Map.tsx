@@ -19,23 +19,33 @@ export default class Map extends React.Component<Props, State> {
     }
 
     onChooseDestination = () => {
-        //TODO: check adjacency collection of system to see what should be clickable
         onSelectSystem(this.state.selectedSystemName)
     }
 
+    isSystemAdjacent = (system:SystemState) => 
+        system.neighbors.filter(nsystem=>nsystem === this.props.activeShip.systemName).length > 0
+    
     getMap = () => {
             return (
                 <div style={{...styles.disabled, display: 'flex'}}>
                     <div style={AppStyles.notification}>
                         <h3>Milky Way</h3>
-                        <div style={{width:'60vw', height:'60vh', background:'black', position:'relative'}}>
-                            {StarSystems.map(system=>
-                                <div style={{position:'absolute', top: system.y/100, left: system.x/100, cursor:'pointer'}} 
-                                     onClick={()=>this.setState({selectedSystemName: system.name})}>
-                                    <div style={{height:'0.5em', width:'0.5em', background:this.state.selectedSystemName === system.name ? 'blue' : 'white', borderRadius:'50%'}}/> 
-                                    <h5>{system.name}</h5>    
-                                </div>
-                            )}
+                        <div style={{width:'60vw', height:'60vh', background:'black', overflow:'auto'}}>
+                            <svg style={{minHeight:'100%', minWidth:'100%'}}>
+                                {StarSystems.map(system=>
+                                    [system.neighbors.map(neighborName=>{
+                                        let nSystem = StarSystems.find(asystem=>asystem.name === neighborName)
+                                        return <line x1={system.x/50} y1={system.y/50} x2={nSystem.x/50} y2={nSystem.y/50} stroke='white'/>
+                                    })]
+                                )}
+                                {StarSystems.map(system=>[
+                                    <circle cx={system.x/50} cy={system.y/50} 
+                                            r={10}
+                                            fill={this.state.selectedSystemName === system.name ? 'green' : 'white'}
+                                            onClick={this.isSystemAdjacent(system) ? ()=>this.setState({selectedSystemName: system.name}) : null}/>,
+                                    <text x={system.x/50} y={(system.y/50)+30} stroke='green'>{system.name}</text>]
+                                )}
+                            </svg>
                         </div>
                         {Button(true, this.onChooseDestination, 'Ok')}
                     </div>
