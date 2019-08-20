@@ -3,7 +3,7 @@ import Projectile from './display/Projectile'
 import ServerShipSprite from './display/ServerShipSprite'
 import * as Ships from './data/Ships'
 import { v4 } from 'uuid'
-import { PlayerEvents, Metals, AiProfileType, CargoType } from "../../enum";
+import { PlayerEvents, Metals, CargoType } from "../../enum";
 import { StarSystems } from "./data/StarSystems";
 import Planet from "./display/Planet";
 import { getCargoWeight, getNPCShipData } from "../../client/components/util/Util";
@@ -101,6 +101,9 @@ export default class ServerStarSystem extends Scene {
                     break
                 case PlayerEvents.SELECT_PRIMARY:
                     ship.selectPrimary()
+                    break
+                case PlayerEvents.SELECT_TARGET:
+                    ship.selectNextTarget()
                     break
                 case PlayerEvents.COMMODITY_ORDER:
                     ship.processOrder(update.shipData.transientData.commodityOrder)
@@ -215,7 +218,7 @@ export default class ServerStarSystem extends Scene {
 
     shipHitShip = (target:ServerShipSprite, projectile:Projectile) => {
         projectile.destroy()
-        let launcher = Weapons.find(launcher=>projectile.weapon.name === launcher.name)
+        let launcher = projectile.weapon
         if(target.shipData.shields > 0)
             target.shipData.shields -= launcher.shieldDamage
         else if(target.shipData.armor > 0)

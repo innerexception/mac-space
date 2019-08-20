@@ -12,6 +12,7 @@ interface Props {
     loginName: string
     loginPassword: string
     activeShip:ShipData
+    targetShip: ShipData
     player:Player
     activePlanet: StellarObjectConfig
 }
@@ -38,7 +39,16 @@ export default class Match extends React.Component<Props, State> {
                         <div>energy: {this.props.activeShip.energy} / {this.props.activeShip.maxEnergy}</div>
                         <div>sheild: {this.props.activeShip.shields} / {this.props.activeShip.maxShields}</div>
                         <div>hull: {this.props.activeShip.hull} / {this.props.activeShip.maxHull}</div>
-                        <div>selected: {this.props.activeShip.weapons[this.props.activeShip.selectedPrimaryIndex].name}</div>
+                        <div>selected: {this.props.activeShip.weapons[this.props.activeShip.selectedWeaponIndex].name}</div>
+                    </div>}
+                    {this.props.targetShip && <div style={{position:'absolute', top:'10em', right:'1em', color:'green'}}>
+                        <div>{this.props.targetShip.name + ' - '+this.props.targetShip.faction}</div>
+                        <div>fuel: {this.props.targetShip.fuel} / {this.props.targetShip.maxFuel}</div>
+                        <div>cargo: {getCargoWeight(this.props.targetShip)} / {this.props.targetShip.maxCargoSpace}</div>
+                        <div>energy: {this.props.targetShip.energy} / {this.props.targetShip.maxEnergy}</div>
+                        <div>sheild: {this.props.targetShip.shields} / {this.props.targetShip.maxShields}</div>
+                        <div>hull: {this.props.targetShip.hull} / {this.props.targetShip.maxHull}</div>
+                        <div>selected: {this.props.targetShip.weapons[this.props.targetShip.selectedWeaponIndex].name}</div>
                     </div>}
                     <div style={{...styles.modal, display: this.state.showMatchOptions ? 'flex':'none'}}>
                         <div style={{display:'flex'}}>

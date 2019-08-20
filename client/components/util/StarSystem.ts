@@ -62,7 +62,7 @@ export default class StarSystem extends Scene {
                         this.selectedSystem = StarSystems.find(system=>system.name===name)
                         break
                     case PlayerEvents.SHIP_PURCHASE:
-                        // this.server.publishMessage(player data update)
+                        //TODO
                         break
                     case PlayerEvents.OUTFIT_ORDER:
                         //TODO
@@ -225,9 +225,6 @@ export default class StarSystem extends Scene {
 
         this.createStarfield()
 
-        //we need to wait until the server gives us a ship to focus on
-        this.time.addEvent({ delay: 100, callback: this.checkForActiveShip, loop: true });
-        
         this.input.keyboard.on('keydown-L', (event) => {
             this.selectedPlanetIndex = (this.selectedPlanetIndex + 1) % this.planets.length
             this.activeShip.startLandingSequence(this.planets[this.selectedPlanetIndex])
@@ -237,7 +234,7 @@ export default class StarSystem extends Scene {
             else console.log('no system selected...')
         })
         this.input.keyboard.on('keydown-SPACE', (event) => {
-            let weapon = this.activeShip.shipData.weapons[this.activeShip.shipData.selectedPrimaryIndex]
+            let weapon = this.activeShip.shipData.weapons[this.activeShip.shipData.selectedWeaponIndex]
             if(weapon.isBeam){
                 this.activeShip.firePrimary()
             }
@@ -250,17 +247,26 @@ export default class StarSystem extends Scene {
                     loop:true
                 })
             }
-        });
+        })
         this.input.keyboard.on('keyup-SPACE', (event) => {
             this.firingEvent.remove()
         })
         this.input.keyboard.on('keydown-M', (event) => {
             onToggleMapMenu(true, this.activeShip.shipData)
-        });
+        })
         this.input.keyboard.on('keydown-W', (event) => {
             this.activeShip.selectPrimary()
-        });
+        })
+        this.input.keyboard.on('keydown-T', (event) => {
+            this.activeShip.selectNextTarget()
+        })
+        this.input.keyboard.on('keydown-R', (event) => {
+            this.activeShip.selectNextHostileTarget()
+        })
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        //we need to wait until the server gives us a ship to focus on
+        this.time.addEvent({ delay: 100, callback: this.checkForActiveShip, loop: true });
         
         this.server.setListeners(this.onWSMessage, this.onConnected, this.onConnectionError)
     }

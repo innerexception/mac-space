@@ -6,6 +6,7 @@ export default class Projectile extends GameObjects.Image {
     xSpeed: number
     ySpeed: number
     weapon: Weapon
+    target: Physics.Arcade.Sprite
 
     constructor(scene, x, y){
         super(scene, x, y, 'proton')
@@ -16,24 +17,37 @@ export default class Projectile extends GameObjects.Image {
         this.setTexture(weapon.projectileAsset)
         this.setPosition(shooter.x, shooter.y); // Initial position
         this.setScale(0.2,0.2)
-        if(target && weapon.isTurrent) this.rotation = Math.atan( (target.x-this.x) / (target.y-this.y));
-        else this.rotation = shooter.rotation
+        this.rotation = shooter.rotation
+        this.target=target
 
         let targetVector = { x: Math.sin(shooter.rotation), y: Math.cos(shooter.rotation)}
+        this.rotation = shooter.rotation; // angle bullet with shooters rotation
+        if(this.weapon.isTurrent && this.target){
+            //angle bullet with turrent's rotation
+            this.rotation = Math.atan( (this.target.x-this.x) / (this.target.y-this.y) )
+            targetVector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
+        }
+
         this.xSpeed = targetVector.x
         this.ySpeed = -targetVector.y
-        this.x += this.xSpeed * 50;
-        this.y += this.ySpeed * 50;
+        this.x += this.xSpeed * weapon.projectileSpeed;
+        this.y += this.ySpeed * weapon.projectileSpeed;
 
-        this.rotation = shooter.rotation; // angle bullet with shooters rotation
         this.timeAlive = 0; // Time since new bullet spawned
     }
     
     update = (time, delta) =>
     {
-        this.x += this.xSpeed * delta;
-        this.y += this.ySpeed * delta;
+        this.x += this.xSpeed * this.weapon.projectileSpeed;
+        this.y += this.ySpeed * this.weapon.projectileSpeed;
         this.timeAlive += delta;
+
+        if(this.weapon.isGuided && this.target) {
+            this.rotation = Math.atan( (this.target.x-this.x) / (this.target.y-this.y) )
+            const targetVector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
+            this.xSpeed = targetVector.x
+            this.ySpeed = -targetVector.y
+        }
         if (this.timeAlive > this.weapon.range)
         {
             this.setActive(false);

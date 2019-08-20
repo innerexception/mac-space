@@ -142,7 +142,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         console.log('take off')
         this.shipData.landedAtName = null
         if(this.shipData.aiProfile){
-            this.scene.time.addEvent({
+            this.scene && this.scene.time.addEvent({
                 delay: 3000,
                 callback: this.AiEvents.jump
             })
@@ -191,17 +191,30 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         })
     }
 
-    firePrimary = (target?:ShipSprite) => {
+    firePrimary = () => {
         //TODO: change to fireOn/fireOff
         const projectile = this.projectiles.get().setActive(true).setVisible(true) as Projectile
         if(projectile){
-            projectile.fire(this.shipData.weapons[this.shipData.selectedPrimaryIndex], this, target)
+            let target = (this.scene as ServerStarSystem).ships.get(this.shipData.currentTargetId)
+            projectile.fire(this.shipData.weapons[this.shipData.selectedWeaponIndex], this, target)
             this.shipData.transientData.firePrimary = true
         }
     }
 
     selectPrimary = () => {
-        this.shipData.selectedPrimaryIndex = (this.shipData.selectedPrimaryIndex + 1) % this.shipData.weapons.length
+        this.shipData.selectedWeaponIndex = (this.shipData.selectedWeaponIndex + 1) % this.shipData.weapons.length
+    }
+
+    selectNextTarget = () => {
+        let ships = [];
+        let i=0;
+        let index = 0;
+        (this.scene as ServerStarSystem).ships.forEach((ship)=>{
+            if(ship.shipData.id === this.shipData.currentTargetId) index = i
+            ships.push(ship)
+            i++
+        })
+        this.shipData.currentTargetId = ships[(index+1)%ships.length].shipData.id
     }
 
     fireSecondary = () => {

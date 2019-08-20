@@ -8,13 +8,14 @@ export const ProtonGun:Weapon = {
     projectileSpeed: 100,
     accuracy: 1,
     shotsPerSecond: 3,
-    isTurrent: false,
+    isTurrent: true,
     shieldDamage: 1,
     armorDamage: 0.5,
     projectileAsset: 'proton',
     range: 300,
     isBeam: false,
-    shipId: ''
+    shipId: '',
+    isGuided: false
 }
 
 export const LaserCannon:Weapon = {
@@ -30,7 +31,29 @@ export const LaserCannon:Weapon = {
     armorDamage: 0.1,
     projectileAsset: 'lazor',
     range: 200,
-    shipId: ''
+    shipId: '',
+    isGuided: false,
+    shotsPerSecond: 0.5
+}
+
+export const Sparrow:Weapon = {
+    name: 'Sparrow Missile',
+    type: WeaponType.Kinetic,
+    energyPerShot: 0,
+    heatPerShot: 0,
+    projectileSpeed: 25,
+    accuracy: 1,
+    isBeam: false,
+    isTurrent: false,
+    shieldDamage: 10,
+    armorDamage: 10,
+    projectileAsset: 'sparrow',
+    projectileTrackingInterval: 100,
+    projectileTurnSpeed: 0.2,
+    range: 2000,
+    shipId: '',
+    isGuided: true,
+    shotsPerSecond: 1
 }
 
 export const Weapons:Array<Weapon> = [ProtonGun, LaserCannon]

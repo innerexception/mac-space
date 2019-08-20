@@ -17,7 +17,8 @@ export const ReducerActions= {
     PLANET_REPLACE: 'plrp',
     ACCEPT_MISSION: 'ams',
     COMPLETE_MISSION: 'compm',
-    ABANDON_MISSION: 'abndm'
+    ABANDON_MISSION: 'abndm',
+    PLAYER_REPLACE_TARGET:'prprt'
 }
 export enum WeaponType {
     Energy='e', Kinetic='k', Quantum='q'
@@ -64,7 +65,8 @@ export enum PlayerEvents {
     ACCEPT_MISSION='amis',
     SELECT_PRIMARY='slctw',
     COMPLETE_MISSION='cmplm',
-    ABANDON_MISSION='abndm'
+    ABANDON_MISSION='abndm',
+    SELECT_TARGET='selct'
 }
 
 export enum AiProfileType {
