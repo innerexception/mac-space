@@ -132,7 +132,7 @@ export default class StarSystem extends Scene {
                     if(planet.config.planetName === planetConfig.planetName){
                         planet.config = planetConfig
                         found=true
-                        if(this.activeShip.shipData.landedAtName === planetConfig.planetName)
+                        if(this.activeShip && this.activeShip.shipData.landedAtName === planetConfig.planetName)
                             this.onReplacePlanet(planetConfig)
                     }
                 })
@@ -153,20 +153,19 @@ export default class StarSystem extends Scene {
                             this.unsubscribeRedux()
                             this.scene.remove()
                         }
-                        // else{
-                        //     //Somebody else left...but this is server's responsibility
-                                //TODO: This is a memory leak probably
-                        // }
+                    }
+                    if(update.shipData.systemName !== this.name){
+                        this.destroyShip(ship, false)
                     }
                     if(update.shipData.hull <= 0){
-                        this.destroyShip(ship)
+                        this.destroyShip(ship, true)
                     }
                     else {
                         ship.body && ship.applyUpdate(update)
                     }
                 }
                 else {
-                    console.log('spawning new ship at '+update.shipData.x+','+update.shipData.y)
+                    console.log('spawning new ship: '+update.shipData.id)
                     this.spawnShip(update.shipData)
                 }
             })
@@ -314,7 +313,7 @@ export default class StarSystem extends Scene {
             //We should spawn it
             //This is our starting sector so we spawn ourselves
             let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
-            this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, this.beams, true, activeShipData, this.server, this.onTogglePlanetMenu, this.destroyShip);
+            this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, this.beams, true, activeShipData, this.server, this.onTogglePlanetMenu);
             this.ships.set(this.activeShip.shipData.id, this.activeShip)
             activeShipData.systemName = this.name
             //Add player ship notification
@@ -358,7 +357,7 @@ export default class StarSystem extends Scene {
     spawnShip = (config:ShipData) => {
         let shipData = {...Ships[config.name], ...config}
         shipData.systemName = this.name
-        let ship = new ShipSprite(this.scene.scene, config.x, config.y, shipData.asset, this.projectiles, this.beams, false, shipData, this.server, this.onTogglePlanetMenu, this.destroyShip)
+        let ship = new ShipSprite(this.scene.scene, config.x, config.y, shipData.asset, this.projectiles, this.beams, false, shipData, this.server, this.onTogglePlanetMenu)
         ship.rotation = config.rotation
         this.ships.set(shipData.id, ship)
         this.physics.add.overlap(this.projectiles, ship, this.projectileHitShip);
@@ -442,10 +441,24 @@ export default class StarSystem extends Scene {
         projectile.destroy()
     }
 
-    destroyShip = (ship:ShipSprite) => {
-        this.explosions.get(ship.x, ship.y, 'boom').play('explode')
+    destroyShip = (ship:ShipSprite, explode:boolean) => {
+        if(explode){
+            this.explosions.get(ship.x, ship.y, 'boom').play('explode')
+            console.log('destryed ship with id: '+ship.shipData.id)
+        } 
+        else{
+            console.log('ship left the system.')
+        }
         this.ships.delete(ship.shipData.id)
-        console.log('destryed ship with id: '+ship.shipData.id)
+        
+        if(this.activeShip.shipData.id === ship.shipData.id){
+            delete this.activeShip
+            store.dispatch({ type: ReducerActions.PLAYER_SHIP_LOST })
+        }
+        if(ship.shipData.id === this.activeShip.shipData.currentTargetId){
+            delete this.activeShip.shipData.currentTargetId
+            store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.activeShip.shipData}})
+        }
         ship.destroy()
     }
 

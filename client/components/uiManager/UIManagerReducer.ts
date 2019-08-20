@@ -34,6 +34,8 @@ const appReducer = (state = getInitialState(), action:any):RState => {
             return {...state, targetShip: action.targetShip, playerEvent: null }
         case ReducerActions.PLANET_REPLACE:
             return {...state, activePlanet: action.planet, playerEvent: null }
+        case ReducerActions.PLAYER_SHIP_LOST:
+            return {...state, activeShip: null }
         default:
             return state
     }

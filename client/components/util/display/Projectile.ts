@@ -3,8 +3,8 @@ import { GameObjects, Physics, } from "phaser";
 export default class Projectile extends GameObjects.Image {
 
     timeAlive: number
-    xSpeed: number
-    ySpeed: number
+    xVector: number
+    yVector: number
     weapon: Weapon
     target: Physics.Arcade.Sprite
 
@@ -16,7 +16,7 @@ export default class Projectile extends GameObjects.Image {
         this.weapon = weapon
         this.setTexture(weapon.projectileAsset)
         this.setPosition(shooter.x, shooter.y); // Initial position
-        this.setScale(0.2,0.2)
+        this.setScale(weapon.projectileSize)
         this.rotation = shooter.rotation
         this.target=target
 
@@ -28,25 +28,25 @@ export default class Projectile extends GameObjects.Image {
             targetVector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
         }
 
-        this.xSpeed = targetVector.x
-        this.ySpeed = -targetVector.y
-        this.x += this.xSpeed * 50;
-        this.y += this.ySpeed * 50;
+        this.xVector = targetVector.x
+        this.yVector = -targetVector.y
+        this.x += this.xVector * 50;
+        this.y += this.yVector * 50;
 
         this.timeAlive = 0; // Time since new bullet spawned
     }
     
     update = (time, delta) =>
     {
-        this.x += this.xSpeed * delta;
-        this.y += this.ySpeed * delta;
+        this.x += this.xVector * this.weapon.projectileSpeed;
+        this.y += this.yVector * this.weapon.projectileSpeed;
         this.timeAlive += delta;
 
         if(this.weapon.isGuided && this.target) {
             this.rotation = Math.atan( (this.target.x-this.x) / (this.target.y-this.y) )
             const targetVector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
-            this.xSpeed = targetVector.x
-            this.ySpeed = -targetVector.y
+            this.xVector = targetVector.x
+            this.yVector = -targetVector.y
         }
         if (this.timeAlive > this.weapon.range)
         {

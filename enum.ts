@@ -18,7 +18,8 @@ export const ReducerActions= {
     ACCEPT_MISSION: 'ams',
     COMPLETE_MISSION: 'compm',
     ABANDON_MISSION: 'abndm',
-    PLAYER_REPLACE_TARGET:'prprt'
+    PLAYER_REPLACE_TARGET:'prprt',
+    PLAYER_SHIP_LOST: 'pded'
 }
 export enum WeaponType {
     Energy='e', Kinetic='k', Quantum='q'

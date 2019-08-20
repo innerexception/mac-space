@@ -133,6 +133,7 @@ interface Weapon {
     isBeam: boolean
     isGuided: boolean
     shipId: string
+    projectileSize: number
 }
 
 interface Engine {

@@ -50,11 +50,20 @@ export default class Match extends React.Component<Props, State> {
                         <div>hull: {this.props.targetShip.hull} / {this.props.targetShip.maxHull}</div>
                         <div>selected: {this.props.targetShip.weapons[this.props.targetShip.selectedWeaponIndex].name}</div>
                     </div>}
-                    <div style={{...styles.modal, display: this.state.showMatchOptions ? 'flex':'none'}}>
-                        <div style={{display:'flex'}}>
-                            options menu (esc)
+                    {this.state.showMatchOptions && 
+                        <div style={{...styles.modal, display: 'flex'}}>
+                            <div style={{display:'flex'}}>
+                                options menu (esc)
+                            </div>
                         </div>
-                    </div>
+                    }
+                    {!this.props.activeShip && 
+                        <div style={{...styles.modal, display: 'flex'}}>
+                            <div style={{...AppStyles.notification, margin:'auto'}}>
+                                <h3>You Died.</h3>
+                            </div>
+                        </div>
+                    }
                     {this.props.showMap && <Map activeShip={this.props.activeShip}/>}
                     {this.props.showPlanetMenu && this.props.activeShip.landedAtName && 
                         <PlanetMenu activeShip={this.props.activeShip} 

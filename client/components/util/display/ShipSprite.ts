@@ -19,9 +19,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     bufferedInputs: Array<ShipUpdate>
     server:WebsocketClient
     onTogglePlanetMenu: Function
-    destroyShip: Function
 
-    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, beams:GameObjects.Group, isPlayerControlled:boolean, ship:ShipData, server:WebsocketClient, onTogglePlanetMenu:Function, destroyShip:Function){
+    constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, beams:GameObjects.Group, isPlayerControlled:boolean, ship:ShipData, server:WebsocketClient, onTogglePlanetMenu:Function){
         super(scene, x, y, texture)
         this.server=server
         this.bufferedInputs = []
@@ -46,7 +45,6 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         this.beams = beams
         this.isPlayerControlled = isPlayerControlled
         this.onTogglePlanetMenu = onTogglePlanetMenu
-        this.destroyShip = destroyShip
     }
 
     takeOff = () => {
@@ -228,10 +226,6 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             // this.anims.play('hullHit')
             this.shipData.hull=update.hull
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
-            if(this.shipData.hull <=0) {
-                this.destroyShip(this)
-                //TODO store.dispatch({ type: ReducerActions.PLAYER_SHIP_DESTROYED})
-            }
         }
     }
 

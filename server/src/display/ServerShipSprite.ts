@@ -478,10 +478,12 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     AiEvents = {
         land: ()=>{
-            let system = (this.scene as ServerStarSystem)
-            let target = system.planets[Phaser.Math.Between(0, system.planets.length-1)]
-            this.startLandingSequence(target)
-            console.log('ai landing start:'+this.shipData.id)
+            if(this.scene){
+                let system = (this.scene as ServerStarSystem)
+                let target = system.planets[Phaser.Math.Between(0, system.planets.length-1)]
+                this.startLandingSequence(target)
+                console.log('ai landing start:'+this.shipData.id)
+            }
         },
         takeOff: ()=>{
             this.takeOff()
@@ -489,11 +491,13 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         },
         jump: ()=>{
             this.aiEvent && this.aiEvent.remove()
-            let otherSystems = this.theGalaxy.scenes.filter(scene=>scene!==(this.scene as ServerStarSystem).name)
-            let targetName = otherSystems[Phaser.Math.Between(0,otherSystems.length-1)]
-            const system = StarSystems.find(system=>system.name === targetName)
-            this.startJumpSequence(system)
-            console.log('ai jump start to:'+ system.name+' '+this.shipData.id)
+            if(this.scene){
+                let otherSystems = this.theGalaxy.scenes.filter(scene=>scene!==(this.scene as ServerStarSystem).name)
+                let targetName = otherSystems[Phaser.Math.Between(0,otherSystems.length-1)]
+                const system = StarSystems.find(system=>system.name === targetName)
+                this.startJumpSequence(system)
+                console.log('ai jump start to:'+ system.name+' '+this.shipData.id)
+            }
         },
         board: () => {
             this.startBoardingSequence(this.shipData.aiProfile.targetShipId)
