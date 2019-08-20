@@ -4,7 +4,6 @@ import ServerStarSystem from "./ServerStarSystem";
 import WebsocketClient from "../../client/WebsocketClient";
 import ServerShipSprite from "./display/ServerShipSprite";
 import { ServerMessages, PlayerEvents } from "../../enum";
-import Planet from "./display/Planet";
 
 export default class GalaxyScene extends Scene {
 

@@ -1,5 +1,4 @@
 import { GameObjects, Physics, Scene, } from "phaser";
-import { onTogglePlanetMenu } from "../../uiManager/Thunks";
 import WebsocketClient from "../../../WebsocketClient";
 import { PlayerEvents, ServerMessages, ReducerActions } from "../../../../enum";
 import StarSystem from "../StarSystem";
@@ -7,7 +6,6 @@ import Planet from "./Planet";
 import { store } from "../../../App";
 import { getCargoWeight } from "../Util";
 import Projectile from "./Projectile";
-import Beam from "./Beam";
 
 export default class ShipSprite extends Physics.Arcade.Sprite {
 
@@ -95,11 +93,12 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     }
 
     firePrimary = () => {
-        let weapon = this.shipData.weapons[this.shipData.selectedPrimaryIndex]
+        let weapon = this.shipData.weapons[this.shipData.selectedWeaponIndex]
+        let target = (this.scene as StarSystem).ships.get(this.shipData.currentTargetId)
         if(!weapon.isBeam){
             const projectile = this.projectiles.get().setActive(true).setVisible(true) as Projectile
             if(projectile){
-                projectile.fire(this.shipData.weapons[this.shipData.selectedPrimaryIndex], this)
+                projectile.fire(this.shipData.weapons[this.shipData.selectedWeaponIndex], this, target)
                 this.shipData.transientData.firePrimary = true
                 if(this.isPlayerControlled){
                     this.addShipUpdate(this, PlayerEvents.FIRE_PRIMARY)
@@ -109,9 +108,29 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     }
 
     selectPrimary = () => {
-        this.shipData.selectedPrimaryIndex = (this.shipData.selectedPrimaryIndex + 1) % this.shipData.weapons.length
+        this.shipData.selectedWeaponIndex = (this.shipData.selectedWeaponIndex + 1) % this.shipData.weapons.length
         store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         this.addShipUpdate(this, PlayerEvents.SELECT_PRIMARY)
+    }
+
+    selectNextTarget = () => {
+        let ships = [];
+        let i=0;
+        let index = 0;
+        (this.scene as StarSystem).ships.forEach((ship)=>{
+            if(ship.shipData.id === this.shipData.currentTargetId) index = i
+            ships.push(ship)
+            i++
+        })
+        let targetData = ships[(index+1)%ships.length].shipData
+        this.shipData.currentTargetId = targetData.id
+        store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...targetData}})
+        this.addShipUpdate(this, PlayerEvents.SELECT_TARGET)
+    }
+
+    selectNextHostileTarget = () => {
+        //Next ship with you as target and weapons armed
+
     }
 
     fireSecondary = () => {
