@@ -217,6 +217,7 @@ export default class ServerStarSystem extends Scene {
     }
 
     shipHitShip = (target:ServerShipSprite, projectile:Projectile) => {
+        projectile.trackingEvent && projectile.trackingEvent.remove()
         projectile.destroy()
         let launcher = projectile.weapon
         if(target.shipData.shields > 0)
@@ -270,6 +271,7 @@ export default class ServerStarSystem extends Scene {
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:any) =>
     {
         if(asteroid.getData('state').hp > 0){
+            projectile.trackingEvent && projectile.trackingEvent.remove()
             projectile.destroy();
             asteroid.getData('state').hp-=1
             if(asteroid.getData('state').hp <= 0){

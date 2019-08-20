@@ -8,6 +8,7 @@ const lazor = require('./projectile/laser+0.png')
 const boom = require('./explosion.png')
 const proton = require('./projectile/proton+.png')
 const sparrow = require('./projectile/javelin.png') 
+const target = require('./projectile/blaster+.png')
 
 
 export const defaults = [
@@ -20,5 +21,6 @@ export const defaults = [
     { key: 'ship', resource: ship, type: 'image' },
     { key: 'boom', resource: boom, type: 'spritesheet', data:  { frameWidth: 64, frameHeight: 64 } },
     { key: 'proton', resource: proton, type: 'image' },
-    { key: 'sparrow', resource: sparrow, type: 'image' }
+    { key: 'sparrow', resource: sparrow, type: 'image' },
+    { key: 'target', resource: target, type: 'image' }
 ]

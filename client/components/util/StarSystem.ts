@@ -33,6 +33,7 @@ export default class StarSystem extends Scene {
     loginName: string
     loginPassword: string
     firingEvent: Time.TimerEvent
+    targetRect: GameObjects.Image
 
     constructor(config, jumpedIn?:boolean){
         super(config)
@@ -222,6 +223,9 @@ export default class StarSystem extends Scene {
         this.beams = this.physics.add.group({ classType: Beam  })
         this.beams.runChildUpdate = true
 
+        this.targetRect = this.add.sprite(-1, -1, 'target')
+        this.targetRect.depth = 5
+
         this.createStarfield()
 
         this.input.keyboard.on('keydown-L', (event) => {
@@ -351,6 +355,17 @@ export default class StarSystem extends Scene {
             //  we want the center of the camera on the player, not the left-hand side of it
             this.minimap.scrollX = this.activeShip.x;
             this.minimap.scrollY = this.activeShip.y;
+
+            //Paint target with a rectangle
+            let target = this.ships.get(this.activeShip.shipData.currentTargetId)
+            if(target){
+                this.targetRect.x = target.x
+                this.targetRect.y = target.y
+                this.targetRect.setVisible(true)
+            }
+            else {
+                this.targetRect.setVisible(false)
+            }
         }
     }
     
@@ -427,6 +442,7 @@ export default class StarSystem extends Scene {
 
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:Projectile) =>
     {
+        projectile.trackingEvent && projectile.trackingEvent.remove()
         projectile.destroy()
     }
 
@@ -438,6 +454,7 @@ export default class StarSystem extends Scene {
     }
 
     projectileHitShip = (target:ShipSprite, projectile:Projectile) => {
+        projectile.trackingEvent && projectile.trackingEvent.remove()
         projectile.destroy()
     }
 
@@ -457,7 +474,7 @@ export default class StarSystem extends Scene {
         }
         if(ship.shipData.id === this.activeShip.shipData.currentTargetId){
             delete this.activeShip.shipData.currentTargetId
-            store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.activeShip.shipData}})
+            store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: null})
         }
         ship.destroy()
     }

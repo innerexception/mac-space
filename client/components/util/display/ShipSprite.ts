@@ -1,4 +1,4 @@
-import { GameObjects, Physics, Scene, } from "phaser";
+import { GameObjects, Physics, Scene, Time, } from "phaser";
 import WebsocketClient from "../../../WebsocketClient";
 import { PlayerEvents, ServerMessages, ReducerActions } from "../../../../enum";
 import StarSystem from "../StarSystem";
@@ -19,6 +19,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     bufferedInputs: Array<ShipUpdate>
     server:WebsocketClient
     onTogglePlanetMenu: Function
+    targetUpdater: Time.TimerEvent
 
     constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, beams:GameObjects.Group, isPlayerControlled:boolean, ship:ShipData, server:WebsocketClient, onTogglePlanetMenu:Function){
         super(scene, x, y, texture)
@@ -117,12 +118,24 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         let index = 0;
         (this.scene as StarSystem).ships.forEach((ship)=>{
             if(ship.shipData.id === this.shipData.currentTargetId) index = i
-            ships.push(ship)
-            i++
+            if(ship.shipData.id !== this.shipData.id){
+                ships.push(ship)
+                i++
+            } 
         })
         let targetData = ships[(index+1)%ships.length].shipData
         this.shipData.currentTargetId = targetData.id
         store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...targetData}})
+        this.targetUpdater && this.targetUpdater.remove()
+        this.targetUpdater = this.scene.time.addEvent({
+            delay: 500, 
+            callback: ()=>{
+                let ship = (this.scene as StarSystem).ships.get(this.shipData.currentTargetId)
+                if(ship) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...ship.shipData}})
+                else this.targetUpdater.remove()
+            },
+            loop: true
+        })
         this.addShipUpdate(this, PlayerEvents.SELECT_TARGET)
     }
 

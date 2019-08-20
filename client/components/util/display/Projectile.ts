@@ -1,4 +1,4 @@
-import { GameObjects, Physics, } from "phaser";
+import { GameObjects, Physics, Time, } from "phaser";
 
 export default class Projectile extends GameObjects.Image {
 
@@ -7,6 +7,7 @@ export default class Projectile extends GameObjects.Image {
     yVector: number
     weapon: Weapon
     target: Physics.Arcade.Sprite
+    trackingEvent: Time.TimerEvent
 
     constructor(scene, x, y){
         super(scene, x, y, 'proton')
@@ -24,8 +25,25 @@ export default class Projectile extends GameObjects.Image {
         this.rotation = shooter.rotation; // angle bullet with shooters rotation
         if(this.weapon.isTurrent && this.target){
             //angle bullet with turrent's rotation
-            this.rotation = Math.atan( (this.target.x-this.x) / (this.target.y-this.y) )
+            this.rotation = Math.atan2((this.target.x-this.x), (this.y-this.target.y) )
             targetVector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
+        }
+
+        if(this.weapon.isGuided && this.target){
+            this.trackingEvent = this.scene.time.addEvent({
+                delay: weapon.projectileTrackingInterval,
+                callback: ()=> {
+                    this.scene.tweens.add({
+                        targets: this,
+                        rotation: Math.atan2((this.target.x-this.x), (this.y-this.target.y) ),
+                        duration: weapon.projectileTrackingInterval
+                    })
+                    const targetVector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
+                    this.xVector = targetVector.x
+                    this.yVector = -targetVector.y
+                },
+                loop:true
+            })
         }
 
         this.xVector = targetVector.x
@@ -41,17 +59,11 @@ export default class Projectile extends GameObjects.Image {
         this.x += this.xVector * this.weapon.projectileSpeed;
         this.y += this.yVector * this.weapon.projectileSpeed;
         this.timeAlive += delta;
-
-        if(this.weapon.isGuided && this.target) {
-            this.rotation = Math.atan( (this.target.x-this.x) / (this.target.y-this.y) )
-            const targetVector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
-            this.xVector = targetVector.x
-            this.yVector = -targetVector.y
-        }
         if (this.timeAlive > this.weapon.range)
         {
             this.setActive(false);
             this.setVisible(false);
+            this.trackingEvent && this.trackingEvent.remove()
         }
     }
 }

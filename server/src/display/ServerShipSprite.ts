@@ -211,8 +211,10 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
         let index = 0;
         (this.scene as ServerStarSystem).ships.forEach((ship)=>{
             if(ship.shipData.id === this.shipData.currentTargetId) index = i
-            ships.push(ship)
-            i++
+            if(ship.shipData.id !== this.shipData.id){
+                ships.push(ship)
+                i++
+            } 
         })
         this.shipData.currentTargetId = ships[(index+1)%ships.length].shipData.id
     }
