@@ -1,12 +1,14 @@
-export const star = require('./star/g0.png')
-export const star2 = require('./star/a0.png')
-export const ship = require('./ship/aerie.png')
-export const planet = require('./planet/callisto.png')
-export const asteroid1 = require('./asteroid/iron/spin-00.png')
-export const asteroid2 = require('./asteroid/lead/spin-00.png')
-export const lazor = require('./projectile/laser+0.png')
-export const boom = require('./explosion.png')
-export const proton = require('./projectile/proton+.png')
+const star = require('./star/g0.png')
+const star2 = require('./star/a0.png')
+const ship = require('./ship/aerie.png')
+const planet = require('./planet/callisto.png')
+const asteroid1 = require('./asteroid/iron/spin-00.png')
+const asteroid2 = require('./asteroid/lead/spin-00.png')
+const lazor = require('./projectile/laser+0.png')
+const boom = require('./explosion.png')
+const proton = require('./projectile/proton+.png')
+const sparrow = require('./projectile/javelin.png') 
+const target = require('./projectile/blaster+.png')
 
 
 export const defaults = [
@@ -18,5 +20,7 @@ export const defaults = [
     { key: 'lazor', resource: lazor, type: 'image' },
     { key: 'ship', resource: ship, type: 'image' },
     { key: 'boom', resource: boom, type: 'spritesheet', data:  { frameWidth: 64, frameHeight: 64 } },
-    { key: 'proton', resource: proton, type: 'image' }
+    { key: 'proton', resource: proton, type: 'image' },
+    { key: 'sparrow', resource: sparrow, type: 'image' },
+    { key: 'target', resource: target, type: 'image' }
 ]

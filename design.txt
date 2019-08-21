@@ -1,11 +1,14 @@
-milestones:
+millstones
+0. Fix AI ship firing
 
-1. collect resource chunk from asteroid
-2. land on a planet and sell it
-3. landing effect removes/adds ship sprite
+1. complete a patrol mission
+2. complete an escort mission
+3. complete a bounty mission
 
-netcode milestones: 
+4. The above, with friends
 
-1. control your client by sending inputs to the server
-2. see another player enter your system
-3. follow a player to another system
+4.5 Firin mah lazer beams
+5. Buy a bigger gun and other shinies
+6. Fire several guns at once and explode up into space
+7. Buy a bigger ship
+

@@ -17,5 +17,5 @@
             "es7"
         ]
     },
-    "include": ["src/**/*", "../*.d.ts", "server.ts", "../client/components/match/ViewscreenFrame.tsx", "src/data/StarSystems.ts", "src/data/Weapons.ts", "../client/components/util/display/Beam.ts", "../client/assets/Assets.ts"],
+    "include": ["src/**/*", "../*.d.ts", "server.ts"]
 }

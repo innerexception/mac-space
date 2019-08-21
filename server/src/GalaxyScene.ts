@@ -4,7 +4,6 @@ import ServerStarSystem from "./ServerStarSystem";
 import WebsocketClient from "../../client/WebsocketClient";
 import ServerShipSprite from "./display/ServerShipSprite";
 import { ServerMessages, PlayerEvents } from "../../enum";
-import Planet from "./display/Planet";
 
 export default class GalaxyScene extends Scene {
 
@@ -105,6 +104,8 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
     ship.shipData.transientData.firePrimary = false
     ship.shipData.transientData.commodityOrder = null
     ship.shipData.transientData.mission = null
+    ship.shipData.transientData.targetSystemName = null
+
   })
   jumpingShips.forEach(ship=>{
     //These have been removed from the scene and no new updates will be sent

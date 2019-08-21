@@ -30,7 +30,8 @@ declare enum PlayerEvents {
     ACCEPT_MISSION='amis',
     SELECT_PRIMARY='slctw',
     COMPLETE_MISSION='cmplm',
-    ABANDON_MISSION='abndm'
+    ABANDON_MISSION='abndm',
+    SELECT_TARGET='selct'
 }
 
 declare enum FactionName {
@@ -119,7 +120,7 @@ interface Weapon {
     heatPerShot: number
     projectileSpeed: number
     accuracy: number
-    shotsPerSecond?: number
+    shotsPerSecond: number
     ammo?: number
     maxAmmo?: number
     projectileTrackingInterval?: number
@@ -130,7 +131,9 @@ interface Weapon {
     projectileAsset: string
     range: number
     isBeam: boolean
+    isGuided: boolean
     shipId: string
+    projectileSize: number
 }
 
 interface Engine {
@@ -229,7 +232,7 @@ interface ShipData {
     turrentMounts: number
     hardPoints: number
     weapons: Array<Weapon>
-    selectedPrimaryIndex: number
+    selectedWeaponIndex: number
     asset: string
     cargo: Array<InventoryData>
     systemName: string
@@ -239,6 +242,7 @@ interface ShipData {
     rotation?: number
     velocity?: Tuple
     aiProfile: AiProfile
+    currentTargetId: string
     transientData: {
         firePrimary?: boolean
         landingTargetName?: string
@@ -341,6 +345,7 @@ interface RState {
     isConnected: boolean
     player: Player | null
     activeShip: ShipData | null
+    targetShip: ShipData | null
     activePlanet: StellarObjectConfig | null
     showMap: boolean
     showPlanetMenu: boolean

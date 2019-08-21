@@ -33,6 +33,7 @@ export default class StarSystem extends Scene {
     loginName: string
     loginPassword: string
     firingEvent: Time.TimerEvent
+    targetRect: GameObjects.Image
 
     constructor(config, jumpedIn?:boolean){
         super(config)
@@ -62,7 +63,7 @@ export default class StarSystem extends Scene {
                         this.selectedSystem = StarSystems.find(system=>system.name===name)
                         break
                     case PlayerEvents.SHIP_PURCHASE:
-                        // this.server.publishMessage(player data update)
+                        //TODO
                         break
                     case PlayerEvents.OUTFIT_ORDER:
                         //TODO
@@ -132,7 +133,7 @@ export default class StarSystem extends Scene {
                     if(planet.config.planetName === planetConfig.planetName){
                         planet.config = planetConfig
                         found=true
-                        if(this.activeShip.shipData.landedAtName === planetConfig.planetName)
+                        if(this.activeShip && this.activeShip.shipData.landedAtName === planetConfig.planetName)
                             this.onReplacePlanet(planetConfig)
                     }
                 })
@@ -153,20 +154,19 @@ export default class StarSystem extends Scene {
                             this.unsubscribeRedux()
                             this.scene.remove()
                         }
-                        // else{
-                        //     //Somebody else left...but this is server's responsibility
-                                //TODO: This is a memory leak probably
-                        // }
+                    }
+                    if(update.shipData.systemName !== this.name){
+                        this.destroyShip(ship, false)
                     }
                     if(update.shipData.hull <= 0){
-                        this.destroyShip(ship)
+                        this.destroyShip(ship, true)
                     }
                     else {
                         ship.body && ship.applyUpdate(update)
                     }
                 }
                 else {
-                    console.log('spawning new ship at '+update.shipData.x+','+update.shipData.y)
+                    console.log('spawning new ship: '+update.shipData.id)
                     this.spawnShip(update.shipData)
                 }
             })
@@ -223,11 +223,11 @@ export default class StarSystem extends Scene {
         this.beams = this.physics.add.group({ classType: Beam  })
         this.beams.runChildUpdate = true
 
+        this.targetRect = this.add.sprite(-1, -1, 'target')
+        this.targetRect.depth = 5
+
         this.createStarfield()
 
-        //we need to wait until the server gives us a ship to focus on
-        this.time.addEvent({ delay: 100, callback: this.checkForActiveShip, loop: true });
-        
         this.input.keyboard.on('keydown-L', (event) => {
             this.selectedPlanetIndex = (this.selectedPlanetIndex + 1) % this.planets.length
             this.activeShip.startLandingSequence(this.planets[this.selectedPlanetIndex])
@@ -237,7 +237,7 @@ export default class StarSystem extends Scene {
             else console.log('no system selected...')
         })
         this.input.keyboard.on('keydown-SPACE', (event) => {
-            let weapon = this.activeShip.shipData.weapons[this.activeShip.shipData.selectedPrimaryIndex]
+            let weapon = this.activeShip.shipData.weapons[this.activeShip.shipData.selectedWeaponIndex]
             if(weapon.isBeam){
                 this.activeShip.firePrimary()
             }
@@ -250,17 +250,26 @@ export default class StarSystem extends Scene {
                     loop:true
                 })
             }
-        });
+        })
         this.input.keyboard.on('keyup-SPACE', (event) => {
             this.firingEvent.remove()
         })
         this.input.keyboard.on('keydown-M', (event) => {
             onToggleMapMenu(true, this.activeShip.shipData)
-        });
+        })
         this.input.keyboard.on('keydown-W', (event) => {
             this.activeShip.selectPrimary()
-        });
+        })
+        this.input.keyboard.on('keydown-T', (event) => {
+            this.activeShip.selectNextTarget()
+        })
+        this.input.keyboard.on('keydown-R', (event) => {
+            this.activeShip.selectNextHostileTarget()
+        })
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        //we need to wait until the server gives us a ship to focus on
+        this.time.addEvent({ delay: 100, callback: this.checkForActiveShip, loop: true });
         
         this.server.setListeners(this.onWSMessage, this.onConnected, this.onConnectionError)
     }
@@ -308,7 +317,7 @@ export default class StarSystem extends Scene {
             //We should spawn it
             //This is our starting sector so we spawn ourselves
             let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
-            this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, this.beams, true, activeShipData, this.server, this.onTogglePlanetMenu, this.destroyShip);
+            this.activeShip = new ShipSprite(this.scene.scene, this.planets[0].x, this.planets[0].y, activeShipData.asset, this.projectiles, this.beams, true, activeShipData, this.server, this.onTogglePlanetMenu);
             this.ships.set(this.activeShip.shipData.id, this.activeShip)
             activeShipData.systemName = this.name
             //Add player ship notification
@@ -346,17 +355,28 @@ export default class StarSystem extends Scene {
             //  we want the center of the camera on the player, not the left-hand side of it
             this.minimap.scrollX = this.activeShip.x;
             this.minimap.scrollY = this.activeShip.y;
+
+            //Paint target with a rectangle
+            let target = this.ships.get(this.activeShip.shipData.currentTargetId)
+            if(target){
+                this.targetRect.x = target.x
+                this.targetRect.y = target.y
+                this.targetRect.setVisible(true)
+            }
+            else {
+                this.targetRect.setVisible(false)
+            }
         }
     }
     
     spawnShip = (config:ShipData) => {
         let shipData = {...Ships[config.name], ...config}
         shipData.systemName = this.name
-        let ship = new ShipSprite(this.scene.scene, config.x, config.y, shipData.asset, this.projectiles, this.beams, false, shipData, this.server, this.onTogglePlanetMenu, this.destroyShip)
+        let ship = new ShipSprite(this.scene.scene, config.x, config.y, shipData.asset, this.projectiles, this.beams, false, shipData, this.server, this.onTogglePlanetMenu)
         ship.rotation = config.rotation
         this.ships.set(shipData.id, ship)
         this.physics.add.overlap(this.projectiles, ship, this.projectileHitShip);
-        //TODO this.physics.add.overlap(this.beams, ship, this.beamHitShip);
+        //TODO lazor beamz this.physics.add.overlap(this.beams, ship, this.beamHitShip);
     }
 
     spawnResource = (update:ResourceData) => {
@@ -422,6 +442,7 @@ export default class StarSystem extends Scene {
 
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:Projectile) =>
     {
+        projectile.trackingEvent && projectile.trackingEvent.remove()
         projectile.destroy()
     }
 
@@ -433,13 +454,28 @@ export default class StarSystem extends Scene {
     }
 
     projectileHitShip = (target:ShipSprite, projectile:Projectile) => {
+        projectile.trackingEvent && projectile.trackingEvent.remove()
         projectile.destroy()
     }
 
-    destroyShip = (ship:ShipSprite) => {
-        this.explosions.get(ship.x, ship.y, 'boom').play('explode')
+    destroyShip = (ship:ShipSprite, explode:boolean) => {
+        if(explode){
+            this.explosions.get(ship.x, ship.y, 'boom').play('explode')
+            console.log('destryed ship with id: '+ship.shipData.id)
+        } 
+        else{
+            console.log('ship left the system.')
+        }
         this.ships.delete(ship.shipData.id)
-        console.log('destryed ship with id: '+ship.shipData.id)
+        
+        if(this.activeShip.shipData.id === ship.shipData.id){
+            delete this.activeShip
+            store.dispatch({ type: ReducerActions.PLAYER_SHIP_LOST })
+        }
+        if(ship.shipData.id === this.activeShip.shipData.currentTargetId){
+            delete this.activeShip.shipData.currentTargetId
+            store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: null})
+        }
         ship.destroy()
     }
 

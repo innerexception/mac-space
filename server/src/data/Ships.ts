@@ -1,4 +1,4 @@
-import { ProtonGun, LaserCannon } from "./Weapons";
+import { ProtonGun, LaserCannon, Sparrow } from "./Weapons";
 import { FactionName } from "../../../enum";
 
 export const Shuttle:ShipData = {
@@ -26,8 +26,9 @@ export const Shuttle:ShipData = {
     gunMounts: 1,
     turrentMounts: 0,
     hardPoints: 0,
-    weapons: [ProtonGun],
-    selectedPrimaryIndex: 0,
+    weapons: [ProtonGun, Sparrow],
+    selectedWeaponIndex: 0,
+    currentTargetId: '',
     asset: 'ship',
     cargo: [],
     systemName: 'Rigel',

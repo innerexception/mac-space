@@ -30,8 +30,12 @@ const appReducer = (state = getInitialState(), action:any):RState => {
             return {...state, player: action.player, activeShip: action.activeShip, playerEvent: null }
         case ReducerActions.PLAYER_REPLACE_SHIP:
             return {...state, activeShip: action.activeShip, playerEvent: null }
+        case ReducerActions.PLAYER_REPLACE_TARGET:
+            return {...state, targetShip: action.targetShip, playerEvent: null }
         case ReducerActions.PLANET_REPLACE:
             return {...state, activePlanet: action.planet, playerEvent: null }
+        case ReducerActions.PLAYER_SHIP_LOST:
+            return {...state, activeShip: null }
         default:
             return state
     }
@@ -44,6 +48,7 @@ const getInitialState = ():RState => {
         isConnected: false,
         player: null,
         activeShip: null,
+        targetShip: null,
         activePlanet: null,
         showMap: false,
         showPlanetMenu: false,
