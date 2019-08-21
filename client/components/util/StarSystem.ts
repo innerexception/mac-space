@@ -376,7 +376,7 @@ export default class StarSystem extends Scene {
         ship.rotation = config.rotation
         this.ships.set(shipData.id, ship)
         this.physics.add.overlap(this.projectiles, ship, this.projectileHitShip);
-        //TODO this.physics.add.overlap(this.beams, ship, this.beamHitShip);
+        //TODO lazor beamz this.physics.add.overlap(this.beams, ship, this.beamHitShip);
     }
 
     spawnResource = (update:ResourceData) => {

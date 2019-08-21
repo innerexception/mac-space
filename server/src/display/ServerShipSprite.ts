@@ -192,7 +192,6 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     }
 
     firePrimary = () => {
-        //TODO: change to fireOn/fireOff
         const projectile = this.projectiles.get().setActive(true).setVisible(true) as Projectile
         if(projectile){
             let target = (this.scene as ServerStarSystem).ships.get(this.shipData.currentTargetId)
@@ -320,7 +319,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                         })
                     player.credits -= price
                     console.log('buy processed order, new credits: '+player.credits)
-                    //TODO: fix pump and dump exploit
+                    //TODO: fix pump and dump exploit by processing order amount one at a time or having demand quota
                     commodity.price += Math.round(commodity.price * (0.01 * order.amount))
                 }
             }
@@ -379,7 +378,8 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             else{
                 let system = (this.scene as ServerStarSystem)
                 let target = system.ships.get(this.shipData.aiProfile.attackerId)
-                //this.firePrimary()
+                //TODO: change to fireOn/fireOff for AI ships
+                //this.fireEvent = add a fire event if we have a turrent
                 if(target){
                     let targetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
                     const rotation = (targetAngle+(Math.PI/2))+Math.PI
@@ -426,8 +426,9 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                 })
                 this.thrust()
                 //Engage target
-                if(target.shipData.hull > 5)
-                    this.firePrimary()
+                if(target.shipData.hull > 5){
+                    //TODO add a firing event here
+                }
                 else{
                     this.aiEvent.remove()
                     this.AiEvents.board()
@@ -473,7 +474,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                 })
                 this.thrust()
                 //Engage target
-                this.firePrimary()
+                //TODO this.scene.time.add a firing event
             }
         }
     }
@@ -505,7 +506,6 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             this.startBoardingSequence(this.shipData.aiProfile.targetShipId)
         },
         plunderAndTakeOff: () => {
-            //TODO: remove any carried goods
             if(this.scene){
                 let system = (this.scene as ServerStarSystem)
                 let target = system.ships.get(this.shipData.aiProfile.targetShipId)
