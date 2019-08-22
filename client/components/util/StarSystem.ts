@@ -51,6 +51,7 @@ export default class StarSystem extends Scene {
         this.loginName = config.loginName
         this.loginPassword = config.loginPassword
         this.player = config.player
+        this.priorityTargets = []
     }
 
     onReduxUpdate = () => {

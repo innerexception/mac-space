@@ -35,17 +35,17 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             ship.aiProfile.targetShipId=''
             switch(ship.aiProfile.type){
                 case AiProfileType.MERCHANT:
-                    this.aiEvent = this.scene.time.addEvent({ delay: 500, callback: this.merchantAICombatListener, loop: true})
+                    this.aiEvent = this.scene.time.addEvent({ delay: 100, callback: this.merchantAICombatListener, loop: true})
                     this.scene.time.addEvent({
                         delay: 3000,
                         callback: this.AiEvents.land
                     })
                     break
                 case AiProfileType.PIRATE:
-                    this.aiEvent = this.scene.time.addEvent({ delay: 500, callback: this.pirateAICombatListener, loop: true})
+                    this.aiEvent = this.scene.time.addEvent({ delay: 100, callback: this.pirateAICombatListener, loop: true})
                     break
                 case AiProfileType.POLICE:
-                    this.aiEvent = this.scene.time.addEvent({ delay: 500, callback: this.policeAICombatListener, loop: true})
+                    this.aiEvent = this.scene.time.addEvent({ delay: 100, callback: this.policeAICombatListener, loop: true})
                     this.scene.time.addEvent({
                         delay: 3000,
                         callback: this.AiEvents.land
@@ -384,11 +384,10 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                 if(target){
                     let targetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
                     const rotation = (targetAngle+(Math.PI/2))+Math.PI
-                    this.scene.tweens.add({
-                        targets: this,
-                        rotation,
-                        duration: this.shipData.turn*10000
-                    })
+                    
+                    if(this.rotation - rotation < 0) this.rotateRight()
+                    else this.rotateLeft()
+
                     this.thrust()
                     this.shipData.aiProfile.attackTime+=1
                 }
@@ -418,13 +417,13 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                 delete this.shipData.aiProfile.targetShipId
             }
             else{
+                //TODO: AI ships should call rotate() methods depending on angle to target
                 let targetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
-                const rotation = targetAngle+(Math.PI/2)
-                this.scene.tweens.add({
-                    targets: this,
-                    rotation,
-                    duration: this.shipData.turn*10000
-                })
+                const rotation = (targetAngle+(Math.PI/2))
+
+                if(this.rotation - rotation < 0) this.rotateRight()
+                else this.rotateLeft()
+                
                 this.thrust()
                 //Engage target
                 if(target.shipData.hull > 5){
@@ -468,12 +467,11 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             }
             else{
                 let targetAngle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y)
-                const rotation = targetAngle+(Math.PI/2)
-                this.scene.tweens.add({
-                    targets: this,
-                    rotation,
-                    duration: this.shipData.turn*10000
-                })
+                const rotation = (targetAngle+(Math.PI/2))
+                
+                if(this.rotation - rotation < 0) this.rotateRight()
+                else this.rotateLeft()
+                
                 this.thrust()
                 //Engage target
                 //TODO this.scene.time.add a firing event
