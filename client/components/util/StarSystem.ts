@@ -6,7 +6,7 @@ import * as Ships from '../../../server/src/data/Ships'
 import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
 import { onToggleMapMenu, onConnectionError, onConnected, onTogglePlanetMenu } from "../uiManager/Thunks";
-import { PlayerEvents, ReducerActions, ServerMessages } from "../../../enum";
+import { PlayerEvents, ReducerActions, ServerMessages, MissionType } from "../../../enum";
 import Planet from "./display/Planet";
 import Beam from "./display/Beam";
 
@@ -34,6 +34,7 @@ export default class StarSystem extends Scene {
     loginPassword: string
     firingEvent: Time.TimerEvent
     targetRect: GameObjects.Image
+    priorityTargets: Array<ShipData>
 
     constructor(config, jumpedIn?:boolean){
         super(config)
@@ -156,7 +157,7 @@ export default class StarSystem extends Scene {
                         }
                     }
                     if(update.shipData.systemName !== this.name){
-                        this.destroyShip(ship, false)
+                        console.log('ship system is incorrect: '+update.shipData.id)
                     }
                     if(update.shipData.hull <= 0){
                         this.destroyShip(ship, true)
@@ -288,6 +289,10 @@ export default class StarSystem extends Scene {
 
     onReplacePlayer = (payload:ServerMessage) => {
         this.player = (payload.event as Player)
+        this.priorityTargets = []
+        let dMissions = this.player.missions.filter(mission=>mission.type === MissionType.DESTROY)
+        dMissions.forEach(mission=>mission.targets.forEach(target=>this.priorityTargets.push(target)))
+
         let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
         this.activeShip.shipData = activeShipData
         store.dispatch({ type: ReducerActions.PLAYER_REPLACE, player: this.player, activeShip: this.activeShip.shipData})
@@ -361,6 +366,8 @@ export default class StarSystem extends Scene {
             if(target){
                 this.targetRect.x = target.x
                 this.targetRect.y = target.y
+                if(this.priorityTargets.find(pTarget=>pTarget.id===target.shipData.id)) this.targetRect.setTint(0xff0000)
+                else this.targetRect.setTint(0x0000ff)
                 this.targetRect.setVisible(true)
             }
             else {

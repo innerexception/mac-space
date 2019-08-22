@@ -73,7 +73,8 @@ export enum PlayerEvents {
 export enum AiProfileType {
     MERCHANT='merc',
     PIRATE='pirate',
-    POLICE='police'
+    POLICE='police',
+    PIRATE_PATROL='pirate_patrol'
 }
 
 export enum ServerMessages {

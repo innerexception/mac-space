@@ -41,7 +41,7 @@ export default class GalaxyScene extends Scene {
           type: ServerMessages.SERVER_UPDATE,
           system: scene.name,
           event: {
-              ships: getShipUpdates(scene.ships, scene.jumpingShips, this.players, this.server, scene.deadShips),
+              ships: getShipUpdates(scene.name, scene.ships, scene.jumpingShips, this.players, this.server, scene.deadShips),
               asteroids: getAsteroidUpdates(scene.asteroids, scene.deadAsteroids),
               resources: getResourceUpdates(scene.resources, scene.deadResources),
               planets: scene.planets.map(planet=>planet.config)
@@ -83,7 +83,7 @@ export default class GalaxyScene extends Scene {
     }
 }
 
-const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<ServerShipSprite>, players:Map<string,Player>, server:WebsocketClient, deadShips:Array<ServerShipSprite>) => {
+const getShipUpdates = (systemName:string, ships:Map<string,ServerShipSprite>, jumpingShips: Array<ServerShipSprite>, players:Map<string,Player>, server:WebsocketClient, deadShips:Array<ServerShipSprite>) => {
   let updates = new Array<ShipUpdate>()
   ships.forEach(ship=>{
     updates.push({
@@ -96,6 +96,7 @@ const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<
         rotation: ship.rotation,
         velocity : ship.body.velocity,
         fighters: [],
+        systemName,
         transientData: {...ship.shipData.transientData}
       }
     })

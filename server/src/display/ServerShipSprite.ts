@@ -2,7 +2,7 @@ import { GameObjects, Physics, Scene, } from "phaser";
 import ServerStarSystem from "../ServerStarSystem";
 import GalaxyScene from "../GalaxyScene";
 import { ServerMessages, AiProfileType, FactionName, CargoType, MissionType } from "../../../enum";
-import { getCargoWeight, getRandomPublicMission } from '../../../client/components/util/Util'
+import { getCargoWeight, getRandomPublicMission, checkTargets } from '../../../client/components/util/Util'
 import Planet from "./Planet";
 import Projectile from "./Projectile";
 import { StarSystems } from "../data/StarSystems";
@@ -233,21 +233,22 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             let planetData = planet.config
             let sMission = planetData.missions.find(pmission=>pmission.id === mission.id)
             sMission.payment = sMission.payment ? sMission.payment : player.notoriety*100
-            player.missions.push(sMission)
-            if(mission.cargo)
-                this.shipData.cargo.push(mission.cargo)
-            if(mission.targets){
-                if(mission.type === MissionType.DESTROY){
-                    //TODO: spawn appropriate number of targets in system with PATROL ai so they don't leave
+            if(sMission.cargo)
+                this.shipData.cargo.push(sMission.cargo)
+            if(sMission.targets){
+                if(sMission.type === MissionType.DESTROY){
+                    //TODO: spawn appropriate number of targets in system
+                    let system = this.theGalaxy.scene.get(sMission.destinationSystemName);
+                    sMission.targets = new Array(sMission.targetCount).fill(null).map(ship=>(system as ServerStarSystem).spawnNPCShip(AiProfileType.PIRATE))
                 }
-                if(mission.type === MissionType.ESCORT){
+                if(sMission.type === MissionType.ESCORT){
                     //TODO: spawn number of merchant or vip ships to escort and give them a TRAVELTO ai
                 }
             }
-            if(mission.minimumTimeInSystem){
+            if(sMission.minimumTimeInSystem){
                 //TODO: start the clock once this ship takes off
             }
-            
+            player.missions.push(sMission)
             this.theGalaxy.server.publishMessage({ type: ServerMessages.PLAYER_DATA_UPDATE, event: player, system:'' })
             planetData.missions = planetData.missions.filter(pmission=>pmission.id !== mission.id)
             planetData.missions.push(getRandomPublicMission((this.scene as ServerStarSystem).state))
@@ -261,7 +262,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             let planetData = planet.config
             if(mission.destinationPlanetName === planetData.planetName){
                 let success = (mission.type === MissionType.DELIVERY && mission.destinationPlanetName === planetData.planetName) ||
-                            (mission.type === MissionType.DESTROY && mission.targetsDestroyed) ||
+                            (mission.type === MissionType.DESTROY && checkTargets(mission.targets, this.shipData)) ||
                             (mission.type === MissionType.ESCORT && mission.escortsAlive) ||
                             (mission.type === MissionType.PATROL && mission.timeElapsedInSystem >= mission.minimumTimeInSystem)
                 if(success){
@@ -430,6 +431,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     //TODO add a firing event here
                 }
                 else{
+                    this.thrustOff()
                     this.aiEvent.remove()
                     this.AiEvents.board()
                 }
