@@ -18,6 +18,7 @@ export const Shuttle:ShipData = {
     heat: 5,
     maxHeat: 5,
     fighters: [],
+    killedIds: [],
     turn: 0.05,
     accel: 100,
     speed: 0,

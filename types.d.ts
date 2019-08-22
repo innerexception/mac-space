@@ -50,7 +50,8 @@ declare enum AiProfileType {
     
     MERCHANT='merc',
     PIRATE='pirate',
-    POLICE='police'
+    POLICE='police',
+    PIRATE_PATROL='pirate_patrol'
 }
 
 declare enum ServerMessages {
@@ -223,6 +224,7 @@ interface ShipData {
     heat: number
     maxHeat: number
     fighters: Array<ShipData>
+    killedIds: Array<string>
     turn: number
     accel: number
     speed: number
@@ -306,8 +308,8 @@ interface Mission {
     payment: number
     type: MissionType
     cargo?: InventoryData
-    targets?: number | Array<ShipData>
-    targetsDestroyed?: boolean
+    targetCount?: number
+    targets?: Array<ShipData>
     escortsAlive?: boolean
     timeElapsedInSystem?: number
     minimumTimeInSystem?: number

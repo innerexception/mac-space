@@ -17,25 +17,27 @@ export const getCargoWeight = (ship:ShipData) => {
     return weights
 }
 
-export const getNPCShipData = () => {
+export const getNPCShipData = (aiProfile?:AiProfileType) => {
     let shipData = Ships[Phaser.Math.Between(0,Ships.length-1)]
     shipData.aiProfile = {
-        type: AiProfileType.MERCHANT,
+        type: aiProfile ? aiProfile : AiProfileType.MERCHANT,
         jumpedIn: true,
         attackerId: '',
         attackTime: 0,
         targetShipId: ''
     }
     shipData.id = v4()
-    switch(Phaser.Math.Between(0,2)){
-        case 1: 
-            shipData.faction = FactionName.PIRATE
-            shipData.aiProfile.type = AiProfileType.PIRATE
-            break
-        case 2:     
-            shipData.faction = FactionName.POLICE
-            shipData.aiProfile.type = AiProfileType.POLICE
-            break
+    if(!aiProfile){
+        switch(Phaser.Math.Between(0,2)){
+            case 1: 
+                shipData.faction = FactionName.PIRATE
+                shipData.aiProfile.type = AiProfileType.PIRATE
+                break
+            case 2:     
+                shipData.faction = FactionName.POLICE
+                shipData.aiProfile.type = AiProfileType.POLICE
+                break
+        }
     }
     return shipData
 }
@@ -102,10 +104,11 @@ const getRandomBountyMission = () => {
         payment: 0, //Set when viewed by a player
         destinationPlanetName: destinationPlanet.planetName,
         destinationSystemName: destinationSystem.name,
-        targets,
+        targetCount: targets,
+        targets: [],
         description: getBountyDescription(targets, destinationSystem.name),
         type: MissionType.DESTROY,
-        notorietyMinimum: 10
+        notorietyMinimum: 0
     }
     return mission
 }
@@ -122,10 +125,11 @@ const getRandomEscortMission = () => {
         payment: 0, //set when viewed by a player
         destinationPlanetName: destinationPlanet.planetName,
         destinationSystemName: destinationSystem.name,
-        targets,
+        targetCount: targets,
+        targets: [],
         description: getEscortDescription(targets, destinationPlanet.planetName, destinationSystem.name),
         type: MissionType.ESCORT,
-        notorietyMinimum: 10
+        notorietyMinimum: 0
     }
     return mission
 }
@@ -146,4 +150,11 @@ export const getPlayerFactionMissions = (player:Player) => {
 
 export const getNextFactionMission = (factionName:string, missionIndex:number) => {
     return FactionMissions[factionName][missionIndex+1]
+}
+
+export const checkTargets = (ships:Array<ShipData>, ship:ShipData) => {
+    let killed =  ship.killedIds.filter(killId=>{
+        return ships.filter(mShip=>mShip.id === killId).length > 0
+    })
+    return killed.length === ships.length
 }

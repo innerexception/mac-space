@@ -230,8 +230,11 @@ export default class ServerStarSystem extends Scene {
         if(target.shipData.aiProfile){
             target.shipData.aiProfile.attackerId = projectile.weapon.shipId
         }
-        if(target.shipData.hull <= 0) 
+        if(target.shipData.hull <= 0) {
+            let shooter = this.ships.get(projectile.weapon.shipId)
+            if(shooter) shooter.shipData.killedIds.push(target.shipData.id)
             this.destroyShip(target)
+        }
     }
 
     destroyShip = (ship:ServerShipSprite) => {
@@ -305,24 +308,29 @@ export default class ServerStarSystem extends Scene {
 
     initNPCTraffic = () => {
         new Array(Phaser.Math.Between(0,8)).fill(null).forEach(ship=>{
-            let shipData = getNPCShipData()
-            const rotation = Phaser.Math.FloatBetween(0,Math.PI*2)
-            let systemVector = { x: Math.sin(rotation), y: Math.cos(rotation), rotation}
-            if(shipData.aiProfile.jumpedIn){
-                let x = Phaser.Math.Between(100,3000)
-                this.spawnShip(shipData, {
-                    x, y:100, rotation, 
-                    xVelocity: systemVector.x*shipData.maxSpeed, 
-                    yVelocity: systemVector.y*shipData.maxSpeed
-                })
-            }
-            else{
-                let origin = this.planets[0]
-                this.spawnShip(shipData, {
-                    x:origin.x, y:origin.y, rotation
-                })
-            }
-            console.log('created ai ship: '+shipData.aiProfile.type)
+            this.spawnNPCShip()
         })
+    }
+
+    spawnNPCShip = (aiProfile?:AiProfileType) => {
+        let shipData = getNPCShipData(aiProfile)
+        const rotation = Phaser.Math.FloatBetween(0,Math.PI*2)
+        let systemVector = { x: Math.sin(rotation), y: Math.cos(rotation), rotation}
+        if(shipData.aiProfile.jumpedIn){
+            let x = Phaser.Math.Between(100,3000)
+            this.spawnShip(shipData, {
+                x, y:100, rotation, 
+                xVelocity: systemVector.x*shipData.maxSpeed, 
+                yVelocity: systemVector.y*shipData.maxSpeed
+            })
+        }
+        else{
+            let origin = this.planets[0]
+            this.spawnShip(shipData, {
+                x:origin.x, y:origin.y, rotation
+            })
+        }
+        console.log('created ai ship: '+shipData.aiProfile.type)
+        return shipData
     }
 }
