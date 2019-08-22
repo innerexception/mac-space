@@ -199,12 +199,17 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     applyState = (update:ShipData, doTween?:boolean) => {
         if(doTween){
+            
+            let curDegrAngle = Phaser.Math.RadToDeg(this.rotation);
+            let newDegrAngle = Phaser.Math.RadToDeg(update.rotation);
+            let shortestRad = Phaser.Math.DegToRad(Phaser.Math.Angle.ShortestBetween(curDegrAngle, newDegrAngle));
+
             this.scene.add.tween({
                 targets: this,
                 x: update.x,
                 y: update.y,
-                rotation: update.rotation, //TODO: clamp to shortest rotation distance
-                duration: 50
+                rotation: '+=' + shortestRad, //javascript
+                duration: 10
             })
         }
         else{
@@ -241,6 +246,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }
     }
+    
 
     addShipUpdate = (ship:ShipSprite, event:PlayerEvents) => {
         let update = {
