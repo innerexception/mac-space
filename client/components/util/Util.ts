@@ -105,7 +105,7 @@ const getRandomBountyMission = () => {
         destinationPlanetName: destinationPlanet.planetName,
         destinationSystemName: destinationSystem.name,
         targetCount: targets,
-        targets: [],
+        targetIds: [],
         description: getBountyDescription(targets, destinationSystem.name),
         type: MissionType.DESTROY,
         notorietyMinimum: 0
@@ -126,7 +126,7 @@ const getRandomEscortMission = () => {
         destinationPlanetName: destinationPlanet.planetName,
         destinationSystemName: destinationSystem.name,
         targetCount: targets,
-        targets: [],
+        targetIds: [],
         description: getEscortDescription(targets, destinationPlanet.planetName, destinationSystem.name),
         type: MissionType.ESCORT,
         notorietyMinimum: 0
@@ -152,9 +152,9 @@ export const getNextFactionMission = (factionName:string, missionIndex:number) =
     return FactionMissions[factionName][missionIndex+1]
 }
 
-export const checkTargets = (ships:Array<ShipData>, ship:ShipData) => {
+export const checkTargets = (ships:Array<string>, ship:ShipData) => {
     let killed =  ship.killedIds.filter(killId=>{
-        return ships.filter(mShip=>mShip.id === killId).length > 0
+        return ships.filter(mShip=>mShip === killId).length > 0
     })
     return killed.length === ships.length
 }
