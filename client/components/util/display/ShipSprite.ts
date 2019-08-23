@@ -20,6 +20,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     server:WebsocketClient
     onTogglePlanetMenu: Function
     targetUpdater: Time.TimerEvent
+    firingEvent: Time.TimerEvent
 
     constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, beams:GameObjects.Group, isPlayerControlled:boolean, ship:ShipData, server:WebsocketClient, onTogglePlanetMenu:Function){
         super(scene, x, y, texture)
@@ -91,6 +92,20 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         this.addShipUpdate(this, PlayerEvents.START_JUMP)
     }
 
+    startFiring = () => {
+        let weapon = this.shipData.weapons[this.shipData.selectedWeaponIndex]
+        this.firingEvent = this.scene.time.addEvent({ 
+            delay: 1000/weapon.shotsPerSecond, 
+            callback: ()=>{
+                this.firePrimary()
+            },
+            loop:true
+        })
+    }
+    stopFiring = () => {
+        this.firingEvent && this.firingEvent.remove()
+    }
+
     firePrimary = () => {
         let weapon = this.shipData.weapons[this.shipData.selectedWeaponIndex]
         let target = (this.scene as StarSystem).ships.get(this.shipData.currentTargetId)
@@ -123,20 +138,22 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
                 i++
             } 
         })
-        let targetData = ships[(index+1)%ships.length].shipData
-        this.shipData.currentTargetId = targetData.id
-        store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...targetData}})
-        this.targetUpdater && this.targetUpdater.remove()
-        this.targetUpdater = this.scene.time.addEvent({
-            delay: 500, 
-            callback: ()=>{
-                let ship = (this.scene as StarSystem).ships.get(this.shipData.currentTargetId)
-                if(ship) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...ship.shipData}})
-                else this.targetUpdater.remove()
-            },
-            loop: true
-        })
-        this.addShipUpdate(this, PlayerEvents.SELECT_TARGET)
+        if(i>0){
+            let targetData = ships[(index+1)%ships.length].shipData
+            this.shipData.currentTargetId = targetData.id
+            store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...targetData}})
+            this.targetUpdater && this.targetUpdater.remove()
+            this.targetUpdater = this.scene.time.addEvent({
+                delay: 500, 
+                callback: ()=>{
+                    let ship = (this.scene as StarSystem).ships.get(this.shipData.currentTargetId)
+                    if(ship) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...ship.shipData}})
+                    else this.targetUpdater.remove()
+                },
+                loop: true
+            })
+            this.addShipUpdate(this, PlayerEvents.SELECT_TARGET)
+        }
     }
 
     selectNextHostileTarget = () => {
@@ -243,6 +260,10 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         if(this.shipData.hull > update.hull){
             // this.anims.play('hullHit')
             this.shipData.hull=update.hull
+            if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
+        }
+        if(this.shipData.fuel != update.fuel){
+            this.shipData.fuel = update.fuel
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }
     }

@@ -31,7 +31,7 @@ export const Arcturus:SystemState = {
     name: 'Arcturus',
     x: 10000,
     y: 10000,
-    neighbors: ['Rigel', 'Centauri'],
+    neighbors: ['Rigel', 'Centauri', 'Deneb'],
     stellarObjects: [
         {x: 850, y:750, 
             asset: 'planet', planetName: 'Haven', description: "It's Haveny",
@@ -56,7 +56,7 @@ export const Centauri:SystemState = {
     name: 'Centauri',
     x: 15000,
     y: 1000,
-    neighbors: ['Arcturus', 'Rigel'],
+    neighbors: ['Arcturus', 'Rigel', 'Deneb'],
     stellarObjects: [{
         x: 150, 
         y:750, 
