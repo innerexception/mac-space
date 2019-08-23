@@ -156,6 +156,9 @@ export default class StarSystem extends Scene {
                             this.unsubscribeRedux()
                             this.scene.remove()
                         }
+                        else {
+                            this.destroyShip(ship, false)
+                        }
                     }
                     if(update.shipData.systemName !== this.name){
                         console.log('ship system is incorrect: '+update.shipData.id)
