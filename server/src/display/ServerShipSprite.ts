@@ -161,7 +161,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             duration: 1500,
             onComplete: ()=>{
                 if(this.scene){
-                    const duration = (distance/(this.shipData.maxSpeed))*50
+                    const duration = (distance/(this.shipData.maxSpeed))*40
                     this.setCollideWorldBounds(false)
                     this.scene.tweens.add({
                         targets: this,
@@ -179,6 +179,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                                 });
                                 newShip.shipData.transientData.targetSystemName = targetSystem.name;
                                 newShip.shipData.systemName = targetSystem.name;
+                                newShip.shipData.currentTargetId = ''
                                 newShip.shipData.fuel = this.shipData.fuel-1;
                                 (this.scene as ServerStarSystem).jumpingShips.push(newShip);
                                 (this.scene as ServerStarSystem).ships.delete(this.shipData.id)
@@ -235,11 +236,11 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             sMission.payment = sMission.payment ? sMission.payment : player.notoriety*100
             if(sMission.cargo)
                 this.shipData.cargo.push(sMission.cargo)
-            if(sMission.targets){
+            if(sMission.targetIds){
                 if(sMission.type === MissionType.DESTROY){
                     //TODO: spawn appropriate number of targets in system
                     let system = this.theGalaxy.scene.get(sMission.destinationSystemName);
-                    sMission.targets = new Array(sMission.targetCount).fill(null).map(ship=>(system as ServerStarSystem).spawnNPCShip(AiProfileType.PIRATE))
+                    sMission.targetIds = new Array(sMission.targetCount).fill('null').map(ship=>(system as ServerStarSystem).spawnNPCShip(AiProfileType.PIRATE).id)
                 }
                 if(sMission.type === MissionType.ESCORT){
                     //TODO: spawn number of merchant or vip ships to escort and give them a TRAVELTO ai
@@ -262,7 +263,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
             let planetData = planet.config
             if(mission.destinationPlanetName === planetData.planetName){
                 let success = (mission.type === MissionType.DELIVERY && mission.destinationPlanetName === planetData.planetName) ||
-                            (mission.type === MissionType.DESTROY && checkTargets(mission.targets, this.shipData)) ||
+                            (mission.type === MissionType.DESTROY && checkTargets(mission.targetIds, this.shipData)) ||
                             (mission.type === MissionType.ESCORT && mission.escortsAlive) ||
                             (mission.type === MissionType.PATROL && mission.timeElapsedInSystem >= mission.minimumTimeInSystem)
                 if(success){
@@ -435,13 +436,14 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                     this.AiEvents.board()
                 }
             }
+            //Attempt retreat when hull is < 50%
+            if(this.shipData.hull < 5){
+                this.aiEvent.remove()
+                this.AiEvents.jump()
+            } 
             //Roll for rage kill after boarding?, then leave system
         }
-        //Attempt retreat when hull is < 50%
-        if(this.shipData.hull < 5){
-            this.aiEvent.remove()
-            this.AiEvents.jump()
-        } 
+        
     }
 
     policeAICombatListener = () => {

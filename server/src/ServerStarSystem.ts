@@ -307,9 +307,9 @@ export default class ServerStarSystem extends Scene {
     }
 
     initNPCTraffic = () => {
-        new Array(Phaser.Math.Between(0,8)).fill(null).forEach(ship=>{
-            this.spawnNPCShip()
-        })
+        // new Array(Phaser.Math.Between(0,8)).fill(null).forEach(ship=>{
+        //     this.spawnNPCShip()
+        // })
     }
 
     spawnNPCShip = (aiProfile?:AiProfileType) => {

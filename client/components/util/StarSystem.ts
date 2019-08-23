@@ -34,7 +34,7 @@ export default class StarSystem extends Scene {
     loginPassword: string
     firingEvent: Time.TimerEvent
     targetRect: GameObjects.Image
-    priorityTargets: Array<ShipData>
+    priorityTargets: Array<string>
 
     constructor(config, jumpedIn?:boolean){
         super(config)
@@ -52,6 +52,8 @@ export default class StarSystem extends Scene {
         this.loginPassword = config.loginPassword
         this.player = config.player
         this.priorityTargets = []
+        let dMissions = this.player.missions.filter(mission=>mission.type === MissionType.DESTROY)
+        dMissions.forEach(mission=>mission.targetIds.forEach(target=>this.priorityTargets.push(target)))
     }
 
     onReduxUpdate = () => {
@@ -295,7 +297,7 @@ export default class StarSystem extends Scene {
         this.player = (payload.event as Player)
         this.priorityTargets = []
         let dMissions = this.player.missions.filter(mission=>mission.type === MissionType.DESTROY)
-        dMissions.forEach(mission=>mission.targets.forEach(target=>this.priorityTargets.push(target)))
+        dMissions.forEach(mission=>mission.targetIds.forEach(target=>this.priorityTargets.push(target)))
 
         let activeShipData = this.player.ships.find(shipData=>shipData.id===this.player.activeShipId)
         this.activeShip.shipData = activeShipData
@@ -370,7 +372,7 @@ export default class StarSystem extends Scene {
             if(target){
                 this.targetRect.x = target.x
                 this.targetRect.y = target.y
-                if(this.priorityTargets.find(pTarget=>pTarget.id===target.shipData.id)) this.targetRect.setTint(0xff0000)
+                if(this.priorityTargets.find(pTarget=>pTarget===target.shipData.id)) this.targetRect.setTint(0xff0000)
                 else this.targetRect.setTint(0x0000ff)
                 this.targetRect.setVisible(true)
             }

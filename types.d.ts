@@ -309,7 +309,7 @@ interface Mission {
     type: MissionType
     cargo?: InventoryData
     targetCount?: number
-    targets?: Array<ShipData>
+    targetIds?: Array<string>
     escortsAlive?: boolean
     timeElapsedInSystem?: number
     minimumTimeInSystem?: number
