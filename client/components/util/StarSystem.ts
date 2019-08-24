@@ -149,9 +149,9 @@ export default class StarSystem extends Scene {
             state.ships.forEach(update=> {
                 let ship = this.ships.get(update.shipData.id)
                 if(ship){
-                    if(update.shipData.transientData.targetSystemName){
+                    if(update.shipData.systemName !== this.name){
                         //We jumped somewhere else, change the scene over
-                        const system = StarSystems.find(system=>system.name === update.shipData.transientData.targetSystemName)
+                        const system = StarSystems.find(system=>system.name === update.shipData.systemName)
                         if(ship.isPlayerControlled){
                             this.scene.add(system.name, new StarSystem({key:system.name, server:this.server, initialState: system, player:this.player}, true), false)
                             this.scene.start(system.name)
@@ -161,9 +161,6 @@ export default class StarSystem extends Scene {
                         else {
                             this.destroyShip(ship, false)
                         }
-                    }
-                    if(update.shipData.systemName !== this.name){
-                        console.log('ship system is incorrect: '+update.shipData.id)
                     }
                     if(update.shipData.hull <= 0){
                         this.destroyShip(ship, true)

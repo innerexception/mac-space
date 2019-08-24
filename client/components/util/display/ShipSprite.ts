@@ -88,7 +88,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
-        this.shipData.transientData.targetSystemName = targetSystem.name
+        this.shipData.systemName = targetSystem.name
         this.addShipUpdate(this, PlayerEvents.START_JUMP)
     }
 
@@ -217,16 +217,14 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     applyState = (update:ShipData, doTween?:boolean) => {
         if(doTween){
             
-            let curDegrAngle = Phaser.Math.RadToDeg(this.rotation);
-            let newDegrAngle = Phaser.Math.RadToDeg(update.rotation);
-            let shortestRad = Phaser.Math.DegToRad(Phaser.Math.Angle.ShortestBetween(curDegrAngle, newDegrAngle));
+            let rotation = Phaser.Math.Angle.RotateTo(this.rotation, update.rotation)
 
             this.scene.add.tween({
                 targets: this,
                 x: update.x,
                 y: update.y,
-                rotation: '+=' + shortestRad, //javascript
-                duration: 10
+                rotation, //javascript
+                duration: 5
             })
         }
         else{

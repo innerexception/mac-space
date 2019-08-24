@@ -34,14 +34,14 @@ export default class GalaxyScene extends Scene {
         let scene = this.scene.get(this.scenes[i]) as ServerStarSystem
         for(var j=0; j<this.playerUpdates.length; j++){
           const update = this.playerUpdates[j]
-          if(scene.name === update.shipData.systemName)
+          if(scene.name === update.shipData.systemName || update.type === PlayerEvents.START_JUMP)
               scene.onApplyPlayerUpdate(update)
         }
         this.server.publishMessage({
           type: ServerMessages.SERVER_UPDATE,
           system: scene.name,
           event: {
-              ships: getShipUpdates(scene.name, scene.ships, scene.jumpingShips, this.players, this.server, scene.deadShips),
+              ships: getShipUpdates(scene.ships, scene.jumpingShips, this.players, this.server, scene.deadShips),
               asteroids: getAsteroidUpdates(scene.asteroids, scene.deadAsteroids),
               resources: getResourceUpdates(scene.resources, scene.deadResources),
               planets: scene.planets.map(planet=>planet.config)
@@ -83,7 +83,7 @@ export default class GalaxyScene extends Scene {
     }
 }
 
-const getShipUpdates = (systemName:string, ships:Map<string,ServerShipSprite>, jumpingShips: Array<ServerShipSprite>, players:Map<string,Player>, server:WebsocketClient, deadShips:Array<ServerShipSprite>) => {
+const getShipUpdates = (ships:Map<string,ServerShipSprite>, jumpingShips: Array<ServerShipSprite>, players:Map<string,Player>, server:WebsocketClient, deadShips:Array<ServerShipSprite>) => {
   let updates = new Array<ShipUpdate>()
   ships.forEach(ship=>{
     updates.push({
@@ -96,7 +96,6 @@ const getShipUpdates = (systemName:string, ships:Map<string,ServerShipSprite>, j
         rotation: ship.rotation,
         velocity : ship.body.velocity,
         fighters: [],
-        systemName,
         transientData: {...ship.shipData.transientData}
       }
     })
@@ -111,12 +110,8 @@ const getShipUpdates = (systemName:string, ships:Map<string,ServerShipSprite>, j
     updates.push({
       type: PlayerEvents.SERVER_STATE,
       sequence: Date.now(),
-      shipData: {
-        ...ship.shipData,
-        transientData: {...ship.shipData.transientData}
-      }
+      shipData: {...ship.shipData}
     })
-    ship.shipData.transientData.targetSystemName = null
 
     //Save new ship data to server store if not ai ship
     let player = players.get(ship.shipData.ownerId)

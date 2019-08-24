@@ -167,7 +167,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                 duration: 1500,
                 onComplete: ()=>{
                     if(this.scene){
-                        const duration = (distance/(this.shipData.maxSpeed))*40
+                        const duration = (distance/(this.shipData.maxSpeed))*70
                         this.setCollideWorldBounds(false)
                         this.scene.tweens.add({
                             targets: this,
@@ -183,7 +183,6 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                                         xVelocity: systemVector.x*this.shipData.maxSpeed, 
                                         yVelocity: systemVector.y*this.shipData.maxSpeed
                                     });
-                                    newShip.shipData.transientData.targetSystemName = targetSystem.name;
                                     newShip.shipData.systemName = targetSystem.name;
                                     newShip.shipData.currentTargetId = ''
                                     newShip.shipData.fuel = this.shipData.fuel-1;
