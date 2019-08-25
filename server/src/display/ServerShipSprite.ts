@@ -11,12 +11,12 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     projectiles: GameObjects.Group
     landingSequence: Phaser.Tweens.Tween
-    jumpSequence: boolean
     shipData: ShipData
     theGalaxy: GalaxyScene
     aiEvent: Phaser.Time.TimerEvent
     nextAiEvent: number
     firingEvent: Time.TimerEvent
+    isJumping: boolean
 
     constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, ship:ShipData){
         super(scene, x, y, texture)
@@ -156,14 +156,15 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
-        if(this.shipData.fuel > 0){
+        if(this.shipData.fuel > 0 && !this.isJumping){
+            this.isJumping = true
             let distance = Phaser.Math.Distance.Between(this.x, this.y, targetSystem.x, targetSystem.y)
             let systemAngle = Phaser.Math.Angle.Between(this.x, this.y, targetSystem.x, targetSystem.y)
             const rotation = systemAngle+(Math.PI/2)
             let systemVector = { x: Math.sin(rotation), y: Math.cos(rotation), rotation}
             this.scene.tweens.add({
                 targets: this,
-                rotation: systemAngle+(Math.PI/2),
+                rotation,
                 duration: 1500,
                 onComplete: ()=>{
                     if(this.scene){
@@ -188,6 +189,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                                     newShip.shipData.fuel = this.shipData.fuel-1;
                                     (this.scene as ServerStarSystem).jumpingShips.push(newShip);
                                     (this.scene as ServerStarSystem).ships.delete(this.shipData.id)
+                                    this.isJumping = false
                                     this.destroy()
                                 }
                             }
@@ -389,10 +391,10 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
     merchantAICombatListener = () => {
         //If attacked, respond and retreat to other non-hostile ships
         if(this.shipData.aiProfile.attackerId){
-            if(this.shipData.aiProfile.attackTime > 20){
+            if(this.shipData.aiProfile.attackTime > 200){
                 this.aiEvent.remove()
-                this.AiEvents.jump()
                 this.stopFiring()
+                this.AiEvents.jump()
             }
             else{
                 let system = (this.scene as ServerStarSystem)

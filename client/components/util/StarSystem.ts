@@ -465,7 +465,6 @@ export default class StarSystem extends Scene {
             console.log('destryed ship with id: '+ship.shipData.id)
         } 
         else{
-            //TODO: this is happening at random
             console.log('ship left the system:'+ship.shipData.id)
         }
         this.ships.delete(ship.shipData.id)

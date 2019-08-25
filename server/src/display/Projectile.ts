@@ -30,14 +30,12 @@ export default class Projectile extends GameObjects.Image {
         }
 
         if(this.weapon.isGuided && this.target){
-            let rotation = Math.atan2((this.target.x-this.x), (this.y-this.target.y) )
-            if(Math.abs(rotation) > weapon.projectileTurnSpeed) rotation = weapon.projectileTurnSpeed
             this.trackingEvent = this.scene.time.addEvent({
                 delay: weapon.projectileTrackingInterval,
                 callback: ()=> {
                     this.scene.tweens.add({
                         targets: this,
-                        rotation,
+                        rotation: Math.atan2((this.target.x-this.x), (this.y-this.target.y) ),
                         duration: weapon.projectileTrackingInterval
                     })
                     const targetVector = { x: Math.sin(this.rotation), y: Math.cos(this.rotation)}
@@ -69,5 +67,3 @@ export default class Projectile extends GameObjects.Image {
         }
     }
 }
-
-

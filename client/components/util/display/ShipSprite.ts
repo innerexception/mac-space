@@ -88,8 +88,10 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
-        this.shipData.systemName = targetSystem.name
-        this.addShipUpdate(this, PlayerEvents.START_JUMP)
+        if(this.shipData.fuel > 0){
+            this.shipData.systemName = targetSystem.name
+            this.addShipUpdate(this, PlayerEvents.START_JUMP)
+        }
     }
 
     startFiring = () => {
@@ -224,7 +226,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
                 x: update.x,
                 y: update.y,
                 rotation, //javascript
-                duration: 5
+                duration: this.isPlayerControlled ? 5 : 30
             })
         }
         else{
