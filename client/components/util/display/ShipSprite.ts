@@ -20,6 +20,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     server:WebsocketClient
     onTogglePlanetMenu: Function
     targetUpdater: Time.TimerEvent
+    firingEvent: Time.TimerEvent
 
     constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, beams:GameObjects.Group, isPlayerControlled:boolean, ship:ShipData, server:WebsocketClient, onTogglePlanetMenu:Function){
         super(scene, x, y, texture)
@@ -87,8 +88,24 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
-        this.shipData.transientData.targetSystemName = targetSystem.name
-        this.addShipUpdate(this, PlayerEvents.START_JUMP)
+        if(this.shipData.fuel > 0){
+            this.shipData.systemName = targetSystem.name
+            this.addShipUpdate(this, PlayerEvents.START_JUMP)
+        }
+    }
+
+    startFiring = () => {
+        let weapon = this.shipData.weapons[this.shipData.selectedWeaponIndex]
+        this.firingEvent = this.scene.time.addEvent({ 
+            delay: 1000/weapon.shotsPerSecond, 
+            callback: ()=>{
+                this.firePrimary()
+            },
+            loop:true
+        })
+    }
+    stopFiring = () => {
+        this.firingEvent && this.firingEvent.remove()
     }
 
     firePrimary = () => {
@@ -123,20 +140,22 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
                 i++
             } 
         })
-        let targetData = ships[(index+1)%ships.length].shipData
-        this.shipData.currentTargetId = targetData.id
-        store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...targetData}})
-        this.targetUpdater && this.targetUpdater.remove()
-        this.targetUpdater = this.scene.time.addEvent({
-            delay: 500, 
-            callback: ()=>{
-                let ship = (this.scene as StarSystem).ships.get(this.shipData.currentTargetId)
-                if(ship) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...ship.shipData}})
-                else this.targetUpdater.remove()
-            },
-            loop: true
-        })
-        this.addShipUpdate(this, PlayerEvents.SELECT_TARGET)
+        if(i>0){
+            let targetData = ships[(index+1)%ships.length].shipData
+            this.shipData.currentTargetId = targetData.id
+            store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...targetData}})
+            this.targetUpdater && this.targetUpdater.remove()
+            this.targetUpdater = this.scene.time.addEvent({
+                delay: 500, 
+                callback: ()=>{
+                    let ship = (this.scene as StarSystem).ships.get(this.shipData.currentTargetId)
+                    if(ship) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...ship.shipData}})
+                    else this.targetUpdater.remove()
+                },
+                loop: true
+            })
+            this.addShipUpdate(this, PlayerEvents.SELECT_TARGET)
+        }
     }
 
     selectNextHostileTarget = () => {
@@ -200,16 +219,14 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     applyState = (update:ShipData, doTween?:boolean) => {
         if(doTween){
             
-            let curDegrAngle = Phaser.Math.RadToDeg(this.rotation);
-            let newDegrAngle = Phaser.Math.RadToDeg(update.rotation);
-            let shortestRad = Phaser.Math.DegToRad(Phaser.Math.Angle.ShortestBetween(curDegrAngle, newDegrAngle));
+            let rotation = Phaser.Math.Angle.RotateTo(this.rotation, update.rotation)
 
             this.scene.add.tween({
                 targets: this,
                 x: update.x,
                 y: update.y,
-                rotation: '+=' + shortestRad, //javascript
-                duration: 10
+                rotation, //javascript
+                duration: this.isPlayerControlled ? 5 : 30
             })
         }
         else{
@@ -243,6 +260,10 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         if(this.shipData.hull > update.hull){
             // this.anims.play('hullHit')
             this.shipData.hull=update.hull
+            if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
+        }
+        if(this.shipData.fuel != update.fuel){
+            this.shipData.fuel = update.fuel
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }
     }

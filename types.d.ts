@@ -248,7 +248,6 @@ interface ShipData {
     transientData: {
         firePrimary?: boolean
         landingTargetName?: string
-        targetSystemName?: string
         commodityOrder?: CommodityOrder
         mission?:Mission
     }

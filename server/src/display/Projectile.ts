@@ -33,7 +33,6 @@ export default class Projectile extends GameObjects.Image {
             this.trackingEvent = this.scene.time.addEvent({
                 delay: weapon.projectileTrackingInterval,
                 callback: ()=> {
-                    //TODO: only rotate up to the projectileTurnSpeed and no further
                     this.scene.tweens.add({
                         targets: this,
                         rotation: Math.atan2((this.target.x-this.x), (this.y-this.target.y) ),
@@ -68,5 +67,3 @@ export default class Projectile extends GameObjects.Image {
         }
     }
 }
-
-

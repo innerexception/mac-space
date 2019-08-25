@@ -93,7 +93,7 @@ export default class ServerStarSystem extends Scene {
                     ship.stopLandingSequence()
                     break
                 case PlayerEvents.START_JUMP:
-                    const system = StarSystems.find(system=>system.name===update.shipData.transientData.targetSystemName)
+                    const system = StarSystems.find(system=>system.name===update.shipData.systemName)
                     ship.startJumpSequence(system)
                     break
                 case PlayerEvents.TAKE_OFF:
@@ -307,9 +307,9 @@ export default class ServerStarSystem extends Scene {
     }
 
     initNPCTraffic = () => {
-        // new Array(Phaser.Math.Between(0,8)).fill(null).forEach(ship=>{
-        //     this.spawnNPCShip()
-        // })
+        new Array(Phaser.Math.Between(0,8)).fill(null).forEach(ship=>{
+            this.spawnNPCShip()
+        })
     }
 
     spawnNPCShip = (aiProfile?:AiProfileType) => {

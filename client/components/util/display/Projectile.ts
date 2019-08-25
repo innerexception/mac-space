@@ -67,5 +67,3 @@ export default class Projectile extends GameObjects.Image {
         }
     }
 }
-
-

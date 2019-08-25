@@ -149,9 +149,9 @@ export default class StarSystem extends Scene {
             state.ships.forEach(update=> {
                 let ship = this.ships.get(update.shipData.id)
                 if(ship){
-                    if(update.shipData.transientData.targetSystemName){
+                    if(update.shipData.systemName !== this.name){
                         //We jumped somewhere else, change the scene over
-                        const system = StarSystems.find(system=>system.name === update.shipData.transientData.targetSystemName)
+                        const system = StarSystems.find(system=>system.name === update.shipData.systemName)
                         if(ship.isPlayerControlled){
                             this.scene.add(system.name, new StarSystem({key:system.name, server:this.server, initialState: system, player:this.player}, true), false)
                             this.scene.start(system.name)
@@ -161,9 +161,6 @@ export default class StarSystem extends Scene {
                         else {
                             this.destroyShip(ship, false)
                         }
-                    }
-                    if(update.shipData.systemName !== this.name){
-                        console.log('ship system is incorrect: '+update.shipData.id)
                     }
                     if(update.shipData.hull <= 0){
                         this.destroyShip(ship, true)
@@ -246,20 +243,12 @@ export default class StarSystem extends Scene {
         this.input.keyboard.on('keydown-SPACE', (event) => {
             let weapon = this.activeShip.shipData.weapons[this.activeShip.shipData.selectedWeaponIndex]
             if(weapon.isBeam){
-                this.activeShip.firePrimary()
+                // this.activeShip.firePrimary() TODO
             }
-            else{
-                this.firingEvent = this.time.addEvent({ 
-                    delay: 1000/weapon.shotsPerSecond, 
-                    callback: ()=>{
-                        this.activeShip.firePrimary()
-                    },
-                    loop:true
-                })
-            }
+            else this.activeShip.startFiring()
         })
         this.input.keyboard.on('keyup-SPACE', (event) => {
-            this.firingEvent.remove()
+            this.activeShip.stopFiring()
         })
         this.input.keyboard.on('keydown-M', (event) => {
             onToggleMapMenu(true, this.activeShip.shipData)
@@ -389,7 +378,6 @@ export default class StarSystem extends Scene {
         ship.rotation = config.rotation
         this.ships.set(shipData.id, ship)
         this.physics.add.overlap(this.projectiles, ship, this.projectileHitShip);
-        //TODO lazor beamz this.physics.add.overlap(this.beams, ship, this.beamHitShip);
     }
 
     spawnResource = (update:ResourceData) => {
@@ -477,7 +465,7 @@ export default class StarSystem extends Scene {
             console.log('destryed ship with id: '+ship.shipData.id)
         } 
         else{
-            console.log('ship left the system.')
+            console.log('ship left the system:'+ship.shipData.id)
         }
         this.ships.delete(ship.shipData.id)
         

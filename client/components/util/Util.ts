@@ -20,7 +20,7 @@ export const getCargoWeight = (ship:ShipData) => {
 export const getNPCShipData = (aiProfile?:AiProfileType) => {
     let shipData = Ships[Phaser.Math.Between(0,Ships.length-1)]
     shipData.aiProfile = {
-        type: aiProfile ? aiProfile : AiProfileType.MERCHANT,
+        type: aiProfile,
         jumpedIn: true,
         attackerId: '',
         attackTime: 0,
@@ -29,6 +29,10 @@ export const getNPCShipData = (aiProfile?:AiProfileType) => {
     shipData.id = v4()
     if(!aiProfile){
         switch(Phaser.Math.Between(0,2)){
+            case 0:
+                shipData.faction = FactionName.NEUTRAL
+                shipData.aiProfile.type = AiProfileType.MERCHANT
+                break
             case 1: 
                 shipData.faction = FactionName.PIRATE
                 shipData.aiProfile.type = AiProfileType.PIRATE
