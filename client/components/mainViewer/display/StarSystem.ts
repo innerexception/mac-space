@@ -1,14 +1,14 @@
 import { Scene, Cameras, GameObjects, Physics, Time, } from "phaser";
-import { StarSystems } from "../../../server/src/data/StarSystems";
-import Projectile from "./display/Projectile";
-import ShipSprite from "./display/ShipSprite";
-import * as Ships from '../../../server/src/data/Ships'
-import WebsocketClient from "../../WebsocketClient";
-import { store } from "../../App";
-import { onToggleMapMenu, onConnectionError, onConnected, onTogglePlanetMenu } from "../uiManager/Thunks";
-import { PlayerEvents, ReducerActions, ServerMessages, MissionType } from "../../../enum";
-import Planet from "./display/Planet";
-import Beam from "./display/Beam";
+import { StarSystems } from "../../../../server/src/data/StarSystems";
+import Projectile from "./Projectile";
+import ShipSprite from "./ShipSprite";
+import * as Ships from '../../../../server/src/data/Ships'
+import WebsocketClient from "../../../WebsocketClient";
+import { store } from "../../../App";
+import { onToggleMapMenu, onConnectionError, onConnected, onTogglePlanetMenu } from "../../uiManager/Thunks";
+import { PlayerEvents, ReducerActions, ServerMessages, MissionType } from "../../../../enum";
+import Planet from "./Planet";
+import Beam from "./Beam";
 
 export default class StarSystem extends Scene {
 
@@ -361,8 +361,8 @@ export default class StarSystem extends Scene {
             if(target){
                 this.targetRect.x = target.x
                 this.targetRect.y = target.y
-                if(this.priorityTargets.find(pTarget=>pTarget===target.shipData.id)) this.targetRect.setTint(0xff0000)
-                else this.targetRect.setTint(0x0000ff)
+                if(this.priorityTargets.find(pTarget=>pTarget===target.shipData.id)) this.targetRect.setTintFill(0xff0000)
+                else this.targetRect.setTintFill(0x00ff00)
                 this.targetRect.setVisible(true)
             }
             else {

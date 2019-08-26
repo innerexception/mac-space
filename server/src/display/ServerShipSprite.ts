@@ -156,6 +156,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
+        //TODO: change to charge-up / vanish effect instead of movement
         if(this.shipData.fuel > 0 && !this.isJumping){
             this.isJumping = true
             let distance = Phaser.Math.Distance.Between(this.x, this.y, targetSystem.x, targetSystem.y)

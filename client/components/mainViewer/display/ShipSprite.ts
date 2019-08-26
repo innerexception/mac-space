@@ -1,10 +1,10 @@
 import { GameObjects, Physics, Scene, Time, } from "phaser";
 import WebsocketClient from "../../../WebsocketClient";
 import { PlayerEvents, ServerMessages, ReducerActions } from "../../../../enum";
-import StarSystem from "../StarSystem";
+import StarSystem from "./StarSystem";
 import Planet from "./Planet";
 import { store } from "../../../App";
-import { getCargoWeight } from "../Util";
+import { getCargoWeight } from "../../util/Util";
 import Projectile from "./Projectile";
 
 export default class ShipSprite extends Physics.Arcade.Sprite {
@@ -133,7 +133,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         let ships = [];
         let i=0;
         let index = 0;
-        (this.scene as StarSystem).ships.forEach((ship)=>{
+        const scene = (this.scene as StarSystem)
+        scene.ships.forEach((ship)=>{
             if(ship.shipData.id === this.shipData.currentTargetId) index = i
             if(ship.shipData.id !== this.shipData.id){
                 ships.push(ship)
@@ -143,7 +144,15 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         if(i>0){
             let targetData = ships[(index+1)%ships.length].shipData
             this.shipData.currentTargetId = targetData.id
-            store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...targetData}})
+            store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...targetData}});
+            scene.targetRect.scale = 0
+            scene.targetRect.rotation = 1
+            scene.tweens.add({
+                targets: scene.targetRect,
+                scale: 2,
+                rotation: 0,
+                duration: 500
+            })
             this.targetUpdater && this.targetUpdater.remove()
             this.targetUpdater = this.scene.time.addEvent({
                 delay: 500, 

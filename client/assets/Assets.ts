@@ -8,7 +8,7 @@ const lazor = require('./projectile/laser+0.png')
 const boom = require('./explosion.png')
 const proton = require('./projectile/proton+.png')
 const sparrow = require('./projectile/javelin.png') 
-const target = require('./projectile/blaster+.png')
+const target = require('./crosshair.png')
 
 
 export const defaults = [

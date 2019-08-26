@@ -3,7 +3,7 @@ import WebsocketClient from "../../WebsocketClient";
 import { store } from "../../App";
 import { onConnectionError, onConnected } from "../uiManager/Thunks";
 import { ReducerActions, ServerMessages } from "../../../enum";
-import StarSystem from "./StarSystem";
+import StarSystem from "../mainViewer/display/StarSystem";
 import { StarSystems } from "../../../server/src/data/StarSystems";
 
 export default class BootScene extends Scene {
