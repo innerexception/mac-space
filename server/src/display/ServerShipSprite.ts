@@ -156,7 +156,6 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
-        //TODO: change to charge-up / vanish effect instead of movement
         if(this.shipData.fuel > 0 && !this.isJumping){
             this.isJumping = true
             let systemAngle = Phaser.Math.Angle.Between(this.x, this.y, targetSystem.x, targetSystem.y)
@@ -183,7 +182,7 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
                             xVelocity: systemVector.x*this.shipData.maxSpeed, 
                             yVelocity: systemVector.y*this.shipData.maxSpeed
                         });
-                        newShip.shipData.systemName = targetSystem.name;
+                        newShip.shipData.systemName = targetSystem.name
                         newShip.shipData.currentTargetId = ''
                         newShip.shipData.fuel = this.shipData.fuel-1;
                         (this.scene as ServerStarSystem).jumpingShips.push(newShip);

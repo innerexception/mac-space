@@ -314,6 +314,7 @@ export default class ServerStarSystem extends Scene {
 
     spawnNPCShip = (aiProfile?:AiProfileType) => {
         let shipData = getNPCShipData(aiProfile)
+        shipData.systemName = this.name
         const rotation = Phaser.Math.FloatBetween(0,Math.PI*2)
         let systemVector = { x: Math.sin(rotation), y: Math.cos(rotation), rotation}
         if(shipData.aiProfile.jumpedIn){

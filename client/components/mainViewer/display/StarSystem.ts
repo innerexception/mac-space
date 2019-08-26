@@ -266,7 +266,7 @@ export default class StarSystem extends Scene {
         this.input.keyboard.on('keydown-SPACE', (event) => {
             let weapon = this.activeShip.shipData.weapons[this.activeShip.shipData.selectedWeaponIndex]
             if(weapon.isBeam){
-                // this.activeShip.firePrimary() TODO
+                // this.activeShip.firePrimary() TODO beamz
             }
             else this.activeShip.startFiring()
         })
@@ -486,7 +486,7 @@ export default class StarSystem extends Scene {
             this.tweens.add({
                 targets: shield,
                 rotation: 2,
-                alphaTopLeft: target.shipData.shields/target.shipData.maxShields,
+                alpha: target.shipData.shields/target.shipData.maxShields,
                 duration: 250,
                 onComplete: ()=> {
                     shield.destroy()
