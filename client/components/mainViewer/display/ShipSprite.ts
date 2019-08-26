@@ -41,6 +41,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             lifespan: 150,
             on: false
         });
+        
         this.thruster.setSpeed(100)
         this.depth = 3
         this.projectiles = projectiles
@@ -256,22 +257,15 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             this.shipData.cargo = update.cargo
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }
-        if(this.shipData.shields > update.shields){
-            // this.anims.play('shieldHit')
+        if(this.shipData.shields !== update.shields){
             this.shipData.shields=update.shields
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }
-        if(this.shipData.armor > update.armor){
-            // this.anims.play('armorHit')
-            this.shipData.armor=update.armor
-            if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
-        }
-        if(this.shipData.hull > update.hull){
-            // this.anims.play('hullHit')
+        if(this.shipData.hull !== update.hull){
             this.shipData.hull=update.hull
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }
-        if(this.shipData.fuel != update.fuel){
+        if(this.shipData.fuel !== update.fuel){
             this.shipData.fuel = update.fuel
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }

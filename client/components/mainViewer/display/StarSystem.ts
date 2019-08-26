@@ -19,6 +19,7 @@ export default class StarSystem extends Scene {
     planets: Array<Planet>
     asteroids: Map<string, Physics.Arcade.Sprite>
     explosions: GameObjects.Group
+    warps: GameObjects.Group
     resources: Map<string, Physics.Arcade.Sprite>
     projectiles: Physics.Arcade.Group
     beams: Physics.Arcade.Group
@@ -221,6 +222,15 @@ export default class StarSystem extends Scene {
         });
 
         this.explosions = this.add.group()
+
+        this.anims.create({
+            key: 'warp',
+            frames: this.anims.generateFrameNumbers('warp', { start: 0, end: 11, first: 0 }),
+            frameRate: 10
+        });
+
+        this.warps = this.add.group()
+
 
         this.projectiles = this.physics.add.group({ classType: Projectile  })
         this.projectiles.runChildUpdate = true
@@ -443,6 +453,7 @@ export default class StarSystem extends Scene {
 
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:Projectile) =>
     {
+        this.explosions.get(asteroid.x, asteroid.y, 'boom').setScale(0.1).play('explode')
         projectile.trackingEvent && projectile.trackingEvent.remove()
         projectile.destroy()
     }
@@ -455,6 +466,25 @@ export default class StarSystem extends Scene {
     }
 
     projectileHitShip = (target:ShipSprite, projectile:Projectile) => {
+        if(target.shipData.shields > 0){
+            const shield = this.add.image(target.x, target.y, 'shield').setAlpha(0).setScale(0.2)
+            this.tweens.add({
+                targets: shield,
+                rotation: 2,
+                alphaTopLeft: target.shipData.shields/target.shipData.maxShields,
+                duration: 250,
+                onComplete: ()=> {
+                    shield.destroy()
+                },
+                onUpdate: () => {
+                    shield.x = target.x
+                    shield.y = target.y
+                }
+            })
+        }
+        else{
+            this.explosions.get(projectile.x, projectile.y, 'boom').setScale(0.2).play('explode')
+        }
         projectile.trackingEvent && projectile.trackingEvent.remove()
         projectile.destroy()
     }
