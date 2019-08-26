@@ -1,10 +1,10 @@
 import { GameObjects, Physics, Scene, Time, } from "phaser";
 import WebsocketClient from "../../../WebsocketClient";
 import { PlayerEvents, ServerMessages, ReducerActions } from "../../../../enum";
-import StarSystem from "../StarSystem";
+import StarSystem from "./StarSystem";
 import Planet from "./Planet";
 import { store } from "../../../App";
-import { getCargoWeight } from "../Util";
+import { getCargoWeight } from "../../util/Util";
 import Projectile from "./Projectile";
 
 export default class ShipSprite extends Physics.Arcade.Sprite {
@@ -21,6 +21,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     onTogglePlanetMenu: Function
     targetUpdater: Time.TimerEvent
     firingEvent: Time.TimerEvent
+    isJumping: boolean
 
     constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, beams:GameObjects.Group, isPlayerControlled:boolean, ship:ShipData, server:WebsocketClient, onTogglePlanetMenu:Function){
         super(scene, x, y, texture)
@@ -41,6 +42,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             lifespan: 150,
             on: false
         });
+        
         this.thruster.setSpeed(100)
         this.depth = 3
         this.projectiles = projectiles
@@ -88,10 +90,9 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
-        if(this.shipData.fuel > 0){
-            this.shipData.systemName = targetSystem.name
-            this.addShipUpdate(this, PlayerEvents.START_JUMP)
-        }
+        this.isJumping = true
+        this.shipData.systemName = targetSystem.name
+        this.addShipUpdate(this, PlayerEvents.START_JUMP)
     }
 
     startFiring = () => {
@@ -133,7 +134,8 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         let ships = [];
         let i=0;
         let index = 0;
-        (this.scene as StarSystem).ships.forEach((ship)=>{
+        const scene = (this.scene as StarSystem)
+        scene.ships.forEach((ship)=>{
             if(ship.shipData.id === this.shipData.currentTargetId) index = i
             if(ship.shipData.id !== this.shipData.id){
                 ships.push(ship)
@@ -143,7 +145,15 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
         if(i>0){
             let targetData = ships[(index+1)%ships.length].shipData
             this.shipData.currentTargetId = targetData.id
-            store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...targetData}})
+            store.dispatch({ type: ReducerActions.PLAYER_REPLACE_TARGET, targetShip: {...targetData}});
+            scene.targetRect.scale = 0
+            scene.targetRect.rotation = 1
+            scene.tweens.add({
+                targets: scene.targetRect,
+                scale: 2,
+                rotation: 0,
+                duration: 500
+            })
             this.targetUpdater && this.targetUpdater.remove()
             this.targetUpdater = this.scene.time.addEvent({
                 delay: 500, 
@@ -247,22 +257,15 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
             this.shipData.cargo = update.cargo
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }
-        if(this.shipData.shields > update.shields){
-            // this.anims.play('shieldHit')
+        if(this.shipData.shields !== update.shields){
             this.shipData.shields=update.shields
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }
-        if(this.shipData.armor > update.armor){
-            // this.anims.play('armorHit')
-            this.shipData.armor=update.armor
-            if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
-        }
-        if(this.shipData.hull > update.hull){
-            // this.anims.play('hullHit')
+        if(this.shipData.hull !== update.hull){
             this.shipData.hull=update.hull
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }
-        if(this.shipData.fuel != update.fuel){
+        if(this.shipData.fuel !== update.fuel){
             this.shipData.fuel = update.fuel
             if(this.isPlayerControlled) store.dispatch({ type: ReducerActions.PLAYER_REPLACE_SHIP, activeShip: {...this.shipData}})
         }

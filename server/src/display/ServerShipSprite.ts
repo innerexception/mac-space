@@ -156,44 +156,40 @@ export default class ServerShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
+        //TODO: change to charge-up / vanish effect instead of movement
         if(this.shipData.fuel > 0 && !this.isJumping){
             this.isJumping = true
-            let distance = Phaser.Math.Distance.Between(this.x, this.y, targetSystem.x, targetSystem.y)
             let systemAngle = Phaser.Math.Angle.Between(this.x, this.y, targetSystem.x, targetSystem.y)
             const rotation = systemAngle+(Math.PI/2)
             let systemVector = { x: Math.sin(rotation), y: Math.cos(rotation), rotation}
             this.scene.tweens.add({
+                targets:this.body.velocity,
+                x: 0,
+                y: 0,
+                ease: Phaser.Math.Easing.Cubic.Out,
+                duration: 1500
+            })
+            this.scene.tweens.add({
                 targets: this,
                 rotation,
-                duration: 1500,
+                duration: 3000,
                 onComplete: ()=>{
                     if(this.scene){
-                        const duration = (distance/(this.shipData.maxSpeed))*70
-                        this.setCollideWorldBounds(false)
-                        this.scene.tweens.add({
-                            targets: this,
-                            x: targetSystem.x,
-                            y: targetSystem.y,
-                            duration: duration,
-                            onComplete: ()=> {
-                                if(this.scene){
-                                    const target = this.scene.scene.get(targetSystem.name) as ServerStarSystem
-                                    let x = Phaser.Math.Between(100,3000)
-                                    let newShip = target.spawnShip(this.shipData, {
-                                        x, y:100, rotation, 
-                                        xVelocity: systemVector.x*this.shipData.maxSpeed, 
-                                        yVelocity: systemVector.y*this.shipData.maxSpeed
-                                    });
-                                    newShip.shipData.systemName = targetSystem.name;
-                                    newShip.shipData.currentTargetId = ''
-                                    newShip.shipData.fuel = this.shipData.fuel-1;
-                                    (this.scene as ServerStarSystem).jumpingShips.push(newShip);
-                                    (this.scene as ServerStarSystem).ships.delete(this.shipData.id)
-                                    this.isJumping = false
-                                    this.destroy()
-                                }
-                            }
-                        })
+                        const target = this.scene.scene.get(targetSystem.name) as ServerStarSystem
+                        let x = Phaser.Math.Between(100,3000)
+                        let y = Phaser.Math.Between(100,3000)
+                        let newShip = target.spawnShip(this.shipData, {
+                            x, y, rotation, 
+                            xVelocity: systemVector.x*this.shipData.maxSpeed, 
+                            yVelocity: systemVector.y*this.shipData.maxSpeed
+                        });
+                        newShip.shipData.systemName = targetSystem.name;
+                        newShip.shipData.currentTargetId = ''
+                        newShip.shipData.fuel = this.shipData.fuel-1;
+                        (this.scene as ServerStarSystem).jumpingShips.push(newShip);
+                        (this.scene as ServerStarSystem).ships.delete(this.shipData.id)
+                        this.isJumping = false
+                        this.destroy()
                     }
                 }
             })

@@ -1,14 +1,14 @@
 import { Scene, Cameras, GameObjects, Physics, Time, } from "phaser";
-import { StarSystems } from "../../../server/src/data/StarSystems";
-import Projectile from "./display/Projectile";
-import ShipSprite from "./display/ShipSprite";
-import * as Ships from '../../../server/src/data/Ships'
-import WebsocketClient from "../../WebsocketClient";
-import { store } from "../../App";
-import { onToggleMapMenu, onConnectionError, onConnected, onTogglePlanetMenu } from "../uiManager/Thunks";
-import { PlayerEvents, ReducerActions, ServerMessages, MissionType } from "../../../enum";
-import Planet from "./display/Planet";
-import Beam from "./display/Beam";
+import { StarSystems } from "../../../../server/src/data/StarSystems";
+import Projectile from "./Projectile";
+import ShipSprite from "./ShipSprite";
+import * as Ships from '../../../../server/src/data/Ships'
+import WebsocketClient from "../../../WebsocketClient";
+import { store } from "../../../App";
+import { onToggleMapMenu, onConnectionError, onConnected, onTogglePlanetMenu } from "../../uiManager/Thunks";
+import { PlayerEvents, ReducerActions, ServerMessages, MissionType } from "../../../../enum";
+import Planet from "./Planet";
+import Beam from "./Beam";
 
 export default class StarSystem extends Scene {
 
@@ -19,6 +19,7 @@ export default class StarSystem extends Scene {
     planets: Array<Planet>
     asteroids: Map<string, Physics.Arcade.Sprite>
     explosions: GameObjects.Group
+    warps: GameObjects.Group
     resources: Map<string, Physics.Arcade.Sprite>
     projectiles: Physics.Arcade.Group
     beams: Physics.Arcade.Group
@@ -159,6 +160,7 @@ export default class StarSystem extends Scene {
                             this.scene.remove()
                         }
                         else {
+                            this.warps.get(ship.x, ship.y, 'warp').setAlpha(0.8).play('warp')
                             this.destroyShip(ship, false)
                         }
                     }
@@ -222,6 +224,15 @@ export default class StarSystem extends Scene {
 
         this.explosions = this.add.group()
 
+        this.anims.create({
+            key: 'warp',
+            frames: this.anims.generateFrameNumbers('warp', { start: 0, end: 11, first: 0 }),
+            frameRate: 10
+        });
+
+        this.warps = this.add.group()
+
+
         this.projectiles = this.physics.add.group({ classType: Projectile  })
         this.projectiles.runChildUpdate = true
         this.beams = this.physics.add.group({ classType: Beam  })
@@ -237,7 +248,19 @@ export default class StarSystem extends Scene {
             this.activeShip.startLandingSequence(this.planets[this.selectedPlanetIndex])
         });
         this.input.keyboard.on('keydown-J', (event) => {
-            if(this.selectedSystem) this.activeShip.startJumpSequence(this.selectedSystem)
+            if(this.selectedSystem && this.activeShip.shipData.fuel > 0 && !this.activeShip.isJumping){
+                this.activeShip.startJumpSequence(this.selectedSystem)
+                this.cameras.main.shake(3000, 0.001)
+                this.tweens.add({
+                    targets: this.activeShip,
+                    scaleY: 0.38,
+                    duration: 2000,
+                    onComplete: ()=>{
+                        this.warps.get(this.activeShip.x, this.activeShip.y, 'warp').setDepth(6).setAlpha(0.8).play('warp')
+                        this.activeShip.setVisible(false)
+                    }
+                })
+            } 
             else console.log('no system selected...')
         })
         this.input.keyboard.on('keydown-SPACE', (event) => {
@@ -361,8 +384,8 @@ export default class StarSystem extends Scene {
             if(target){
                 this.targetRect.x = target.x
                 this.targetRect.y = target.y
-                if(this.priorityTargets.find(pTarget=>pTarget===target.shipData.id)) this.targetRect.setTint(0xff0000)
-                else this.targetRect.setTint(0x0000ff)
+                if(this.priorityTargets.find(pTarget=>pTarget===target.shipData.id)) this.targetRect.setTintFill(0xff0000)
+                else this.targetRect.setTintFill(0x00ff00)
                 this.targetRect.setVisible(true)
             }
             else {
@@ -378,6 +401,7 @@ export default class StarSystem extends Scene {
         ship.rotation = config.rotation
         this.ships.set(shipData.id, ship)
         this.physics.add.overlap(this.projectiles, ship, this.projectileHitShip);
+        this.warps.get(ship.x, ship.y, 'warp').setAlpha(0.8).play('warp')
     }
 
     spawnResource = (update:ResourceData) => {
@@ -443,6 +467,7 @@ export default class StarSystem extends Scene {
 
     playerShotAsteroid = (asteroid:Physics.Arcade.Sprite, projectile:Projectile) =>
     {
+        this.explosions.get(asteroid.x, asteroid.y, 'boom').setScale(0.1).play('explode')
         projectile.trackingEvent && projectile.trackingEvent.remove()
         projectile.destroy()
     }
@@ -455,6 +480,26 @@ export default class StarSystem extends Scene {
     }
 
     projectileHitShip = (target:ShipSprite, projectile:Projectile) => {
+        //TODO: this doesn't match the server very often, need to have projectile updates probably
+        if(target.shipData.shields > 0){
+            const shield = this.add.image(target.x, target.y, 'shield').setAlpha(0).setScale(0.2)
+            this.tweens.add({
+                targets: shield,
+                rotation: 2,
+                alphaTopLeft: target.shipData.shields/target.shipData.maxShields,
+                duration: 250,
+                onComplete: ()=> {
+                    shield.destroy()
+                },
+                onUpdate: () => {
+                    shield.x = target.x
+                    shield.y = target.y
+                }
+            })
+        }
+        else{
+            this.explosions.get(projectile.x, projectile.y, 'boom').setScale(0.2).play('explode')
+        }
         projectile.trackingEvent && projectile.trackingEvent.remove()
         projectile.destroy()
     }
