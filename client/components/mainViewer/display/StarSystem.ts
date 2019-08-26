@@ -160,6 +160,7 @@ export default class StarSystem extends Scene {
                             this.scene.remove()
                         }
                         else {
+                            this.warps.get(ship.x, ship.y, 'warp').setAlpha(0.8).play('warp')
                             this.destroyShip(ship, false)
                         }
                     }
@@ -247,7 +248,19 @@ export default class StarSystem extends Scene {
             this.activeShip.startLandingSequence(this.planets[this.selectedPlanetIndex])
         });
         this.input.keyboard.on('keydown-J', (event) => {
-            if(this.selectedSystem) this.activeShip.startJumpSequence(this.selectedSystem)
+            if(this.selectedSystem && this.activeShip.shipData.fuel > 0 && !this.activeShip.isJumping){
+                this.activeShip.startJumpSequence(this.selectedSystem)
+                this.cameras.main.shake(3000, 0.001)
+                this.tweens.add({
+                    targets: this.activeShip,
+                    scaleY: 0.38,
+                    duration: 2000,
+                    onComplete: ()=>{
+                        this.warps.get(this.activeShip.x, this.activeShip.y, 'warp').setDepth(6).setAlpha(0.8).play('warp')
+                        this.activeShip.setVisible(false)
+                    }
+                })
+            } 
             else console.log('no system selected...')
         })
         this.input.keyboard.on('keydown-SPACE', (event) => {
@@ -388,6 +401,7 @@ export default class StarSystem extends Scene {
         ship.rotation = config.rotation
         this.ships.set(shipData.id, ship)
         this.physics.add.overlap(this.projectiles, ship, this.projectileHitShip);
+        this.warps.get(ship.x, ship.y, 'warp').setAlpha(0.8).play('warp')
     }
 
     spawnResource = (update:ResourceData) => {
@@ -466,6 +480,7 @@ export default class StarSystem extends Scene {
     }
 
     projectileHitShip = (target:ShipSprite, projectile:Projectile) => {
+        //TODO: this doesn't match the server very often, need to have projectile updates probably
         if(target.shipData.shields > 0){
             const shield = this.add.image(target.x, target.y, 'shield').setAlpha(0).setScale(0.2)
             this.tweens.add({

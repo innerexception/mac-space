@@ -21,6 +21,7 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
     onTogglePlanetMenu: Function
     targetUpdater: Time.TimerEvent
     firingEvent: Time.TimerEvent
+    isJumping: boolean
 
     constructor(scene:Scene, x:number, y:number, texture:string, projectiles:GameObjects.Group, beams:GameObjects.Group, isPlayerControlled:boolean, ship:ShipData, server:WebsocketClient, onTogglePlanetMenu:Function){
         super(scene, x, y, texture)
@@ -89,10 +90,9 @@ export default class ShipSprite extends Physics.Arcade.Sprite {
 
     startJumpSequence = (targetSystem:SystemState) => {
         //jump sequence, pass to next system.
-        if(this.shipData.fuel > 0){
-            this.shipData.systemName = targetSystem.name
-            this.addShipUpdate(this, PlayerEvents.START_JUMP)
-        }
+        this.isJumping = true
+        this.shipData.systemName = targetSystem.name
+        this.addShipUpdate(this, PlayerEvents.START_JUMP)
     }
 
     startFiring = () => {

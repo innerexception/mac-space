@@ -17,5 +17,5 @@
             "es7"
         ]
     },
-    "include": ["src/**/*", "../*.d.ts", "server.ts", "../client/components/mainViewer/display/StarSystem.ts"]
+    "include": ["src/**/*", "../*.d.ts", "server.ts"]
 }

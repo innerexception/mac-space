@@ -10,6 +10,7 @@ const proton = require('./projectile/proton+.png')
 const sparrow = require('./projectile/javelin.png') 
 const target = require('./crosshair.png')
 const shield = require('./spr_shield.png')
+const warp = require('./warp.png')
 
 
 export const defaults = [
@@ -25,4 +26,5 @@ export const defaults = [
     { key: 'sparrow', resource: sparrow, type: 'image' },
     { key: 'target', resource: target, type: 'image' },
     { key: 'shield', resource: shield, type: 'image' },
+    { key: 'warp', resource: warp, type: 'spritesheet', data: { frameWidth: 320, frameHeight: 320 }},
 ]
